@@ -1,4 +1,4 @@
-import { useAuth } from '@/app/context/Auth_Context';
+import { useAuth } from '@/context/Auth_Context';
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
 export default function TabLayout() {

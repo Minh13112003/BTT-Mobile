@@ -15,22 +15,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  
   useEffect(() => {
     const checkToken = async () => {
-        try{
-            const token = await SecureStore.getItemAsync('accessToken');
-            if (token) {
-                setAccessToken(token);
-                setIsLoggedIn(true);
-            }
-        }finally{
-            setIsLoading(false);
+      try {
+        const token = await SecureStore.getItemAsync('accessToken');
+        if (token) {
+          setAccessToken(token);
+          setIsLoggedIn(true);
         }
-        checkToken();
-    }
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    }, []);
+    checkToken();
+  }, []);
   if (isLoading) return null;
 
   const saveAuth = async (accessToken: string, refreshToken: string) => {
@@ -45,7 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.deleteItemAsync('refreshToken');
     setAccessToken(null);
     setIsLoggedIn(false);
-    
   };
 
   return (
