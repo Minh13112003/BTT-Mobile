@@ -1,0 +1,317 @@
+========================================================================
+YÊU CẦU ĐẦU VÀO VÀ ĐẦU RA CỦA CÁC API TRONG ỨNG DỤNG (INPUT & RESPONSE)
+========================================================================
+
+Tài liệu này ghi lại chi tiết cấu trúc dữ liệu yêu cầu (Request Payload) và phản hồi (Response) của các API hiện tại đang sử dụng trong ứng dụng di động, kèm mục đích chi tiết của từng API.
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+BOOKINGS APIs
+------------------------------------------------------------------------
+
+1. API: TẠO ĐƠN ĐẶT TOUR (CREATE BOOKING)
+------------------------------------------------------------------------
+- Mục đích: Tạo một đơn đặt tour mới cho người dùng hiện tại kèm upload ảnh tour.
+- Endpoint: /api/v1/bookings
+- Method: POST
+- Headers:
+  Authorization: Bearer <accessToken>
+  Content-Type: multipart/form-data
+- Request Body (Input):
+  {
+    "tourName": "Du lịch Hàn Quốc (Mùa Hoa Anh Đào)",
+    "price": 15990000,
+    "currency": "VND",        // Mặc định là "VND" nếu không truyền
+    "hasVat": true,           // Mặc định là true nếu không truyền
+    "image": <file>           // Bắt buộc - file ảnh upload
+  }
+- Response Body (Output):
+  {
+    "id": "booking-uuid-12345",
+    "orderCode": "BTTNHATMINH202606031234",
+    "tourName": "Du lịch Hàn Quốc (Mùa Hoa Anh Đào)",
+    "imageUrl": "https://res.cloudinary.com/.../bookings/abc.jpg",
+    "price": 15990000,
+    "currency": "VND",
+    "status": "Đang xử lý",
+    "hasVat": true,
+    "bookingDate": "2026-06-03"
+  }
+
+------------------------------------------------------------------------
+2. API: LẤY CHI TIẾT ĐƠN ĐẶT TOUR (GET BOOKING BY ID)
+------------------------------------------------------------------------
+- Mục đích: Lấy thông tin chi tiết của một đơn đặt tour cụ thể thuộc sở hữu của người dùng hiện tại.
+- Endpoint: /api/v1/bookings/:id
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  {
+    "id": "booking-uuid-12345",
+    "orderCode": "BTTNHATMINH202606031234",
+    "tourName": "Du lịch Hàn Quốc (Mùa Hoa Anh Đào)",
+    "imageUrl": "https://res.cloudinary.com/.../bookings/abc.jpg",
+    "price": 15990000,
+    "currency": "VND",
+    "status": "Đang xử lý",
+    "hasVat": true,
+    "bookingDate": "2026-06-03"
+  }
+
+------------------------------------------------------------------------
+3. API: CẬP NHẬT ĐƠN ĐẶT TOUR (UPDATE BOOKING)
+------------------------------------------------------------------------
+- Mục đích: Cập nhật thông tin của một đơn đặt tour thuộc sở hữu của người dùng hiện tại, hỗ trợ cập nhật ảnh tùy chọn.
+- Endpoint: /api/v1/bookings/:id
+- Method: PATCH
+- Headers:
+  Authorization: Bearer <accessToken>
+  Content-Type: multipart/form-data
+- Request Body (Input):
+  {
+    "tourName": "Đà Nẵng - Hội An - Bà Nà Hills 4 Ngày 3 Đêm", // Tùy chọn
+    "price": 5490000,                                             // Tùy chọn
+    "currency": "VND",                                            // Tùy chọn
+    "status": "Đã xác nhận",                                      // Tùy chọn
+    "hasVat": true,                                               // Tùy chọn
+    "bookingDate": "2026-06-03",                                  // Tùy chọn
+    "image": <file>                                               // Tùy chọn - ảnh mới
+  }
+- Response Body (Output):
+  {
+    "id": "booking-uuid-12345",
+    "orderCode": "BTTNHATMINH202606031234",
+    "tourName": "Đà Nẵng - Hội An - Bà Nà Hills 4 Ngày 3 Đêm",
+    "imageUrl": "https://res.cloudinary.com/.../bookings/xyz.jpg",
+    "price": 5490000,
+    "currency": "VND",
+    "status": "Đã xác nhận",
+    "hasVat": true,
+    "bookingDate": "2026-06-03"
+  }
+
+------------------------------------------------------------------------
+4. API: XÓA ĐƠN ĐẶT TOUR (DELETE BOOKING)
+------------------------------------------------------------------------
+- Mục đích: Xóa một đơn đặt tour thuộc sở hữu của người dùng hiện tại, đồng thời xóa ảnh trên Cloudinary.
+- Endpoint: /api/v1/bookings/:id
+- Method: DELETE
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  {
+    "success": true,
+    "message": "Booking deleted successfully"
+  }
+
+========================================================================
+VOUCHERS APIs
+========================================================================
+
+5. API: LẤY DANH SÁCH TẤT CẢ VOUCHER (GET ALL VOUCHERS)
+------------------------------------------------------------------------
+- Mục đích: Lấy danh sách toàn bộ voucher hiện có trong hệ thống, sắp xếp theo ngày tạo mới nhất.
+- Endpoint: /api/v1/vouchers
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  [
+    {
+      "id": "voucher-uuid-001",
+      "code": "BTT300K",
+      "title": "Giảm 5% tối đa 300k",
+      "subtitle": "VOUCHER PHỤ KIỆN",
+      "expiry": "HSD: 05/06/2026",
+      "tag": "HAPPY NEW YEAR 2026",
+      "description": "Áp dụng cho khách hàng mua phụ kiện du lịch tại các chi nhánh BenThanh Tourist toàn quốc.",
+      "value": 5,
+      "max": 300000
+    }
+  ]
+
+------------------------------------------------------------------------
+6. API: LẤY CHI TIẾT VOUCHER (GET VOUCHER BY ID)
+------------------------------------------------------------------------
+- Mục đích: Lấy thông tin chi tiết của một voucher cụ thể theo ID.
+- Endpoint: /api/v1/vouchers/:id
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  {
+    "id": "voucher-uuid-001",
+    "code": "BTT300K",
+    "title": "Giảm 5% tối đa 300k",
+    "subtitle": "VOUCHER PHỤ KIỆN",
+    "expiry": "HSD: 05/06/2026",
+    "tag": "HAPPY NEW YEAR 2026",
+    "description": "Áp dụng cho khách hàng mua phụ kiện du lịch tại các chi nhánh BenThanh Tourist toàn quốc.",
+    "value": 5,
+    "max": 300000
+  }
+
+------------------------------------------------------------------------
+7. API: TẠO VOUCHER MỚI (CREATE VOUCHER)
+------------------------------------------------------------------------
+- Mục đích: Tạo một voucher mới trong hệ thống. Mã code không được trùng với voucher đã tồn tại.
+- Endpoint: /api/v1/vouchers
+- Method: POST
+- Headers:
+  Authorization: Bearer <accessToken>
+- Request Body (Input):
+  {
+    "code": "BTT500K",
+    "title": "Giảm 10% tối đa 500k",
+    "subtitle": "VOUCHER DU LỊCH",
+    "expiry": "HSD: 31/12/2026",
+    "tag": "SUMMER 2026",
+    "description": "Áp dụng cho các tour du lịch trong nước.",
+    "value": 10,
+    "max": 500000
+  }
+- Response Body (Output):
+  {
+    "id": "voucher-uuid-002",
+    "code": "BTT500K",
+    "title": "Giảm 10% tối đa 500k",
+    "subtitle": "VOUCHER DU LỊCH",
+    "expiry": "HSD: 31/12/2026",
+    "tag": "SUMMER 2026",
+    "description": "Áp dụng cho các tour du lịch trong nước.",
+    "value": 10,
+    "max": 500000
+  }
+  *Lưu ý: Nếu code đã tồn tại, server trả về lỗi 409 Conflict.*
+
+------------------------------------------------------------------------
+8. API: CẬP NHẬT VOUCHER (UPDATE VOUCHER)
+------------------------------------------------------------------------
+- Mục đích: Cập nhật thông tin của một voucher theo ID. Nếu đổi code mới thì code mới không được trùng với voucher khác.
+- Endpoint: /api/v1/vouchers/:id
+- Method: PATCH
+- Headers:
+  Authorization: Bearer <accessToken>
+- Request Body (Input):
+  {
+    "title": "Giảm 15% tối đa 500k",  // Tùy chọn
+    "expiry": "HSD: 30/06/2026",       // Tùy chọn
+    "value": 15                         // Tùy chọn
+    // Các trường khác đều tùy chọn
+  }
+- Response Body (Output):
+  {
+    "id": "voucher-uuid-002",
+    "code": "BTT500K",
+    "title": "Giảm 15% tối đa 500k",
+    "subtitle": "VOUCHER DU LỊCH",
+    "expiry": "HSD: 30/06/2026",
+    "tag": "SUMMER 2026",
+    "description": "Áp dụng cho các tour du lịch trong nước.",
+    "value": 15,
+    "max": 500000
+  }
+  *Lưu ý: Nếu code mới trùng với voucher khác, server trả về lỗi 409 Conflict.*
+
+------------------------------------------------------------------------
+9. API: XÓA VOUCHER (DELETE VOUCHER)
+------------------------------------------------------------------------
+- Mục đích: Xóa vĩnh viễn một voucher khỏi hệ thống theo ID.
+- Endpoint: /api/v1/vouchers/:id
+- Method: DELETE
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  {
+    "success": true,
+    "message": "Voucher deleted successfully"
+  }
+------------------------------------------------------------------------
+7. API: LỊCH SỬ GIAO DỊCH (TRANSACTION HISTORY)
+------------------------------------------------------------------------
+- Mục đích: Liệt kê chi tiết danh sách tất cả các đơn đặt tour du lịch từ trước tới nay của người dùng phục vụ cho tab Lịch sử.
+- Endpoint: /api/v1/bookings/history
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  [
+    {
+      "id": "1",
+      "orderCode": "BTTDHCMKHOA20260327",
+      "tourName": "Du lịch Hàn Quốc (Mùa Hoa Anh Đào): Seoul - Nami - Everland - Công viên Yeouido",
+      "imageUrl": "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500",
+      "price": 15990000,
+      "currency": "VND",
+      "status": "Đã nhận hàng",
+      "hasVat": true,
+      "bookingDate": "2026-06-03"
+    },
+    {
+      "id": "2",
+      "orderCode": "BTTDHCMKHOA20260328",
+      "tourName": "Đà Nẵng - Hội An - Bà Nà Hills 4 Ngày 3 Đêm",
+      "imageUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500",
+      "price": 5490000,
+      "currency": "VND",
+      "status": "Đã nhận hàng",
+      "hasVat": true,
+      "bookingDate": "2026-06-03"
+    }
+  ]
+
+------------------------------------------------------------------------
+8. API: LẤY DANH SÁCH MÃ GIẢM GIÁ (GET VOUCHERS)
+------------------------------------------------------------------------
+- Mục đích: Lấy danh sách toàn bộ các mã giảm giá, khuyến mãi và quà tặng đang có hiệu lực dành cho tài khoản người dùng.
+- Endpoint: /api/v1/vouchers
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  [
+    {
+      "id": "v1",
+      "code": "BTT300K",
+      "title": "Giảm 5% tối đa 300k",
+      "subtitle": "VOUCHER PHỤ KIỆN",
+      "expiry": "HSD: 05/06/2026",
+      "tag": "HAPPY NEW YEAR 2026",
+      "description": "Áp dụng cho khách hàng mua phụ kiện du lịch tại các chi nhánh BenThanh Tourist toàn quốc."
+    }
+  ]
+
+------------------------------------------------------------------------
+9. API: THỐNG KÊ GIỚI THIỆU BẠN BÈ (GET REFERRAL STATS)
+------------------------------------------------------------------------
+- Mục đích: Lấy mã giới thiệu duy nhất của người dùng cùng thống kê về số lượng giới thiệu thành công và số điểm tích lũy nhận được từ hoạt động giới thiệu.
+- Endpoint: /api/v1/users/referral
+- Method: GET
+- Headers:
+  Authorization: Bearer <accessToken>
+- Response Body (Output):
+  {
+    "referralCode": "BTTMINH2026",
+    "successReferrals": 5,
+    "earnedPoints": 1000000
+  }
+
+------------------------------------------------------------------------
+10. API: GỬI GÓP Ý PHẢN HỒI (POST FEEDBACK)
+------------------------------------------------------------------------
+- Mục đích: Cho phép người dùng gửi ý kiến đóng góp, phản hồi hoặc báo cáo sự cố về dịch vụ hoặc ứng dụng lên hệ thống máy chủ.
+- Endpoint: /api/v1/feedbacks
+- Method: POST
+- Headers:
+  Authorization: Bearer <accessToken>
+- Request Body (Input):
+  {
+    "subject": "Góp ý dịch vụ Tour",
+    "content": "Nội dung phản hồi chi tiết của khách hàng..."
+  }
+- Response Body (Output):
+  {
+    "success": true,
+    "message": "Cảm ơn bạn đã đóng góp ý kiến phản hồi."
+  }
