@@ -17,10 +17,15 @@ export const URL_GetMe = `${API_BASE_URL}/api/v1/users/me`;
 
 //Booking APIs
 export const URL_DashboardOverview = `${API_BASE_URL}/api/v1/bookings/dashboard`;
-export const URL_TransactionHistory = `${API_BASE_URL}/api/v1/bookings/history`;
+export const URL_TransactionHistory = `${API_BASE_URL}/api/v1/bookings/me?`;
+export const URL_GetBookingById = `${API_BASE_URL}/api/v1/bookings/`;
+export const URL_Booking = `${API_BASE_URL}/api/v1/bookings`;
 
 //Voucher APIs
-export const URL_GetVouchers = `${API_BASE_URL}/api/v1/vouchers`;
+export const URL_GetVouchers = `${API_BASE_URL}/api/v1/vouchers?`;
+
+//Tour APIs
+export const URL_GetTours = `${API_BASE_URL}/api/v1/tours?`;
 
 //Referral APIs
 export const URL_GetReferralStats = `${API_BASE_URL}/api/v1/users/referral`;

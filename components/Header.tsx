@@ -1,7 +1,7 @@
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface HeaderProps {
@@ -28,9 +28,21 @@ export default function Header({
           isDark ? "bg-[#1E222B] border-b border-slate-800" : "bg-[#E51F27]"
         }`}
       >
-        <Text className="text-white font-black text-lg tracking-wider uppercase">
-          {title}
-        </Text>
+        {title === "BENTHANH TOURIST" ? (
+          <Image
+            source={
+              isDark
+                ? require("../assets/images/Logo_BTT-2018-02.png")
+                : require("../assets/images/Logo_BTT-2018.jpg")
+            }
+            style={{ width: 140, height: 35 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Text className="text-white font-black text-lg tracking-wider uppercase">
+            {title}
+          </Text>
+        )}
 
         {showActions && (
           /* Group Header Actions */

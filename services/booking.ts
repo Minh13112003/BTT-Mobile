@@ -4,6 +4,13 @@ import { apiService } from "./api/interceptor";
 
 // Thống nhất dữ liệu Mock và hàm dịch vụ Booking
 
+interface Booking{
+  idTour : string,
+  quantity : number,
+  voucherCode : string,
+  notice: string
+}
+
 export const getDashboardOverview = async (): Promise<{ data: any }> => {
   /*
   // Giả lập độ trễ của API
@@ -33,7 +40,7 @@ export const getDashboardOverview = async (): Promise<{ data: any }> => {
   return { data: response.data };
 };
 
-export const getTransactionHistory = async (): Promise<{ data: any[] }> => {
+export function getTransactionHistory(page: number, limit: number) {
   /*
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -75,51 +82,13 @@ export const getTransactionHistory = async (): Promise<{ data: any[] }> => {
     ],
   };
   */
-  const response = await apiService.get(urls.URL_TransactionHistory);
-  return { data: response.data };
-};
+  return apiService.get(urls.URL_TransactionHistory + `page=${page}&limit=${limit}`);
+}
 
-export const getTours = async (): Promise<{ data: any[] }> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+export function getBookingById(id: string) {
+  return apiService.get(urls.URL_GetBookingById + id);
+}
 
-  return {
-    data: [
-      {
-        id: "t1",
-        name: "Du lịch Hàn Quốc (Mùa Hoa Anh Đào): Seoul - Nami - Everland - Công viên Yeouido",
-        imageUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500",
-        price: 15990000,
-        duration: "5 Ngày 4 Đêm",
-        rating: 4.9,
-        reviewsCount: 124,
-      },
-      {
-        id: "t2",
-        name: "Đà Nẵng - Hội An - Bà Nà Hills 4 Ngày 3 Đêm",
-        imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500",
-        price: 5490000,
-        duration: "4 Ngày 3 Đêm",
-        rating: 4.8,
-        reviewsCount: 95,
-      },
-      {
-        id: "t3",
-        name: "Tour Singapore - Malaysia 5 Ngày 4 Đêm: Sentosa - Genting Highland",
-        imageUrl: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=500",
-        price: 12490000,
-        duration: "5 Ngày 4 Đêm",
-        rating: 4.7,
-        reviewsCount: 82,
-      },
-      {
-        id: "t4",
-        name: "Khám phá Vịnh Hạ Long - Kỳ quan thiên nhiên thế giới du thuyền 5 sao",
-        imageUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?w=500",
-        price: 3250000,
-        duration: "2 Ngày 1 Đêm",
-        rating: 4.9,
-        reviewsCount: 156,
-      },
-    ],
-  };
-};
+export function booking(bookingData : Booking){
+  return apiService.post(urls.URL_Booking, bookingData);
+}

@@ -1,9 +1,12 @@
 import Header from "@/components/Header";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
+import { formatDateTime } from "@/helper/datetime_helper";
 import { getTransactionHistory } from "@/services/booking";
+import { TourItem } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
@@ -19,90 +22,91 @@ import {
 // Định nghĩa kiểu dữ liệu đơn hàng
 interface OrderItem {
   id: string;
-  orderCode: string;
-  tourName: string;
-  imageUrl: string;
+  tour: TourItem;
+  quantity: number;
+  originalPrice?: number;
+  discountAmount?: number;
   price: number;
-  currency: string;
+  voucher?: {
+    id: string;
+    code: string;
+    title: string;
+    subtitle: string;
+    expiry: string;
+    tag: string;
+    description: string;
+    value?: number;
+    max?: number;
+    status?: boolean;
+    reuse?: boolean;
+  };
+  notice?: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
   status: string;
-  hasVat: boolean;
-  bookingDate: string;
 }
 
 export default function HistoryScreen() {
+  const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const LIMIT = 5;
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   // Tải danh sách đơn hàng từ booking service
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNumber = 1, isLoadMore = false) => {
     try {
       setError("");
-      const res = await getTransactionHistory();
-      if (res.data) {
-        setOrders(res.data);
+
+      const res = await getTransactionHistory(pageNumber, LIMIT);
+
+      if (res?.data) {
+        const items = Array.isArray(res.data.items) ? res.data.items : [];
+
+        const meta = res.data.meta;
+
+        setOrders((prev) => (isLoadMore ? [...prev, ...items] : items));
+
+        setHasNext(meta?.hasNext ?? false);
       }
     } catch (err: any) {
       console.error("Lỗi khi tải lịch sử giao dịch:", err);
-      // Sử dụng mock data dự phòng
-      setOrders([
-        {
-          id: "1",
-          orderCode: "BTTDHCMKHOA20260327",
-          tourName:
-            "Du lịch Hàn Quốc (Mùa Hoa Anh Đào): Seoul - Nami - Everland - Công viên Yeouido",
-          imageUrl:
-            "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500",
-          price: 15990000,
-          currency: "VND",
-          status: "Đã nhận hàng",
-          hasVat: true,
-          bookingDate: "2026-06-03",
-        },
-        {
-          id: "2",
-          orderCode: "BTTDHCMKHOA20260328",
-          tourName: "Đà Nẵng - Hội An - Bà Nà Hills 4 Ngày 3 Đêm",
-          imageUrl:
-            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500",
-          price: 5490000,
-          currency: "VND",
-          status: "Đã nhận hàng",
-          hasVat: true,
-          bookingDate: "2026-06-03",
-        },
-        {
-          id: "3",
-          orderCode: "BTTDHCMKHOA20260329",
-          tourName:
-            "Tour Singapore - Malaysia 5 Ngày 4 Đêm: Sentosa - Genting Highland",
-          imageUrl:
-            "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=500",
-          price: 12490000,
-          currency: "VND",
-          status: "Chờ xử lý",
-          hasVat: false,
-          bookingDate: "2026-06-02",
-        },
-      ]);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(1);
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchOrders();
+    setPage(1);
+    fetchOrders(1);
+  };
+
+  const handleLoadMore = async () => {
+    if (!hasNext || loadingMore) return;
+
+    const nextPage = page + 1;
+
+    setLoadingMore(true);
+    setPage(nextPage);
+
+    await fetchOrders(nextPage, true);
   };
 
   const formatCurrency = (value: number) => {
@@ -173,7 +177,7 @@ export default function HistoryScreen() {
                       <Text
                         className={`text-xs font-bold mt-0.5 ${isDark ? "text-slate-200" : "text-slate-700"}`}
                       >
-                        #{item.orderCode}
+                        #{item.id}
                       </Text>
                     </View>
                     <View
@@ -207,7 +211,7 @@ export default function HistoryScreen() {
                   {/* Body info card: image, name, price */}
                   <View className="flex-row items-center py-2">
                     <Image
-                      source={{ uri: item.imageUrl }}
+                      source={{ uri: item.tour.imageUrl }}
                       className="w-16 h-16 rounded-xl bg-slate-900/10"
                       resizeMode="cover"
                     />
@@ -218,21 +222,48 @@ export default function HistoryScreen() {
                         }`}
                         numberOfLines={2}
                       >
-                        {item.tourName}
+                        {item.tour.name}
                       </Text>
-                      <View className="flex-row items-center justify-between mt-2">
-                        <Text
-                          className={`text-sm font-black ${
-                            isDark ? "text-slate-200" : "text-[#E51F27]"
-                          }`}
-                        >
-                          {formatCurrency(item.price)}
-                        </Text>
-                        {item.hasVat && (
+                      <View className="flex-row items-start justify-between mt-2">
+                        <View className="flex-1 mr-2">
+                          {item.discountAmount && item.discountAmount > 0 ? (
+                            <View className="flex-row items-center flex-wrap">
+                              <Text
+                                className={`text-sm font-black mr-2 ${
+                                  isDark ? "text-slate-200" : "text-[#E51F27]"
+                                }`}
+                              >
+                                {formatCurrency(item.price)}
+                              </Text>
+                              <Text className="text-[10px] text-slate-400 line-through mr-1.5">
+                                {formatCurrency(item.originalPrice || 0)}
+                              </Text>
+                              <Text className="text-[10px] text-green-500 font-bold">
+                                -{formatCurrency(item.discountAmount)}
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text
+                              className={`text-sm font-black ${
+                                isDark ? "text-slate-200" : "text-[#E51F27]"
+                              }`}
+                            >
+                              {formatCurrency(item.price)}
+                            </Text>
+                          )}
+                          <Text
+                            className={`text-[10px] mt-0.5 ${
+                              isDark ? "text-slate-400" : "text-slate-500"
+                            }`}
+                          >
+                            Số lượng: {item.quantity} | {item.tour.duration}
+                          </Text>
+                        </View>
+                        {item.tour.hasVat && (
                           <View
-                            className={`border px-1.5 py-0.5 rounded ${
+                            className={`self-start px-2 py-1 rounded-full border ${
                               isDark
-                                ? "border-slate-650 bg-slate-700 border-slate-600"
+                                ? "border-slate-600 bg-slate-700"
                                 : "border-red-200 bg-red-50"
                             }`}
                           >
@@ -249,6 +280,55 @@ export default function HistoryScreen() {
                     </View>
                   </View>
 
+                  {/* Voucher & Notice details if present */}
+                  {((item as any).voucher || (item as any).notice) && (
+                    <View
+                      className={`mt-2 p-3 rounded-2xl border ${
+                        isDark
+                          ? "bg-slate-900/40 border-slate-700/40"
+                          : "bg-slate-50 border-slate-100"
+                      }`}
+                    >
+                      {(item as any).voucher && (
+                        <View className="flex-row items-center mb-1">
+                          <Ionicons
+                            name="gift-outline"
+                            size={12}
+                            color={isDark ? "#93C5FD" : "#E51F27"}
+                          />
+                          <Text
+                            className={`text-[10px] font-bold ml-1.5 ${
+                              isDark ? "text-slate-300" : "text-slate-600"
+                            }`}
+                          >
+                            Voucher:{" "}
+                            <Text className="font-extrabold text-blue-500 dark:text-blue-400">
+                              {(item as any).voucher.code}
+                            </Text>{" "}
+                            ({(item as any).voucher.title})
+                          </Text>
+                        </View>
+                      )}
+                      {(item as any).notice && (
+                        <View className="flex-row items-start mt-0.5">
+                          <Ionicons
+                            name="chatbox-ellipses-outline"
+                            size={12}
+                            color={isDark ? "#94A3B8" : "#64748B"}
+                            style={{ marginTop: 1 }}
+                          />
+                          <Text
+                            className={`text-[10px] ml-1.5 flex-1 italic ${
+                              isDark ? "text-slate-400" : "text-slate-500"
+                            }`}
+                          >
+                            Ghi chú: {(item as any).notice}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
                   {/* Divider */}
                   <View
                     className={`h-[1px] my-2 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
@@ -257,9 +337,15 @@ export default function HistoryScreen() {
                   {/* Footer info card: booking date */}
                   <View className="flex-row justify-between items-center mt-1">
                     <Text className="text-[10px] text-slate-400 font-semibold">
-                      Ngày đặt: {item.bookingDate}
+                      Ngày đặt: {formatDateTime(item.createdAt)}
                     </Text>
                     <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/detailTour" as any,
+                          params: { id: item.id },
+                        })
+                      }
                       activeOpacity={0.7}
                       className={`flex-row items-center px-3 py-1.5 rounded-xl border ${
                         isDark
