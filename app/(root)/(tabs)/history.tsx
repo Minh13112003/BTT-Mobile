@@ -162,11 +162,10 @@ export default function HistoryScreen() {
               orders.map((item) => (
                 <View
                   key={item.id}
-                  className={`p-4 rounded-[24px] mb-4 border ${
-                    isDark
-                      ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
-                      : "bg-white border-slate-100 shadow-sm"
-                  }`}
+                  className={`p-4 rounded-[24px] mb-4 border ${isDark
+                    ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
+                    : "bg-white border-slate-100 shadow-sm"
+                    }`}
                 >
                   {/* Top info card: code, date, status */}
                   <View className="flex-row justify-between items-center mb-3">
@@ -181,22 +180,20 @@ export default function HistoryScreen() {
                       </Text>
                     </View>
                     <View
-                      className={`px-2.5 py-1 rounded-xl ${
-                        isDark
-                          ? "bg-slate-750 bg-slate-700"
-                          : item.status === "Đã nhận hàng"
-                            ? "bg-green-50"
-                            : "bg-amber-50"
-                      }`}
+                      className={`px-2.5 py-1 rounded-xl ${isDark
+                        ? "bg-slate-750 bg-slate-700"
+                        : item.status === "Đã nhận hàng"
+                          ? "bg-green-50"
+                          : "bg-amber-50"
+                        }`}
                     >
                       <Text
-                        className={`text-[10px] font-black uppercase ${
-                          isDark
-                            ? "text-slate-200"
-                            : item.status === "Đã nhận hàng"
-                              ? "text-green-600"
-                              : "text-amber-600"
-                        }`}
+                        className={`text-[10px] font-black uppercase ${isDark
+                          ? "text-slate-200"
+                          : item.status === "Đã nhận hàng"
+                            ? "text-green-600"
+                            : "text-amber-600"
+                          }`}
                       >
                         {item.status}
                       </Text>
@@ -217,9 +214,8 @@ export default function HistoryScreen() {
                     />
                     <View className="flex-1 ml-3.5">
                       <Text
-                        className={`text-xs font-black leading-4 ${
-                          isDark ? "text-slate-100" : "text-slate-800"
-                        }`}
+                        className={`text-xs font-black leading-4 ${isDark ? "text-slate-100" : "text-slate-800"
+                          }`}
                         numberOfLines={2}
                       >
                         {item.tour.name}
@@ -227,50 +223,47 @@ export default function HistoryScreen() {
                       <View className="flex-row items-start justify-between mt-2">
                         <View className="flex-1 mr-2">
                           {item.discountAmount && item.discountAmount > 0 ? (
-                            <View className="flex-row items-center flex-wrap">
-                              <Text
-                                className={`text-sm font-black mr-2 ${
-                                  isDark ? "text-slate-200" : "text-[#E51F27]"
-                                }`}
-                              >
-                                {formatCurrency(item.price)}
-                              </Text>
-                              <Text className="text-[10px] text-slate-400 line-through mr-1.5">
-                                {formatCurrency(item.originalPrice || 0)}
-                              </Text>
+                            <View className="flex-row items-start flex-wrap">
+                              <View className="flex-row items-center">
+                                <Text
+                                  className={`text-sm font-black mr-2 ${isDark ? "text-slate-200" : "text-[#E51F27]"
+                                    }`}
+                                >
+                                  {formatCurrency(item.price)}
+                                </Text>
+                                <Text className="text-[10px] text-slate-400 line-through mr-1.5">
+                                  {formatCurrency(item.originalPrice || 0)}
+                                </Text>
+                              </View>
                               <Text className="text-[10px] text-green-500 font-bold">
                                 -{formatCurrency(item.discountAmount)}
                               </Text>
                             </View>
                           ) : (
                             <Text
-                              className={`text-sm font-black ${
-                                isDark ? "text-slate-200" : "text-[#E51F27]"
-                              }`}
+                              className={`text-sm font-black ${isDark ? "text-slate-200" : "text-[#E51F27]"
+                                }`}
                             >
                               {formatCurrency(item.price)}
                             </Text>
                           )}
                           <Text
-                            className={`text-[10px] mt-0.5 ${
-                              isDark ? "text-slate-400" : "text-slate-500"
-                            }`}
+                            className={`text-[10px] mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"
+                              }`}
                           >
                             Số lượng: {item.quantity} | {item.tour.duration}
                           </Text>
                         </View>
                         {item.tour.hasVat && (
                           <View
-                            className={`self-start px-2 py-1 rounded-full border ${
-                              isDark
-                                ? "border-slate-600 bg-slate-700"
-                                : "border-red-200 bg-red-50"
-                            }`}
+                            className={`self-start px-2 py-1 rounded-full border ${isDark
+                              ? "border-slate-600 bg-slate-700"
+                              : "border-red-200 bg-red-50"
+                              }`}
                           >
                             <Text
-                              className={`text-[8px] font-black uppercase ${
-                                isDark ? "text-slate-300" : "text-red-500"
-                              }`}
+                              className={`text-[8px] font-black uppercase ${isDark ? "text-slate-300" : "text-red-500"
+                                }`}
                             >
                               Đã xuất VAT
                             </Text>
@@ -283,11 +276,10 @@ export default function HistoryScreen() {
                   {/* Voucher & Notice details if present */}
                   {((item as any).voucher || (item as any).notice) && (
                     <View
-                      className={`mt-2 p-3 rounded-2xl border ${
-                        isDark
-                          ? "bg-slate-900/40 border-slate-700/40"
-                          : "bg-slate-50 border-slate-100"
-                      }`}
+                      className={`mt-2 p-3 rounded-2xl border ${isDark
+                        ? "bg-slate-900/40 border-slate-700/40"
+                        : "bg-slate-50 border-slate-100"
+                        }`}
                     >
                       {(item as any).voucher && (
                         <View className="flex-row items-center mb-1">
@@ -297,9 +289,8 @@ export default function HistoryScreen() {
                             color={isDark ? "#93C5FD" : "#E51F27"}
                           />
                           <Text
-                            className={`text-[10px] font-bold ml-1.5 ${
-                              isDark ? "text-slate-300" : "text-slate-600"
-                            }`}
+                            className={`text-[10px] font-bold ml-1.5 ${isDark ? "text-slate-300" : "text-slate-600"
+                              }`}
                           >
                             Voucher:{" "}
                             <Text className="font-extrabold text-blue-500 dark:text-blue-400">
@@ -318,9 +309,8 @@ export default function HistoryScreen() {
                             style={{ marginTop: 1 }}
                           />
                           <Text
-                            className={`text-[10px] ml-1.5 flex-1 italic ${
-                              isDark ? "text-slate-400" : "text-slate-500"
-                            }`}
+                            className={`text-[10px] ml-1.5 flex-1 italic ${isDark ? "text-slate-400" : "text-slate-500"
+                              }`}
                           >
                             Ghi chú: {(item as any).notice}
                           </Text>
@@ -347,11 +337,10 @@ export default function HistoryScreen() {
                         })
                       }
                       activeOpacity={0.7}
-                      className={`flex-row items-center px-3 py-1.5 rounded-xl border ${
-                        isDark
-                          ? "bg-slate-700 border-slate-600"
-                          : "bg-slate-50 border-slate-100"
-                      }`}
+                      className={`flex-row items-center px-3 py-1.5 rounded-xl border ${isDark
+                        ? "bg-slate-700 border-slate-600"
+                        : "bg-slate-50 border-slate-100"
+                        }`}
                     >
                       <Ionicons
                         name="eye-outline"
@@ -359,9 +348,8 @@ export default function HistoryScreen() {
                         color={isDark ? "#E5E7EB" : "#64748B"}
                       />
                       <Text
-                        className={`text-[10px] font-bold ml-1 ${
-                          isDark ? "text-slate-200" : "text-slate-600"
-                        }`}
+                        className={`text-[10px] font-bold ml-1 ${isDark ? "text-slate-200" : "text-slate-600"
+                          }`}
                       >
                         Chi tiết đơn
                       </Text>
@@ -371,11 +359,10 @@ export default function HistoryScreen() {
               ))
             ) : (
               <View
-                className={`rounded-[24px] p-8 items-center justify-center border border-dashed mt-4 ${
-                  isDark
-                    ? "bg-slate-800/40 border-slate-700"
-                    : "bg-white border-slate-200"
-                }`}
+                className={`rounded-[24px] p-8 items-center justify-center border border-dashed mt-4 ${isDark
+                  ? "bg-slate-800/40 border-slate-700"
+                  : "bg-white border-slate-200"
+                  }`}
               >
                 <Ionicons name="receipt-outline" size={48} color="#94A3B8" />
                 <Text
