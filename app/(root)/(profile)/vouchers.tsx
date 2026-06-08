@@ -1,6 +1,7 @@
 import { useTheme } from "@/context/Theme_Context";
 import { getVouchers, VoucherItem } from "@/services/voucher";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,14 +9,12 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Clipboard,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 export default function VouchersScreen() {
   const router = useRouter();
   const [vouchers, setVouchers] = useState<VoucherItem[]>([]);
@@ -29,11 +28,9 @@ export default function VouchersScreen() {
       try {
         setLoading(true);
         const res = await getVouchers(1, 20);
-        const voucherData = Array.isArray(res.data)
-          ? res.data
-          : (res.data && Array.isArray(res.data.data))
-            ? res.data.data
-            : [];
+        const voucherData = Array.isArray(res.data?.items)
+          ? res.data.items
+          : [];
         setVouchers(voucherData);
       } catch (error) {
         console.error("Lỗi khi tải vouchers:", error);
@@ -47,7 +44,7 @@ export default function VouchersScreen() {
   }, []);
 
   const handleCopyCode = (code: string) => {
-    Clipboard.setString(code);
+    Clipboard.setStringAsync(code);
     Alert.alert("Thành công", `Đã sao chép mã voucher: ${code}`);
   };
 

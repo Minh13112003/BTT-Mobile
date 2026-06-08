@@ -35,7 +35,7 @@ export default function Header({
                 ? require("../assets/images/Logo_BTT-2018-02.png")
                 : require("../assets/images/Logo_BTT-2018.jpg")
             }
-            style={{ width: 140, height: 35 }}
+            style={{ width: 180, height: 46 }}
             resizeMode="contain"
           />
         ) : (

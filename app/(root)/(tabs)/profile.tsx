@@ -58,7 +58,7 @@ export default function ProfileScreen() {
         style="light"
         backgroundColor={isDark ? "#1E222B" : "#E51F27"}
       />
-      <Header title="TRANG CÁ NHÂN" showActions={true} />
+      <Header title="BENTHANH TOURIST" showActions={true} />
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}

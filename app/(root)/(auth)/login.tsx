@@ -1,13 +1,14 @@
 import { useAuth } from "@/context/Auth_Context";
+import { useTheme } from "@/context/Theme_Context";
 import { login } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,7 +18,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/context/Theme_Context";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -114,17 +114,36 @@ export default function LoginScreen() {
           >
             {/* Header Section */}
             <View className="items-center mb-8">
+              {/* Logo BTT thay cho icon */}
               <View
-                className={`w-20 h-20 rounded-[24px] items-center justify-center mb-4 shadow-lg border ${
-                  isDark
-                    ? "bg-slate-700 border-slate-600 shadow-black/30"
-                    : "bg-blue-600 border-blue-500 shadow-blue-600/30"
-                }`}
+                style={{
+                  width: 160,
+                  height: 80,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 20,
+                  backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
+                  borderWidth: 2,
+                  borderColor: isDark
+                    ? "rgba(71,85,105,0.6)"
+                    : "rgba(229,31,39,0.15)",
+                  shadowColor: isDark ? "#000" : "#E51F27",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: isDark ? 0.4 : 0.18,
+                  shadowRadius: 14,
+                  elevation: 8,
+                  padding: 10,
+                }}
               >
-                <Ionicons
-                  name="shield-checkmark"
-                  size={38}
-                  color={isDark ? "#E5E7EB" : "#FFFFFF"}
+                <Image
+                  source={
+                    isDark
+                      ? require("D:/App Mobile/MyFirstApp/assets/images/Logo_BTT-2018-02.png")
+                      : require("D:/App Mobile/MyFirstApp/assets/images/Logo_BTT-2018.jpg")
+                  }
+                  style={{ width: 140, height: 60 }}
+                  resizeMode="contain"
                 />
               </View>
 
@@ -133,7 +152,7 @@ export default function LoginScreen() {
                   isDark ? "text-slate-100" : "text-blue-900 color-[#1E3A8A]"
                 }`}
               >
-                Welcome Back
+                BENTHANH TOURIST
               </Text>
 
               <Text
@@ -177,8 +196,12 @@ export default function LoginScreen() {
                   size={20}
                   color={
                     isDark
-                      ? focusedField === "identity" ? "#F3F4F6" : "#6B7280"
-                      : focusedField === "identity" ? "#3B82F6" : "#94A3B8"
+                      ? focusedField === "identity"
+                        ? "#F3F4F6"
+                        : "#6B7280"
+                      : focusedField === "identity"
+                        ? "#3B82F6"
+                        : "#94A3B8"
                   }
                 />
                 <TextInput
@@ -223,8 +246,12 @@ export default function LoginScreen() {
                   size={20}
                   color={
                     isDark
-                      ? focusedField === "password" ? "#F3F4F6" : "#6B7280"
-                      : focusedField === "password" ? "#3B82F6" : "#94A3B8"
+                      ? focusedField === "password"
+                        ? "#F3F4F6"
+                        : "#6B7280"
+                      : focusedField === "password"
+                        ? "#3B82F6"
+                        : "#94A3B8"
                   }
                 />
                 <TextInput

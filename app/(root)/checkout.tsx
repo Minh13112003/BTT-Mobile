@@ -413,7 +413,7 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          {showVoucherList && (
+          {vouchers && (
             <View className="mt-5 border-t border-slate-100/50 pt-4">
               {/* Input Voucher */}
               <View className="mb-5">
