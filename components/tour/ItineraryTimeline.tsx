@@ -1,0 +1,55 @@
+import { useTheme } from "@/context/Theme_Context";
+import { ItineraryDay } from "@/services/tour";
+import React from "react";
+import { Text, View } from "react-native";
+
+/** Vertical day-by-day timeline for the tour itinerary. */
+export function ItineraryTimeline({ items }: { items: ItineraryDay[] }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <View className="mt-1.5 pl-1">
+      {items.map((it, i) => {
+        const last = i === items.length - 1;
+        return (
+          <View key={i} className="flex-row">
+            {/* Rail: dot + connecting line */}
+            <View className="items-center mr-3" style={{ width: 16 }}>
+              <View
+                className="w-4 h-4 rounded-full items-center justify-center border-2 border-[#E51F27]"
+                style={{ backgroundColor: isDark ? "#121620" : "#F4F7FB" }}
+              >
+                <View className="w-1.5 h-1.5 rounded-full bg-[#E51F27]" />
+              </View>
+              {!last && (
+                <View
+                  className="flex-1 w-0.5 mt-1"
+                  style={{ backgroundColor: isDark ? "#2A3142" : "#E2E8F0" }}
+                />
+              )}
+            </View>
+
+            {/* Content */}
+            <View className={`flex-1 ${last ? "" : "pb-4"}`}>
+              <Text className={`text-xs font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                {it.day}
+                {it.title ? ` · ${it.title}` : ""}
+              </Text>
+              <Text className={`text-[11px] leading-5 mt-1 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                {it.route}
+              </Text>
+              {it.meals ? (
+                <View className={`self-start mt-1.5 px-2 py-1 rounded-lg ${isDark ? "bg-green-500/10" : "bg-green-50"}`}>
+                  <Text className={`text-[9.5px] font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}>
+                    🍽 {it.meals}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}

@@ -261,7 +261,7 @@ export default function HomeScreen() {
                           activeOpacity={0.8}
                           onPress={() => {
                             router.push({
-                              pathname: "/(root)/checkout",
+                              pathname: "/(root)/tour/[id]",
                               params: {
                                 id: item.id,
                                 name: item.name,
@@ -281,7 +281,7 @@ export default function HomeScreen() {
                           }`}
                         >
                           <Text className="text-white font-bold text-xs">
-                            Đặt ngay
+                            Xem chi tiết
                           </Text>
                         </TouchableOpacity>
                       </View>

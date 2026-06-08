@@ -1,0 +1,189 @@
+import { BookingBar } from "@/components/tour/BookingBar";
+import { HighlightChips } from "@/components/tour/HighlightChips";
+import { ItineraryTimeline } from "@/components/tour/ItineraryTimeline";
+import { TermsAccordion } from "@/components/tour/TermsAccordion";
+import { TourHero } from "@/components/tour/TourHero";
+import { TripInfoCard } from "@/components/tour/TripInfoCard";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { getPalette } from "@/constants/theme";
+import { useTheme } from "@/context/Theme_Context";
+import { useTourDetail } from "@/hooks/useTourDetail";
+import { TourItem } from "@/services/tour";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useMemo } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+export default function TourDetailScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    id?: string;
+    name?: string;
+    imageUrl?: string;
+    price?: string;
+    duration?: string;
+    rating?: string;
+    reviewsCount?: string;
+    hasVat?: string;
+  }>();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const palette = getPalette(isDark);
+  const insets = useSafeAreaInsets();
+
+  const id = params.id;
+
+  // Basic fields passed from the list let the screen render even if the
+  // detail endpoint is slow or unavailable.
+  const fallback: TourItem | null = useMemo(() => {
+    if (!params.name) return null;
+    return {
+      id: id ?? "",
+      name: params.name,
+      imageUrl: params.imageUrl ?? "",
+      imagePublicId: "",
+      price: params.price ? parseFloat(params.price) : 0,
+      duration: params.duration ?? "",
+      rating: params.rating ? parseFloat(params.rating) : 0,
+      reviewsCount: params.reviewsCount ? parseInt(params.reviewsCount, 10) : 0,
+      hasVat: params.hasVat === "true",
+    };
+  }, [
+    id,
+    params.name,
+    params.imageUrl,
+    params.price,
+    params.duration,
+    params.rating,
+    params.reviewsCount,
+    params.hasVat,
+  ]);
+
+  const { tour, loading, error, refetch } = useTourDetail(id, fallback);
+
+  const goCheckout = () => {
+    if (!tour) return;
+    router.push({
+      pathname: "/(root)/checkout",
+      params: {
+        id: tour.id,
+        name: tour.name,
+        imageUrl: tour.imageUrl,
+        price: String(tour.price),
+        duration: tour.duration,
+        rating: String(tour.rating),
+        reviewsCount: String(tour.reviewsCount),
+        hasVat: tour.hasVat ? "true" : "false",
+      },
+    });
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ position: "absolute", top: insets.top + 6, left: 14, zIndex: 10 }}
+          className={`w-10 h-10 rounded-full items-center justify-center ${
+            isDark ? "bg-slate-800" : "bg-white"
+          }`}
+        >
+          <Ionicons name="chevron-back" size={20} color={palette.icon} />
+        </TouchableOpacity>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={palette.spinner} />
+          <Text className={`text-sm font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            Đang tải chi tiết tour...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error || !tour) {
+    return (
+      <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: insets.top }}>
+          <Ionicons name="alert-circle-outline" size={64} color={isDark ? "#EF4444" : "#DC2626"} />
+          <Text className={`text-base font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+            {error || "Không tìm thấy thông tin tour"}
+          </Text>
+          <View className="flex-row mt-6 gap-3">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className={`px-6 py-2.5 rounded-full border ${
+                isDark ? "border-slate-700" : "border-slate-300"
+              }`}
+            >
+              <Text className={`font-bold text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                Quay lại
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={refetch} className="px-6 py-2.5 rounded-full bg-[#E51F27]">
+              <Text className="text-white font-bold text-sm">Thử lại</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 110 }}
+      >
+        <TourHero tour={tour} onBack={() => router.back()} />
+
+        <View className="px-4 -mt-2">
+          <Text className={`text-[17px] font-black leading-6 ${isDark ? "text-slate-50" : "text-slate-900"}`}>
+            {tour.name}
+          </Text>
+
+          <View className="flex-row items-center mt-2">
+            {tour.code ? (
+              <>
+                <Text className="text-[11.5px] text-slate-400">Mã: {tour.code}</Text>
+                <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
+              </>
+            ) : null}
+            <Text className="text-[11.5px] text-slate-400">
+              {tour.hasVat ? "Đã gồm VAT" : "Chưa gồm VAT"}
+            </Text>
+          </View>
+
+          <HighlightChips items={tour.highlights} />
+
+          <TripInfoCard tour={tour} />
+
+          {tour.itinerary?.length ? (
+            <Card className="mt-4">
+              <SectionTitle title="Lịch trình" />
+              <ItineraryTimeline items={tour.itinerary} />
+            </Card>
+          ) : null}
+
+          <View className="mt-5">
+            <SectionTitle title="Điều khoản & Lưu ý chung" />
+            <TermsAccordion />
+          </View>
+        </View>
+      </ScrollView>
+
+      <BookingBar price={tour.price} onPress={goCheckout} />
+    </View>
+  );
+}

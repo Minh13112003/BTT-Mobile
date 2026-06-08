@@ -26,6 +26,7 @@ export const URL_GetVouchers = `${API_BASE_URL}/api/v1/vouchers?`;
 
 //Tour APIs
 export const URL_GetTours = `${API_BASE_URL}/api/v1/tours?`;
+export const URL_GetTourById = `${API_BASE_URL}/api/v1/tours/`;
 
 //Referral APIs
 export const URL_GetReferralStats = `${API_BASE_URL}/api/v1/users/referral`;

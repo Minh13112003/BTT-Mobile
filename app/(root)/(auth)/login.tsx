@@ -139,8 +139,8 @@ export default function LoginScreen() {
                 <Image
                   source={
                     isDark
-                      ? require("D:/App Mobile/MyFirstApp/assets/images/Logo_BTT-2018-02.png")
-                      : require("D:/App Mobile/MyFirstApp/assets/images/Logo_BTT-2018.jpg")
+                      ? require("../../../assets/images/Logo_BTT-2018-02.png")
+                      : require("../../../assets/images/Logo_BTT-2018.jpg")
                   }
                   style={{ width: 140, height: 60 }}
                   resizeMode="contain"
