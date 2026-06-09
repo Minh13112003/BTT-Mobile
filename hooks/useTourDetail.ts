@@ -1,8 +1,7 @@
 import {
   getTourById,
   normalizeTourDetail,
-  TourDetail,
-  TourItem,
+  TourDetail
 } from "@/services/tour";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -20,7 +19,7 @@ interface TourDetailState {
  * background, so navigating from the list feels instant and still degrades
  * gracefully if the detail endpoint is slow or unavailable.
  */
-export function useTourDetail(id?: string, fallback?: TourItem | null) {
+export function useTourDetail(id?: string, fallback?: TourDetail | null) {
   const [state, setState] = useState<TourDetailState>(() =>
     fallback?.id
       ? { tour: normalizeTourDetail(fallback), loading: false, error: null }
@@ -36,9 +35,17 @@ export function useTourDetail(id?: string, fallback?: TourItem | null) {
 
     if (!id) {
       if (fb?.id) {
-        setState({ tour: normalizeTourDetail(fb), loading: false, error: null });
+        setState({
+          tour: normalizeTourDetail(fb),
+          loading: false,
+          error: null,
+        });
       } else {
-        setState({ tour: null, loading: false, error: "Không tìm thấy mã tour" });
+        setState({
+          tour: null,
+          loading: false,
+          error: "Không tìm thấy mã tour",
+        });
       }
       return;
     }
@@ -50,16 +57,32 @@ export function useTourDetail(id?: string, fallback?: TourItem | null) {
       const res = await getTourById(id);
       const data = res?.data?.data ?? res?.data?.item ?? res?.data;
       if (data?.id) {
-        setState({ tour: normalizeTourDetail(data), loading: false, error: null });
+        setState({
+          tour: normalizeTourDetail(data),
+          loading: false,
+          error: null,
+        });
       } else if (fb?.id) {
-        setState({ tour: normalizeTourDetail(fb), loading: false, error: null });
+        setState({
+          tour: normalizeTourDetail(fb),
+          loading: false,
+          error: null,
+        });
       } else {
-        setState({ tour: null, loading: false, error: "Không tìm thấy thông tin tour" });
+        setState({
+          tour: null,
+          loading: false,
+          error: "Không tìm thấy thông tin tour",
+        });
       }
     } catch (err) {
       console.error("Lỗi khi tải chi tiết tour:", err);
       if (fb?.id) {
-        setState({ tour: normalizeTourDetail(fb), loading: false, error: null });
+        setState({
+          tour: normalizeTourDetail(fb),
+          loading: false,
+          error: null,
+        });
       } else {
         setState({
           tour: null,

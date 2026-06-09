@@ -1,10 +1,10 @@
 import { useTheme } from "@/context/Theme_Context";
-import { ItineraryDay } from "@/services/tour";
+import { TourSchedule } from "@/services/tour";
 import React from "react";
 import { Text, View } from "react-native";
 
 /** Vertical day-by-day timeline for the tour itinerary. */
-export function ItineraryTimeline({ items }: { items: ItineraryDay[] }) {
+export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -32,16 +32,19 @@ export function ItineraryTimeline({ items }: { items: ItineraryDay[] }) {
 
             {/* Content */}
             <View className={`flex-1 ${last ? "" : "pb-4"}`}>
-              <Text className={`text-xs font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-                {it.day}
+              <Text
+                className={`text-xs font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
+              >
+                {it.dayNumber}
                 {it.title ? ` · ${it.title}` : ""}
               </Text>
-              <Text className={`text-[11px] leading-5 mt-1 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                {it.route}
-              </Text>
               {it.meals ? (
-                <View className={`self-start mt-1.5 px-2 py-1 rounded-lg ${isDark ? "bg-green-500/10" : "bg-green-50"}`}>
-                  <Text className={`text-[9.5px] font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}>
+                <View
+                  className={`self-start mt-1.5 px-2 py-1 rounded-lg ${isDark ? "bg-green-500/10" : "bg-green-50"}`}
+                >
+                  <Text
+                    className={`text-[9.5px] font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}
+                  >
                     🍽 {it.meals}
                   </Text>
                 </View>

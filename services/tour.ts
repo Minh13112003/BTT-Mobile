@@ -13,12 +13,20 @@ export interface TourItem {
   hasVat: boolean;
 }
 
-export interface ItineraryDay {
-  day: string;
-  title?: string;
-  route: string;
-  meals?: string;
+export interface TourSchedule {
+  id: string;
+  tourId: string;
+  dayNumber: number;
+  title: string;
+  morning?: string | null;
+  noon?: string | null;
+  afternoon?: string | null;
+  evening?: string | null;
+  night?: string | null;
+  meals: string[];
 }
+
+
 
 /**
  * Extended tour fields returned by the API for the tour detail screen.
@@ -35,7 +43,7 @@ export interface TourDetail extends TourItem {
   included?: string[];
   notIncluded?: string[];
   notes?: string;
-  itinerary?: ItineraryDay[];
+  schedules?: TourSchedule[];
   singleRoomSupplement?: number;
 }
 
@@ -76,15 +84,19 @@ const DEFAULT_NOTES =
  * with sensible defaults and leaving genuinely tour-specific sections
  * (itinerary, highlights) undefined when absent so they can be hidden.
  */
-export function normalizeTourDetail(raw: Partial<TourDetail> & TourItem): TourDetail {
+export function normalizeTourDetail(
+  raw: Partial<TourDetail> & TourItem,
+): TourDetail {
   return {
     ...raw,
     departureFrom: raw.departureFrom || "TP. Hồ Chí Minh",
     transport: raw.transport || "Máy bay & xe du lịch",
     included: raw.included?.length ? raw.included : DEFAULT_INCLUDED,
-    notIncluded: raw.notIncluded?.length ? raw.notIncluded : DEFAULT_NOT_INCLUDED,
+    notIncluded: raw.notIncluded?.length
+      ? raw.notIncluded
+      : DEFAULT_NOT_INCLUDED,
     notes: raw.notes || DEFAULT_NOTES,
     highlights: raw.highlights?.length ? raw.highlights : undefined,
-    itinerary: raw.itinerary?.length ? raw.itinerary : undefined,
+    schedules: raw.schedules?.length ? raw.schedules : undefined,
   };
 }

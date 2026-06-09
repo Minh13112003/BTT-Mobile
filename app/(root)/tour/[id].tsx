@@ -1,10 +1,9 @@
 import { BookingBar } from "@/components/tour/BookingBar";
 import { HighlightChips } from "@/components/tour/HighlightChips";
-import { ItineraryTimeline } from "@/components/tour/ItineraryTimeline";
 import { TermsAccordion } from "@/components/tour/TermsAccordion";
 import { TourHero } from "@/components/tour/TourHero";
+import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
-import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
 import { useTheme } from "@/context/Theme_Context";
@@ -93,7 +92,12 @@ export default function TourDetailScreen() {
         <StatusBar style={isDark ? "light" : "dark"} />
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ position: "absolute", top: insets.top + 6, left: 14, zIndex: 10 }}
+          style={{
+            position: "absolute",
+            top: insets.top + 6,
+            left: 14,
+            zIndex: 10,
+          }}
           className={`w-10 h-10 rounded-full items-center justify-center ${
             isDark ? "bg-slate-800" : "bg-white"
           }`}
@@ -102,7 +106,9 @@ export default function TourDetailScreen() {
         </TouchableOpacity>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={palette.spinner} />
-          <Text className={`text-sm font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          <Text
+            className={`text-sm font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+          >
             Đang tải chi tiết tour...
           </Text>
         </View>
@@ -114,9 +120,18 @@ export default function TourDetailScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: insets.top }}>
-          <Ionicons name="alert-circle-outline" size={64} color={isDark ? "#EF4444" : "#DC2626"} />
-          <Text className={`text-base font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+        <View
+          className="flex-1 items-center justify-center px-8"
+          style={{ paddingTop: insets.top }}
+        >
+          <Ionicons
+            name="alert-circle-outline"
+            size={64}
+            color={isDark ? "#EF4444" : "#DC2626"}
+          />
+          <Text
+            className={`text-base font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}
+          >
             {error || "Không tìm thấy thông tin tour"}
           </Text>
           <View className="flex-row mt-6 gap-3">
@@ -126,11 +141,16 @@ export default function TourDetailScreen() {
                 isDark ? "border-slate-700" : "border-slate-300"
               }`}
             >
-              <Text className={`font-bold text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              <Text
+                className={`font-bold text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}
+              >
                 Quay lại
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={refetch} className="px-6 py-2.5 rounded-full bg-[#E51F27]">
+            <TouchableOpacity
+              onPress={refetch}
+              className="px-6 py-2.5 rounded-full bg-[#E51F27]"
+            >
               <Text className="text-white font-bold text-sm">Thử lại</Text>
             </TouchableOpacity>
           </View>
@@ -149,14 +169,18 @@ export default function TourDetailScreen() {
         <TourHero tour={tour} onBack={() => router.back()} />
 
         <View className="px-4 -mt-2">
-          <Text className={`text-[17px] font-black leading-6 ${isDark ? "text-slate-50" : "text-slate-900"}`}>
+          <Text
+            className={`text-[17px] font-black leading-6 ${isDark ? "text-slate-50" : "text-slate-900"}`}
+          >
             {tour.name}
           </Text>
 
           <View className="flex-row items-center mt-2">
-            {tour.code ? (
+            {tour.id ? (
               <>
-                <Text className="text-[11.5px] text-slate-400">Mã: {tour.code}</Text>
+                <Text className="text-[11.5px] text-slate-400">
+                  Mã: {tour.id}
+                </Text>
                 <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
               </>
             ) : null}
@@ -169,11 +193,8 @@ export default function TourDetailScreen() {
 
           <TripInfoCard tour={tour} />
 
-          {tour.itinerary?.length ? (
-            <Card className="mt-4">
-              <SectionTitle title="Lịch trình" />
-              <ItineraryTimeline items={tour.itinerary} />
-            </Card>
+          {tour.schedules?.length ? (
+            <TourScheduleAccordion schedules={tour.schedules} />
           ) : null}
 
           <View className="mt-5">

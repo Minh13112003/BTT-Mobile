@@ -1,7 +1,7 @@
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getBookingById } from "@/services/booking";
-import { TourItem } from "@/services/tour";
+import { TourDetail } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,9 +19,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { HighlightChips } from "@/components/tour/HighlightChips";
+import { TermsAccordion } from "@/components/tour/TermsAccordion";
+import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
+import { TripInfoCard } from "@/components/tour/TripInfoCard";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 interface BookingDetail {
   id: string;
-  tour: TourItem;
+  tour: TourDetail;
   quantity: number;
   originalPrice?: number;
   discountAmount?: number;
@@ -54,6 +59,14 @@ export default function DetailTourScreen() {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [error, setError] = useState("");
+
+  const sectionCardClass = `
+        rounded-[24px]
+        p-5
+        mt-6
+        border
+        ${isDark ? "bg-slate-800/90 border-slate-700/60" : "bg-white border-slate-100"}
+    `;
 
   const fetchBookingDetail = async () => {
     if (!id) {
@@ -302,13 +315,7 @@ export default function DetailTourScreen() {
             </View>
 
             {/* 2. ORDER DETAILS CARD */}
-            <View
-              className={`rounded-[32px] p-6 mt-6 border shadow-sm ${
-                isDark
-                  ? "bg-slate-800/90 border-slate-700/60"
-                  : "bg-white border-slate-100"
-              }`}
-            >
+            <View className={sectionCardClass}>
               <Text
                 className={`text-sm font-black mb-4 uppercase tracking-wider ${
                   isDark ? "text-slate-300" : "text-slate-700"
@@ -577,6 +584,36 @@ export default function DetailTourScreen() {
                   {formatDateTime(booking.updatedAt)}
                 </Text>
               </View>
+            </View>
+
+            {/*  HIGHLIGHTS + PRICE CARD (vertical stack) */}
+            <View className={sectionCardClass}>
+              <HighlightChips items={booking.tour.highlights} />
+              <TripInfoCard tour={booking.tour} />
+            </View>
+
+            {/* Lịch trình */}
+            {booking.tour.schedules?.length ? (
+              <View className={sectionCardClass}>
+                <SectionTitle title="Lịch trình" />
+                <TourScheduleAccordion schedules={booking.tour.schedules} />
+              </View>
+            ) : null}
+
+            {/* Lưu ý riêng  */}
+            {booking.tour.notes ? (
+              <View className={sectionCardClass}>
+                <SectionTitle title="Lưu ý riêng" />
+                <Text className={isDark ? "text-slate-300" : "text-slate-700"}>
+                  {booking.tour.notes}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Điều khoản và Lưu ý chung */}
+            <View className={sectionCardClass}>
+              <SectionTitle title="Điều khoản & Lưu ý chung" />
+              <TermsAccordion />
             </View>
 
             {/* 3. HELP / CONTACT ACTION */}
