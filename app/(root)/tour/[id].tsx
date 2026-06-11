@@ -1,4 +1,5 @@
 import { BookingBar } from "@/components/tour/BookingBar";
+import { DeparturePicker } from "@/components/tour/DeparturePicker";
 import { HighlightChips } from "@/components/tour/HighlightChips";
 import { TermsAccordion } from "@/components/tour/TermsAccordion";
 import { TourHero } from "@/components/tour/TourHero";
@@ -8,13 +9,16 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
 import { useTheme } from "@/context/Theme_Context";
 import { useTourDetail } from "@/hooks/useTourDetail";
+import { Departure } from "@/services/departure";
 import { TourItem } from "@/services/tour";
+import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -69,19 +73,31 @@ export default function TourDetailScreen() {
 
   const { tour, loading, error, refetch } = useTourDetail(id, fallback);
 
+  const [selectedDeparture, setSelectedDeparture] = useState<Departure | null>(
+    null,
+  );
+
   const goCheckout = () => {
     if (!tour) return;
+    if (!selectedDeparture) {
+      Alert.alert("Thông báo", "Vui lòng chọn ngày khởi hành");
+      return;
+    }
     router.push({
       pathname: "/(root)/checkout",
       params: {
         id: tour.id,
         name: tour.name,
         imageUrl: tour.imageUrl,
-        price: String(tour.price),
+        tourCode: tour.code ?? "",
+        price: String(selectedDeparture.price),
         duration: tour.duration,
         rating: String(tour.rating),
         reviewsCount: String(tour.reviewsCount),
         hasVat: tour.hasVat ? "true" : "false",
+        departureId: selectedDeparture.id,
+        departureDate: selectedDeparture.departureDate,
+        availableSeats: String(selectedDeparture.availableSeats),
       },
     });
   };
@@ -107,7 +123,7 @@ export default function TourDetailScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={palette.spinner} />
           <Text
-            className={`text-sm font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+            className={`text-base font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
           >
             Đang tải chi tiết tour...
           </Text>
@@ -142,7 +158,7 @@ export default function TourDetailScreen() {
               }`}
             >
               <Text
-                className={`font-bold text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                className={`font-bold text-base ${isDark ? "text-slate-300" : "text-slate-600"}`}
               >
                 Quay lại
               </Text>
@@ -151,7 +167,7 @@ export default function TourDetailScreen() {
               onPress={refetch}
               className="px-6 py-2.5 rounded-full bg-[#E51F27]"
             >
-              <Text className="text-white font-bold text-sm">Thử lại</Text>
+              <Text className="text-white font-bold text-base">Thử lại</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -176,20 +192,27 @@ export default function TourDetailScreen() {
           </Text>
 
           <View className="flex-row items-center mt-2">
-            {tour.id ? (
+            {tour.code ? (
               <>
-                <Text className="text-[11.5px] text-slate-400">
-                  Mã: {tour.id}
+                <Text className="text-base text-slate-400">
+                  Mã: {tour.code}
                 </Text>
                 <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
               </>
             ) : null}
-            <Text className="text-[11.5px] text-slate-400">
+            <Text className="text-base text-slate-400">
               {tour.hasVat ? "Đã gồm VAT" : "Chưa gồm VAT"}
             </Text>
           </View>
 
           <HighlightChips items={tour.highlights} />
+
+          <DeparturePicker
+            tourId={tour.id}
+            tourName={tour.name}
+            selected={selectedDeparture}
+            onSelect={setSelectedDeparture}
+          />
 
           <TripInfoCard tour={tour} />
 
@@ -204,7 +227,13 @@ export default function TourDetailScreen() {
         </View>
       </ScrollView>
 
-      <BookingBar price={tour.price} onPress={goCheckout} />
+      <BookingBar
+        price={
+          selectedDeparture?.price ??
+          getNearestDeparture(tour.departures ?? [])?.price
+        }
+        onPress={goCheckout}
+      />
     </View>
   );
 }

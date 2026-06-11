@@ -77,7 +77,7 @@ export default function ReferralScreen() {
         {loading ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#E51F27"} />
-            <Text className={`text-sm font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <Text className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Đang tải thông tin...
             </Text>
           </View>
@@ -104,7 +104,7 @@ export default function ReferralScreen() {
               }`}>
                 Chia Sẻ Mã Giới Thiệu
               </Text>
-              <Text className={`text-xs text-center mt-1 leading-5 ${
+              <Text className={`text-base text-center mt-1 leading-5 ${
                 isDark ? "text-slate-400" : "text-slate-400"
               }`}>
                 Chia sẻ mã giới thiệu của bạn cho bạn bè đăng ký tài khoản để cả hai cùng nhận được nhiều ưu đãi hấp dẫn.
@@ -116,7 +116,7 @@ export default function ReferralScreen() {
                   ? "bg-slate-900/60 border-slate-700"
                   : "bg-slate-50 border-slate-300"
               }`}>
-                <Text className={`text-[10px] font-bold uppercase tracking-wide ${
+                <Text className={`text-base font-bold uppercase tracking-wide ${
                   isDark ? "text-slate-500" : "text-slate-400"
                 }`}>
                   Mã giới thiệu của bạn
@@ -164,7 +164,7 @@ export default function ReferralScreen() {
                   }`}>
                     {successReferrals}
                   </Text>
-                  <Text className={`text-[10px] font-bold uppercase mt-1 ${
+                  <Text className={`text-base font-bold uppercase mt-1 ${
                     isDark ? "text-slate-500" : "text-slate-400"
                   }`}>
                     Đã giới thiệu
@@ -176,7 +176,7 @@ export default function ReferralScreen() {
                   }`}>
                     {earnedPoints.toLocaleString("vi-VN")}
                   </Text>
-                  <Text className={`text-[10px] font-bold uppercase mt-1 ${
+                  <Text className={`text-base font-bold uppercase mt-1 ${
                     isDark ? "text-slate-500" : "text-slate-400"
                   }`}>
                     Điểm nhận được
@@ -220,19 +220,19 @@ export default function ReferralScreen() {
                       ? "bg-slate-700 border-slate-600"
                       : "bg-red-50 border-red-100"
                   }`}>
-                    <Text className={`font-black text-xs ${
+                    <Text className={`font-black text-base ${
                       isDark ? "text-blue-400" : "text-[#E51F27]"
                     }`}>
                       {item.step}
                     </Text>
                   </View>
                   <View className="flex-1">
-                    <Text className={`text-sm font-bold ${
+                    <Text className={`text-base font-bold ${
                       isDark ? "text-slate-200" : "text-slate-800"
                     }`}>
                       {item.title}
                     </Text>
-                    <Text className={`text-xs mt-1 leading-4 ${
+                    <Text className={`text-base mt-1 leading-4 ${
                       isDark ? "text-slate-400" : "text-slate-400"
                     }`}>
                       {item.desc}

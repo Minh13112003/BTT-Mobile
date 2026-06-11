@@ -10,7 +10,7 @@ export function SectionTitle({ title }: { title: string }) {
     <View className="flex-row items-center mb-3">
       <View className="w-1 h-3.5 rounded-sm bg-[#E51F27] mr-2" />
       <Text
-        className={`text-[12.5px] font-black uppercase tracking-wider ${
+        className={`text-base font-black uppercase tracking-wider ${
           isDark ? "text-slate-100" : "text-slate-800"
         }`}
       >

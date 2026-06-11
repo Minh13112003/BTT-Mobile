@@ -6,7 +6,10 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-/** Compact price without the currency symbol, e.g. 13990000 -> "13.990.000đ". */
-export function formatPrice(value: number): string {
-  return value.toLocaleString("vi-VN") + "đ";
+/** Compact price without the currency symbol, e.g. 13990000 -> "13.990.000đ". Returns "Liên hệ" for null/undefined/NaN. */
+export function formatPrice(value: number | string | null | undefined): string {
+  if (value === null || value === undefined) return "Liên hệ";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "Liên hệ";
+  return num.toLocaleString("vi-VN") + " đ";
 }

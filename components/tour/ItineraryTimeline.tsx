@@ -33,7 +33,7 @@ export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
             {/* Content */}
             <View className={`flex-1 ${last ? "" : "pb-4"}`}>
               <Text
-                className={`text-xs font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                className={`text-base font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
               >
                 {it.dayNumber}
                 {it.title ? ` · ${it.title}` : ""}
@@ -43,7 +43,7 @@ export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
                   className={`self-start mt-1.5 px-2 py-1 rounded-lg ${isDark ? "bg-green-500/10" : "bg-green-50"}`}
                 >
                   <Text
-                    className={`text-[9.5px] font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}
+                    className={`text-base font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}
                   >
                     🍽 {it.meals}
                   </Text>

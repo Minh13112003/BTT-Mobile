@@ -1,8 +1,13 @@
 import Header from "@/components/Header";
+import MembershipBanner from "@/components/MembershipBanner";
+import { TourCard } from "@/components/tour/TourCard";
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { getNews, NewsItem } from "@/services/news";
-import { getTours } from "@/services/tour";
+import { getMe } from "@/services/user";
+import { getTours, TourItem } from "@/services/tour";
+import { getNearestDeparture, formatPrice, formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -11,6 +16,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   RefreshControl,
   ScrollView,
   Text,
@@ -18,18 +24,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-// Định nghĩa cấu trúc chuyến du lịch
-interface TourItem {
-  id: string;
-  name: string;
-  imageUrl: string;
-  price: number;
-  duration: string;
-  rating: number;
-  reviewsCount: number;
-  hasVat?: boolean;
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -39,24 +33,28 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [tours, setTours] = useState<TourItem[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [earnedPoints, setEarnedPoints] = useState<number>(0);
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // Tải dữ liệu từ Services
   const loadData = async () => {
     try {
-      const [toursRes, newsRes] = await Promise.all([
-        await getTours(1, 5),
-        await getNews(),
+      const [toursRes, newsRes, meRes] = await Promise.all([
+        getTours(1, 5),
+        getNews(),
+        getMe().catch(() => null),
       ]);
 
-      const toursData = Array.isArray(toursRes.data?.items)
+      const toursData: TourItem[] = Array.isArray(toursRes.data?.items)
         ? toursRes.data.items
         : [];
 
       setTours(toursData);
       setNews(newsRes.data);
+
+      const me = meRes?.data?.data ?? meRes?.data;
+      setEarnedPoints(typeof me?.earnedPoints === "number" ? me.earnedPoints : 0);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu trang chủ:", error);
     } finally {
@@ -74,14 +72,6 @@ export default function HomeScreen() {
     loadData();
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
-  };
-
-  // Lọc danh sách tour theo từ khóa tìm kiếm
   const filteredTours = Array.isArray(tours)
     ? tours.filter((tour) =>
         tour.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -109,7 +99,7 @@ export default function HomeScreen() {
               color={isDark ? "#94A3B8" : "#E51F27"}
             />
             <Text
-              className={`text-sm font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
             >
               Đang tải dữ liệu...
             </Text>
@@ -126,10 +116,40 @@ export default function HomeScreen() {
               />
             }
           >
+            {/* MEMBERSHIP RANK BANNER — clickable → trang quyền lợi */}
+            {!!user && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                className="px-5 mt-4"
+                onPress={() =>
+                  router.push({
+                    pathname: "/(root)/membership" as any,
+                    params: { earnedPoints: String(earnedPoints) },
+                  })
+                }
+              >
+                <MembershipBanner
+                  earnedPoints={earnedPoints}
+                  name={
+                    user?.firstName && user?.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : undefined
+                  }
+                />
+                <Text
+                  className={`text-base font-semibold text-right mt-1 pr-1 ${
+                    isDark ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  Nhấn để xem quyền lợi thành viên →
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {/* SEARCH BAR & WELCOME GREETING */}
             <View className="px-5 mt-4">
               <Text
-                className={`text-xs font-semibold uppercase tracking-wider pl-1 ${
+                className={`text-base font-semibold uppercase tracking-wider pl-1 ${
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
               >
@@ -146,7 +166,6 @@ export default function HomeScreen() {
                 👋
               </Text>
 
-              {/* Input tìm kiếm */}
               <View
                 className={`flex-row items-center rounded-2xl border-2 px-4 h-14 shadow-sm ${
                   isDark
@@ -171,7 +190,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* CHUYẾN DU LỊCH HIỆN CÓ CỦA CÔNG TY */}
+            {/* CHUYẾN DU LỊCH HIỆN CÓ */}
             <View className="mx-5 mt-6">
               <View className="flex-row justify-between items-center mb-3">
                 <Text
@@ -181,113 +200,37 @@ export default function HomeScreen() {
                 >
                   Chuyến du lịch hiện có
                 </Text>
-                <Text className="text-xs text-slate-400 font-semibold">
+                <Text className="text-base text-slate-400 font-semibold">
                   Có {filteredTours.length} tour
                 </Text>
               </View>
 
               {filteredTours.length > 0 ? (
-                filteredTours.map((item) => (
-                  <View
-                    key={item.id}
-                    className={`rounded-[24px] mb-5 border shadow-sm overflow-hidden ${
-                      isDark
-                        ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
-                        : "bg-white border-slate-100"
-                    }`}
-                  >
-                    {/* Tour Image with Rating badge */}
-                    <View className="relative h-44 w-full bg-slate-900/10">
-                      <Image
-                        source={{ uri: item.imageUrl }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
-                      <View
-                        className={`absolute top-3 right-3 rounded-full px-2.5 py-1 flex-row items-center shadow-sm ${
-                          isDark ? "bg-slate-900/90" : "bg-white/90"
-                        }`}
-                      >
-                        <Ionicons name="star" size={12} color="#F59E0B" />
-                        <Text
-                          className={`text-[11px] font-black ml-1 ${
-                            isDark ? "text-slate-100" : "text-slate-800"
-                          }`}
-                        >
-                          {item.rating}
-                        </Text>
-                      </View>
-                      <View
-                        className={`absolute bottom-3 left-3 rounded-xl px-2.5 py-1 ${
-                          isDark ? "bg-slate-700/95" : "bg-[#E51F27]/90"
-                        }`}
-                      >
-                        <Text className="text-[10px] text-white font-black uppercase">
-                          {item.duration}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Tour Details */}
-                    <View className="p-4">
-                      <Text
-                        className={`text-sm font-black leading-5 ${
-                          isDark ? "text-slate-100" : "text-slate-800"
-                        }`}
-                        numberOfLines={2}
-                      >
-                        {item.name}
-                      </Text>
-
-                      <View
-                        className={`flex-row items-center justify-between mt-4 pt-3 border-t ${
-                          isDark ? "border-slate-700/60" : "border-slate-100"
-                        }`}
-                      >
-                        <View>
-                          <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                            Giá trọn gói
-                          </Text>
-                          <Text
-                            className={`text-base font-black mt-0.5 ${
-                              isDark ? "text-slate-200" : "text-[#E51F27]"
-                            }`}
-                          >
-                            {formatCurrency(item.price)}
-                          </Text>
-                        </View>
-
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          onPress={() => {
-                            router.push({
-                              pathname: "/(root)/tour/[id]",
-                              params: {
-                                id: item.id,
-                                name: item.name,
-                                imageUrl: item.imageUrl,
-                                price: item.price.toString(),
-                                duration: item.duration,
-                                rating: item.rating.toString(),
-                                reviewsCount: item.reviewsCount.toString(),
-                                hasVat: item.hasVat ? "true" : "false",
-                              },
-                            });
-                          }}
-                          className={`rounded-xl px-4 py-2.5 ${
-                            isDark
-                              ? "bg-slate-700 border border-slate-600 active:bg-slate-600"
-                              : "bg-[#E51F27] active:bg-[#C41A21]"
-                          }`}
-                        >
-                          <Text className="text-white font-bold text-xs">
-                            Xem chi tiết
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                ))
+                filteredTours.map((item) => {
+                  const nearest = getNearestDeparture(item.departures ?? []);
+                  const displayPrice = nearest?.price ?? null;
+                  return (
+                    <TourCard
+                      key={item.id}
+                      tour={item}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/(root)/tour/[id]",
+                          params: {
+                            id: item.id,
+                            name: item.name,
+                            imageUrl: item.imageUrl,
+                            price: displayPrice != null ? String(displayPrice) : "0",
+                            duration: item.duration,
+                            rating: item.rating.toString(),
+                            reviewsCount: item.reviewsCount.toString(),
+                            hasVat: item.hasVat ? "true" : "false",
+                          },
+                        });
+                      }}
+                    />
+                  );
+                })
               ) : (
                 <View
                   className={`rounded-[24px] p-8 items-center justify-center border border-dashed mt-2 ${
@@ -298,11 +241,11 @@ export default function HomeScreen() {
                 >
                   <Ionicons name="search-outline" size={48} color="#94A3B8" />
                   <Text
-                    className={`font-bold text-sm mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                    className={`font-bold text-base mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
                   >
                     Không tìm thấy chuyến du lịch phù hợp
                   </Text>
-                  <Text className="text-slate-400 text-xs text-center mt-1">
+                  <Text className="text-slate-400 text-base text-center mt-1">
                     Vui lòng thử lại bằng một từ khóa khác.
                   </Text>
                 </View>
@@ -343,7 +286,7 @@ export default function HomeScreen() {
                     />
                     <View className="p-3">
                       <Text
-                        className={`text-xs font-bold leading-4 ${
+                        className={`text-base font-bold leading-4 ${
                           isDark ? "text-slate-200" : "text-slate-800"
                         }`}
                         numberOfLines={2}
@@ -351,14 +294,12 @@ export default function HomeScreen() {
                         {item.title}
                       </Text>
                       <View className="flex-row items-center justify-between mt-3">
-                        <Text className="text-[10px] text-slate-400 font-semibold">
+                        <Text className="text-base text-slate-400 font-semibold">
                           {item.date}
                         </Text>
                         <Text
-                          className={`text-[10px] font-black uppercase ${
-                            isDark
-                              ? "text-slate-350 color-[#CBD5E1]"
-                              : "text-blue-600"
+                          className={`text-base font-black uppercase ${
+                            isDark ? "color-[#CBD5E1]" : "text-blue-600"
                           }`}
                         >
                           Xem chi tiết

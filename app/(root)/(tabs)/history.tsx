@@ -1,9 +1,11 @@
 import Header from "@/components/Header";
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getTransactionHistory } from "@/services/booking";
 import { TourItem } from "@/services/tour";
+import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -14,6 +16,7 @@ import {
   FlatList,
   Image,
   RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -44,18 +47,41 @@ interface OrderItem {
   createdAt: string | Date;
   updatedAt: string | Date;
   status: string;
+  departure?: {
+    id?: string;
+    tourCode?: string;
+    departureDate?: string;
+  };
 }
+
+export const MAP_STATUS_VN: Record<string, string> = {
+  PENDING: "Chờ xử lý",
+  CONFIRMED: "Đã xác nhận",
+  PAID: "Đã thanh toán",
+  ONGOING: "Đang diễn ra",
+  COMPLETED: "Đã hoàn thành",
+  CANCELLED: "Đã hủy",
+  REFUNDED: "Đã hoàn tiền",
+};
+
+const STATUS_OPTIONS = ["Tất cả", "Chờ xử lý", "Đã xác nhận", "Đã thanh toán", "Đang diễn ra", "Đã hoàn thành", "Đã hủy", "Đã hoàn tiền"];
 
 export default function HistoryScreen() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string>("Tất cả");
+
+  const filteredOrders = orders.filter((item) => {
+    if (selectedStatus === "Tất cả") return true;
+    const statusVn = MAP_STATUS_VN[item.status] || item.status;
+    return statusVn === selectedStatus;
+  });
 
   const LIMIT = 5;
 
@@ -65,8 +91,6 @@ export default function HistoryScreen() {
   // Tải danh sách đơn hàng từ booking service
   const fetchOrders = async (pageNumber = 1, isLoadMore = false) => {
     try {
-      setError("");
-
       const res = await getTransactionHistory(pageNumber, LIMIT);
 
       if (res?.data) {
@@ -130,6 +154,46 @@ export default function HistoryScreen() {
       <Header title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
+        {/* Horizontal filter chips */}
+        <View style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+          >
+            {STATUS_OPTIONS.map((status) => {
+              const isActive = selectedStatus === status;
+              return (
+                <TouchableOpacity
+                  key={status}
+                  onPress={() => setSelectedStatus(status)}
+                  className={`px-4 py-2 rounded-full border ${
+                    isActive
+                      ? "bg-[#E51F27] border-[#E51F27]"
+                      : isDark
+                        ? "bg-slate-800 border-slate-700"
+                        : "bg-white border-slate-200"
+                  }`}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={{ fontSize: 16 }}
+                    className={`font-bold ${
+                      isActive
+                        ? "text-white"
+                        : isDark
+                          ? "text-slate-300"
+                          : "text-slate-600"
+                    }`}
+                  >
+                    {status}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {loading && !refreshing ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator
@@ -137,14 +201,14 @@ export default function HistoryScreen() {
               color={isDark ? "#94A3B8" : "#E51F27"}
             />
             <Text
-              className={`text-sm font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
             >
               Đang tải lịch sử giao dịch...
             </Text>
           </View>
         ) : (
           <FlatList
-            data={orders}
+            data={filteredOrders}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
@@ -181,11 +245,11 @@ export default function HistoryScreen() {
               >
                 <Ionicons name="receipt-outline" size={48} color="#94A3B8" />
                 <Text
-                  className={`font-bold text-sm mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  className={`font-bold text-base mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
                 >
                   Bạn chưa có giao dịch nào
                 </Text>
-                <Text className="text-slate-400 text-xs text-center mt-1">
+                <Text className="text-slate-400 text-base text-center mt-1">
                   Mọi giao dịch đặt tour du lịch của bạn sẽ hiển thị tại đây.
                 </Text>
               </View>
@@ -198,37 +262,64 @@ export default function HistoryScreen() {
                     : "bg-white border-slate-100 shadow-sm"
                 }`}
               >
-                {/* Top info card: code, date, status */}
-                <View className="flex-row justify-between items-center mb-3">
-                  <View>
-                    <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Mã đơn hàng
-                    </Text>
+                {/* Top info card: status badge */}
+                <View className="flex-row justify-between items-start mb-3">
+                  <View className="flex-1 mr-3">
                     <Text
-                      className={`text-xs font-bold mt-0.5 ${isDark ? "text-slate-200" : "text-slate-700"}`}
+                      style={{ fontSize: FONT_SIZE.md }}
+                      className={`font-black leading-6 ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                      numberOfLines={2}
                     >
-                      #{item.id}
+                      {item.tour.name}
+                    </Text>
+                    
+                    {/* Mã tour */}
+                    <Text
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      className={`font-semibold mt-1.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                    >
+                      Mã tour: {item.departure?.tourCode || (item.tour as any).code || "-"}
+                    </Text>
+
+                    {/* Ngày khởi hành */}
+                    <Text
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      className={`font-semibold mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                    >
+                      Ngày khởi hành: {formatDepartureDate(item.departure?.departureDate)}
                     </Text>
                   </View>
                   <View
-                    className={`px-2.5 py-1 rounded-xl ${
+                    className={`px-2.5 py-1.5 rounded-xl self-start ${
                       isDark
-                        ? "bg-slate-750 bg-slate-700"
-                        : item.status === "Đã nhận hàng"
-                          ? "bg-green-50"
-                          : "bg-amber-50"
+                        ? "bg-slate-700"
+                        : (MAP_STATUS_VN[item.status] || item.status) === "Đã thanh toán" ||
+                          (MAP_STATUS_VN[item.status] || item.status) === "Đã nhận hàng" ||
+                          (MAP_STATUS_VN[item.status] || item.status) === "Đã xác nhận" ||
+                          (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn thành"
+                          ? "bg-green-50 border border-green-200"
+                          : (MAP_STATUS_VN[item.status] || item.status) === "Đã hủy" ||
+                            (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn tiền"
+                            ? "bg-red-50 border border-red-200"
+                            : "bg-amber-50 border border-amber-200"
                     }`}
                   >
                     <Text
-                      className={`text-[10px] font-black uppercase ${
+                      className={`text-xs font-black uppercase ${
                         isDark
                           ? "text-slate-200"
-                          : item.status === "Đã nhận hàng"
+                          : (MAP_STATUS_VN[item.status] || item.status) === "Đã thanh toán" ||
+                            (MAP_STATUS_VN[item.status] || item.status) === "Đã nhận hàng" ||
+                            (MAP_STATUS_VN[item.status] || item.status) === "Đã xác nhận" ||
+                            (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn thành"
                             ? "text-green-600"
-                            : "text-amber-600"
+                            : (MAP_STATUS_VN[item.status] || item.status) === "Đã hủy" ||
+                              (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn tiền"
+                              ? "text-red-600"
+                              : "text-amber-600"
                       }`}
                     >
-                      {item.status}
+                      {MAP_STATUS_VN[item.status] || item.status}
                     </Text>
                   </View>
                 </View>
@@ -238,77 +329,59 @@ export default function HistoryScreen() {
                   className={`h-[1px] my-2 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
                 />
 
-                {/* Body info card: image, name, price */}
+                {/* Body info card: image + price/quantity */}
                 <View className="flex-row items-center py-2">
                   <Image
                     source={{ uri: item.tour.imageUrl }}
-                    className="w-16 h-16 rounded-xl bg-slate-900/10"
+                    className="w-20 h-20 rounded-2xl bg-slate-900/10"
                     resizeMode="cover"
                   />
                   <View className="flex-1 ml-3.5">
-                    <Text
-                      className={`text-xs font-black leading-4 ${
-                        isDark ? "text-slate-100" : "text-slate-800"
-                      }`}
-                      numberOfLines={2}
-                    >
-                      {item.tour.name}
-                    </Text>
-                    <View className="flex-row items-start justify-between mt-2">
-                      <View className="flex-1 mr-2">
-                        {item.discountAmount && item.discountAmount > 0 ? (
-                          <View className="flex-row items-start flex-wrap">
-                            <View className="flex-row items-center">
-                              <Text
-                                className={`text-sm font-black mr-2 ${
-                                  isDark ? "text-slate-200" : "text-[#E51F27]"
-                                }`}
-                              >
-                                {formatCurrency(item.price)}
-                              </Text>
-                              <Text className="text-[10px] text-slate-400 line-through mr-1.5">
-                                {formatCurrency(item.originalPrice || 0)}
-                              </Text>
-                            </View>
-                            <Text className="text-[10px] text-green-500 font-bold">
-                              -{formatCurrency(item.discountAmount)}
-                            </Text>
-                          </View>
-                        ) : (
+                    {item.discountAmount && item.discountAmount > 0 ? (
+                      <View>
+                        <View className="flex-row items-center flex-wrap gap-x-2">
                           <Text
-                            className={`text-sm font-black ${
-                              isDark ? "text-slate-200" : "text-[#E51F27]"
-                            }`}
+                            className={`text-base font-black ${isDark ? "text-slate-200" : "text-[#E51F27]"}`}
                           >
                             {formatCurrency(item.price)}
                           </Text>
-                        )}
-                        <Text
-                          className={`text-[10px] mt-0.5 ${
-                            isDark ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          Số lượng: {item.quantity} | {item.tour.duration}
-                        </Text>
-                      </View>
-                      {item.tour.hasVat && (
-                        <View
-                          className={`self-start px-2 py-1 rounded-full border ${
-                            isDark
-                              ? "border-slate-600 bg-slate-700"
-                              : "border-red-200 bg-red-50"
-                          }`}
-                        >
-                          <Text
-                            className={`text-[8px] font-black uppercase ${
-                              isDark ? "text-slate-300" : "text-red-500"
-                            }`}
-                          >
-                            Đã xuất VAT
+                          <Text className="text-xs text-slate-400 line-through">
+                            {formatCurrency(item.originalPrice || 0)}
                           </Text>
                         </View>
-                      )}
-                    </View>
+                        <Text className="text-xs text-green-500 font-bold mt-0.5">
+                          Giảm {formatCurrency(item.discountAmount)}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text
+                        className={`text-base font-black ${isDark ? "text-slate-200" : "text-[#E51F27]"}`}
+                      >
+                        {formatCurrency(item.price)}
+                      </Text>
+                    )}
+
+                    <Text
+                      className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                    >
+                      {item.quantity} khách · {item.tour.duration}
+                    </Text>
+
+                    {item.tour.hasVat && (
+                      <View
+                        className={`self-start mt-1.5 px-2 py-0.5 rounded-full border ${
+                          isDark
+                            ? "border-slate-600 bg-slate-700"
+                            : "border-red-200 bg-red-50"
+                        }`}
+                      >
+                        <Text
+                          className={`text-xs font-black uppercase ${isDark ? "text-slate-300" : "text-red-500"}`}
+                        >
+                          Đã xuất VAT
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
@@ -329,7 +402,7 @@ export default function HistoryScreen() {
                           color={isDark ? "#93C5FD" : "#E51F27"}
                         />
                         <Text
-                          className={`text-[10px] font-bold ml-1.5 ${
+                          className={`text-base font-bold ml-1.5 ${
                             isDark ? "text-slate-300" : "text-slate-600"
                           }`}
                         >
@@ -350,7 +423,7 @@ export default function HistoryScreen() {
                           style={{ marginTop: 1 }}
                         />
                         <Text
-                          className={`text-[10px] ml-1.5 flex-1 italic ${
+                          className={`text-base ml-1.5 flex-1 italic ${
                             isDark ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
@@ -366,38 +439,40 @@ export default function HistoryScreen() {
                   className={`h-[1px] my-2 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
                 />
 
-                {/* Footer info card: booking date */}
-                <View className="flex-row justify-between items-center mt-1">
-                  <Text className="text-[10px] text-slate-400 font-semibold">
+                {/* Footer info card: booking date & details button */}
+                <View className="mt-1.5 gap-y-2">
+                  <Text className="text-base text-slate-400 font-semibold">
                     Ngày đặt: {formatDateTime(item.createdAt)}
                   </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/detailTour" as any,
-                        params: { id: item.id },
-                      })
-                    }
-                    activeOpacity={0.7}
-                    className={`flex-row items-center px-3 py-1.5 rounded-xl border ${
-                      isDark
-                        ? "bg-slate-700 border-slate-600"
-                        : "bg-slate-50 border-slate-100"
-                    }`}
-                  >
-                    <Ionicons
-                      name="eye-outline"
-                      size={14}
-                      color={isDark ? "#E5E7EB" : "#64748B"}
-                    />
-                    <Text
-                      className={`text-[10px] font-bold ml-1 ${
-                        isDark ? "text-slate-200" : "text-slate-600"
+                  <View className="flex-row justify-end">
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/detailTour" as any,
+                          params: { id: item.id },
+                        })
+                      }
+                      activeOpacity={0.7}
+                      className={`flex-row items-center px-3.5 py-2 rounded-xl border ${
+                        isDark
+                          ? "bg-slate-700 border-slate-600"
+                          : "bg-slate-50 border-slate-100"
                       }`}
                     >
-                      Chi tiết đơn
-                    </Text>
-                  </TouchableOpacity>
+                      <Ionicons
+                        name="eye-outline"
+                        size={15}
+                        color={isDark ? "#E5E7EB" : "#64748B"}
+                      />
+                      <Text
+                        className={`text-base font-bold ml-1.5 ${
+                          isDark ? "text-slate-200" : "text-slate-600"
+                        }`}
+                      >
+                        Chi tiết đơn
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}

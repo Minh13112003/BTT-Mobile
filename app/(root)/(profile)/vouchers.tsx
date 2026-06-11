@@ -82,7 +82,7 @@ export default function VouchersScreen() {
               color={isDark ? "#94A3B8" : "#E51F27"}
             />
             <Text
-              className={`text-sm font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
             >
               Đang tải danh sách voucher...
             </Text>
@@ -122,7 +122,7 @@ export default function VouchersScreen() {
                   </View>
                   <View className="ml-4 flex-1">
                     <Text
-                      className={`text-[10px] font-black uppercase tracking-wider ${
+                      className={`text-base font-black uppercase tracking-wider ${
                         isDark ? "text-blue-400" : "text-[#E51F27]"
                       }`}
                     >
@@ -136,7 +136,7 @@ export default function VouchersScreen() {
                       {item.title}
                     </Text>
                     <Text
-                      className={`text-[10px] font-semibold mt-1 ${
+                      className={`text-base font-semibold mt-1 ${
                         isDark ? "text-slate-400" : "text-slate-400"
                       }`}
                     >
@@ -147,7 +147,7 @@ export default function VouchersScreen() {
 
                 {/* Description */}
                 <Text
-                  className={`text-xs mt-4 leading-5 ${
+                  className={`text-base mt-4 leading-5 ${
                     isDark ? "text-slate-300" : "text-slate-500"
                   }`}
                 >
@@ -169,14 +169,14 @@ export default function VouchersScreen() {
                 >
                   <View>
                     <Text
-                      className={`text-[9px] font-bold uppercase ${
+                      className={`text-base font-bold uppercase ${
                         isDark ? "text-slate-500" : "text-slate-400"
                       }`}
                     >
                       Mã ưu đãi
                     </Text>
                     <Text
-                      className={`text-sm font-black mt-0.5 uppercase tracking-wider ${
+                      className={`text-base font-black mt-0.5 uppercase tracking-wider ${
                         isDark ? "text-blue-400" : "text-[#1E3A8A]"
                       }`}
                     >
@@ -192,7 +192,7 @@ export default function VouchersScreen() {
                         : "bg-[#E51F27]"
                     }`}
                   >
-                    <Text className="text-white font-bold text-xs">
+                    <Text className="text-white font-bold text-base">
                       Sao chép mã
                     </Text>
                   </TouchableOpacity>

@@ -1,4 +1,5 @@
 import { getTours, TourItem } from "@/services/tour";
+import { getNearestDeparture } from "@/utils/tour";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "./useDebounce";
 
@@ -16,12 +17,17 @@ function parseDays(duration: string): number {
   return match ? parseInt(match[1], 10) : 0;
 }
 
+const getTourPrice = (t: TourItem) => {
+  const nearest = getNearestDeparture(t.departures ?? []);
+  return nearest?.price ?? 0;
+};
+
 export const TOUR_FILTERS: TourFilter[] = [
   { key: "all", label: "Tất cả", match: () => true },
   { key: "short", label: "≤ 3 ngày", match: (t) => parseDays(t.duration) > 0 && parseDays(t.duration) <= 3 },
   { key: "long", label: "4 ngày trở lên", match: (t) => parseDays(t.duration) >= 4 },
-  { key: "budget", label: "Dưới 7 triệu", match: (t) => t.price < 7_000_000 },
-  { key: "premium", label: "Cao cấp", match: (t) => t.price >= 10_000_000 },
+  { key: "budget", label: "Dưới 7 triệu", match: (t) => getTourPrice(t) < 7_000_000 },
+  { key: "premium", label: "Cao cấp", match: (t) => getTourPrice(t) >= 10_000_000 },
 ];
 
 type FetchMode = "init" | "refresh" | "more";

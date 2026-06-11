@@ -70,7 +70,7 @@ export function TourHero({ tour, onBack }: { tour: TourDetail; onBack: () => voi
 
       {/* Duration badge */}
       <View className="absolute left-4 bottom-4 bg-[#E51F27] px-3 py-1.5 rounded-xl">
-        <Text className="text-[10.5px] text-white font-black uppercase tracking-wide">
+        <Text className="text-base text-white font-black uppercase tracking-wide">
           {tour.duration}
         </Text>
       </View>
@@ -81,10 +81,10 @@ export function TourHero({ tour, onBack }: { tour: TourDetail; onBack: () => voi
         style={{ backgroundColor: isDark ? "rgba(10,12,18,0.8)" : "rgba(255,255,255,0.92)" }}
       >
         <Ionicons name="star" size={13} color="#FBBF24" />
-        <Text className={`text-[11px] font-black ml-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+        <Text className={`text-base font-black ml-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
           {tour.rating}
         </Text>
-        <Text className="text-[10px] text-slate-400 ml-0.5">({tour.reviewsCount})</Text>
+        <Text className="text-base text-slate-400 ml-0.5">({tour.reviewsCount})</Text>
       </View>
     </View>
   );

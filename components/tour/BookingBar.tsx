@@ -10,7 +10,7 @@ export function BookingBar({
   onPress,
   label = "Đặt tour",
 }: {
-  price: number;
+  price: number | undefined;
   onPress: () => void;
   label?: string;
 }) {
@@ -27,7 +27,7 @@ export function BookingBar({
     >
       <View>
         <Text
-          className={`text-[9.5px] font-bold uppercase tracking-wide ${
+          className={`text-base font-bold uppercase tracking-wide ${
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
@@ -35,7 +35,7 @@ export function BookingBar({
         </Text>
         <Text className={`text-lg font-black ${isDark ? "text-slate-100" : "text-[#E51F27]"}`}>
           {formatPrice(price)}
-          <Text className="text-[11px] font-bold text-[#E51F27]"> /khách</Text>
+          <Text className="text-base font-bold text-[#E51F27]"> /khách</Text>
         </Text>
       </View>
       <TouchableOpacity
@@ -43,7 +43,7 @@ export function BookingBar({
         activeOpacity={0.85}
         className="bg-[#E51F27] active:bg-[#C41A21] rounded-2xl px-7 py-3.5"
       >
-        <Text className="text-white font-black text-sm">{label}</Text>
+        <Text className="text-white font-black text-base">{label}</Text>
       </TouchableOpacity>
     </View>
   );

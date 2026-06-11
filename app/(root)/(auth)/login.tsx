@@ -140,7 +140,7 @@ export default function LoginScreen() {
                   source={
                     isDark
                       ? require("../../../assets/images/Logo_BTT-2018-02.png")
-                      : require("../../../assets/images/Logo_BTT-2018.jpg")
+                      : require("../../../assets/images/Logo_BTT-2018.png")
                   }
                   style={{ width: 140, height: 60 }}
                   resizeMode="contain"
@@ -156,7 +156,7 @@ export default function LoginScreen() {
               </Text>
 
               <Text
-                className={`text-sm font-medium mt-1 ${
+                className={`text-base font-medium mt-1 ${
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
               >
@@ -174,7 +174,7 @@ export default function LoginScreen() {
             >
               {/* Email Input */}
               <Text
-                className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+                className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                   isDark ? "text-slate-300" : "text-slate-600"
                 }`}
               >
@@ -224,7 +224,7 @@ export default function LoginScreen() {
 
               {/* Password Input */}
               <Text
-                className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+                className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                   isDark ? "text-slate-300" : "text-slate-600"
                 }`}
               >
@@ -290,7 +290,7 @@ export default function LoginScreen() {
                 >
                   <Ionicons name="alert-circle" size={18} color="#EF4444" />
                   <Text
-                    className={`text-sm font-medium ml-2 flex-1 ${
+                    className={`text-base font-medium ml-2 flex-1 ${
                       isDark ? "text-red-400" : "text-red-600"
                     }`}
                   >
@@ -305,7 +305,7 @@ export default function LoginScreen() {
                 activeOpacity={0.6}
               >
                 <Text
-                  className={`font-bold text-sm ${
+                  className={`font-bold text-base ${
                     isDark ? "text-slate-350 color-[#CBD5E1]" : "text-blue-500"
                   }`}
                 >

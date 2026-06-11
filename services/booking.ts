@@ -4,11 +4,15 @@ import { apiService } from "./api/interceptor";
 
 // Thống nhất dữ liệu Mock và hàm dịch vụ Booking
 
-interface Booking{
-  idTour : string,
-  quantity : number,
-  voucherCode : string,
-  notice: string
+export type PaymentMethod = "AT_OFFICE" | "BANK_TRANSFER";
+
+interface Booking {
+  idTour: string;
+  departureId: string;
+  quantity: number;
+  paymentMethod: PaymentMethod;
+  voucherCode?: string | null;
+  notice?: string | null;
 }
 
 export const getDashboardOverview = async (): Promise<{ data: any }> => {

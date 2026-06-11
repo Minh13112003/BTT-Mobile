@@ -252,7 +252,7 @@ export default function SelfProfileScreen() {
                   className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? "bg-slate-700 border border-slate-600" : "bg-blue-50"}`}
                 >
                   <Ionicons name="create-outline" size={16} color={isDark ? "#93C5FD" : "#3B82F6"} />
-                  <Text className={`font-bold text-xs ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+                  <Text className={`font-bold text-base ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
                     Chỉnh sửa
                   </Text>
                 </TouchableOpacity>
@@ -265,7 +265,7 @@ export default function SelfProfileScreen() {
                 {/* Mục Họ và Tên (chia làm 2 ô) */}
                 <View className="flex-row mb-4">
                   <View className="flex-1 mr-2">
-                    <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                    <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                       Họ
                     </Text>
                     <View
@@ -292,7 +292,7 @@ export default function SelfProfileScreen() {
                   </View>
 
                   <View className="flex-1 ml-2">
-                    <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                    <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                       Tên
                     </Text>
                     <View
@@ -320,7 +320,7 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Email */}
-                <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Địa chỉ Email
                 </Text>
                 <View
@@ -353,7 +353,7 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Tuổi */}
-                <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Tuổi
                 </Text>
                 <View
@@ -390,7 +390,7 @@ export default function SelfProfileScreen() {
                     isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
                   }`}>
                     <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 text-sm font-medium ml-2 flex-1">
+                    <Text className="text-red-600 text-base font-medium ml-2 flex-1">
                       {profileError}
                     </Text>
                   </View>
@@ -400,7 +400,7 @@ export default function SelfProfileScreen() {
               // CHẾ ĐỘ HIỂN THỊ
               <View>
                 {/* Mục Họ và tên */}
-                <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Họ và tên
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -415,7 +415,7 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Email */}
-                <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Địa chỉ Email
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -428,7 +428,7 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Tuổi */}
-                <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Tuổi
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -450,7 +450,7 @@ export default function SelfProfileScreen() {
 
             {/* Các mục không cho phép sửa (hiển thị giống nhau ở cả 2 chế độ, nhưng thêm icon khóa ở chế độ chỉnh sửa) */}
             {/* Mục Chức vụ / Vai trò */}
-            <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
               Quyền hạn hệ thống
             </Text>
             <View
@@ -481,7 +481,7 @@ export default function SelfProfileScreen() {
             </View>
 
             {/* Mục Ngày tạo tài khoản */}
-            <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
               Ngày tạo tài khoản
             </Text>
             <View
@@ -512,7 +512,7 @@ export default function SelfProfileScreen() {
             </View>
 
             {/* Mục Cập nhật tài khoản gần nhất */}
-            <Text className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
               Cập nhật gần nhất
             </Text>
             <View
@@ -616,7 +616,7 @@ export default function SelfProfileScreen() {
                 <View className={`h-[1px] mb-5 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`} />
 
                 {/* Mật khẩu cũ */}
-                <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-500 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Mật khẩu cũ
                 </Text>
                 <View
@@ -663,7 +663,7 @@ export default function SelfProfileScreen() {
                 <View className="h-4" />
 
                 {/* Mật khẩu mới */}
-                <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-500 text-base font-bold mb-2 uppercase tracking-wider pl-1">
                   Mật khẩu mới
                 </Text>
                 <View
@@ -713,7 +713,7 @@ export default function SelfProfileScreen() {
                     isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
                   }`}>
                     <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 text-sm font-medium ml-2 flex-1">
+                    <Text className="text-red-600 text-base font-medium ml-2 flex-1">
                       {errorMsg}
                     </Text>
                   </View>
@@ -729,7 +729,7 @@ export default function SelfProfileScreen() {
                       size={18}
                       color="#10B981"
                     />
-                    <Text className="text-green-600 text-sm font-medium ml-2 flex-1">
+                    <Text className="text-green-600 text-base font-medium ml-2 flex-1">
                       {successMsg}
                     </Text>
                   </View>

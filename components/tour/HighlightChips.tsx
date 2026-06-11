@@ -20,7 +20,7 @@ export function HighlightChips({ items }: { items?: string[] }) {
           }`}
         >
           <Text
-            className={`text-[10.5px] font-bold ${
+            className={`text-base font-bold ${
               isDark ? "text-[#7FE08A]" : "text-green-700"
             }`}
           >

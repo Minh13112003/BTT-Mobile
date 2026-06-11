@@ -2,6 +2,7 @@ import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getBookingById } from "@/services/booking";
 import { TourDetail } from "@/services/tour";
+import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -27,6 +28,13 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 interface BookingDetail {
   id: string;
   tour: TourDetail;
+  departure?: {
+    id?: string;
+    tourCode?: string;
+    departureDate?: string;
+    price?: number;
+    availableSeats?: number;
+  };
   quantity: number;
   originalPrice?: number;
   discountAmount?: number;
@@ -49,6 +57,16 @@ interface BookingDetail {
   updatedAt: string;
   status: string;
 }
+
+const MAP_STATUS_VN: Record<string, string> = {
+  PENDING: "Chờ xử lý",
+  CONFIRMED: "Đã xác nhận",
+  PAID: "Đã thanh toán",
+  ONGOING: "Đang diễn ra",
+  COMPLETED: "Đã hoàn thành",
+  CANCELLED: "Đã hủy",
+  REFUNDED: "Đã hoàn tiền",
+};
 
 export default function DetailTourScreen() {
   const router = useRouter();
@@ -103,10 +121,11 @@ export default function DetailTourScreen() {
     }).format(value);
   };
 
-  const handleCopyId = () => {
-    if (booking?.id) {
-      Clipboard.setString(booking.id);
-      Alert.alert("Thành công", `Đã sao chép mã đơn hàng: ${booking.id}`);
+  const handleCopyTourCode = () => {
+    const code = booking?.departure?.tourCode ?? booking?.tour?.code;
+    if (code) {
+      Clipboard.setString(code);
+      Alert.alert("Thành công", `Đã sao chép mã tour: ${code}`);
     }
   };
 
@@ -123,10 +142,13 @@ export default function DetailTourScreen() {
 
   // Chọn màu status badge
   const getStatusBadgeConfig = (status: string) => {
-    switch (status) {
+    const statusVn = MAP_STATUS_VN[status] || status;
+    switch (statusVn) {
       case "Đã nhận hàng":
       case "Đã thanh toán":
       case "Thành công":
+      case "Đã xác nhận":
+      case "Đã hoàn thành":
         return {
           bg: isDark
             ? "bg-green-950/40 border-green-800"
@@ -136,12 +158,22 @@ export default function DetailTourScreen() {
         };
       case "Chờ xử lý":
       case "Chờ thanh toán":
+      case "Đang diễn ra":
         return {
           bg: isDark
             ? "bg-amber-950/40 border-amber-800"
             : "bg-amber-50 border-amber-200",
           text: isDark ? "text-amber-400" : "text-amber-600",
           icon: "time-outline" as const,
+        };
+      case "Đã hủy":
+      case "Đã hoàn tiền":
+        return {
+          bg: isDark
+            ? "bg-red-950/40 border-red-800"
+            : "bg-red-50 border-red-200",
+          text: isDark ? "text-red-400" : "text-red-600",
+          icon: "close-circle-outline" as const,
         };
       default:
         return {
@@ -189,7 +221,7 @@ export default function DetailTourScreen() {
               color={isDark ? "#94A3B8" : "#E51F27"}
             />
             <Text
-              className={`text-sm font-semibold mt-3 ${
+              className={`text-base font-semibold mt-3 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}
             >
@@ -216,7 +248,7 @@ export default function DetailTourScreen() {
                 isDark ? "bg-slate-700" : "bg-[#E51F27]"
               }`}
             >
-              <Text className="text-white font-bold text-sm">Thử lại</Text>
+              <Text className="text-white font-bold text-base">Thử lại</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -251,20 +283,20 @@ export default function DetailTourScreen() {
                 >
                   <Ionicons name="star" size={14} color="#F59E0B" />
                   <Text
-                    className={`text-xs font-black ml-1 ${
+                    className={`text-base font-black ml-1 ${
                       isDark ? "text-slate-100" : "text-slate-800"
                     }`}
                   >
                     {booking.tour.rating}
                   </Text>
-                  <Text className="text-[10px] text-slate-400 ml-0.5">
+                  <Text className="text-base text-slate-400 ml-0.5">
                     ({booking.tour.reviewsCount})
                   </Text>
                 </View>
 
                 {/* Duration Badge */}
                 <View className="absolute bottom-4 left-4 bg-[#E51F27] px-3.5 py-1.5 rounded-2xl shadow-md">
-                  <Text className="text-[11px] text-white font-black uppercase tracking-wider">
+                  <Text className="text-base text-white font-black uppercase tracking-wider">
                     {booking.tour.duration}
                   </Text>
                 </View>
@@ -282,7 +314,7 @@ export default function DetailTourScreen() {
 
                 <View className="flex-row items-start justify-between mt-4 pt-4 border-t border-slate-100/50">
                   <View className="flex-1 mr-3">
-                    <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    <Text className="text-base font-bold text-slate-400 uppercase tracking-wide">
                       Đơn giá trọn gói
                     </Text>
 
@@ -291,7 +323,7 @@ export default function DetailTourScreen() {
                         isDark ? "text-slate-200" : "text-[#E51F27]"
                       }`}
                     >
-                      {formatCurrency(booking.tour.price)}
+                      {formatCurrency(booking.price)}
                     </Text>
                   </View>
 
@@ -303,7 +335,7 @@ export default function DetailTourScreen() {
                     }`}
                   >
                     <Text
-                      className={`text-[10px] font-black ${
+                      className={`text-base font-black ${
                         isDark ? "text-slate-300" : "text-red-500"
                       }`}
                     >
@@ -317,7 +349,7 @@ export default function DetailTourScreen() {
             {/* 2. ORDER DETAILS CARD */}
             <View className={sectionCardClass}>
               <Text
-                className={`text-sm font-black mb-4 uppercase tracking-wider ${
+                className={`text-base font-black mb-4 uppercase tracking-wider ${
                   isDark ? "text-slate-300" : "text-slate-700"
                 }`}
               >
@@ -327,7 +359,7 @@ export default function DetailTourScreen() {
               {/* Status Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
@@ -346,19 +378,31 @@ export default function DetailTourScreen() {
                         ? getStatusBadgeConfig(booking.status).text ===
                           "text-green-400"
                           ? "#4ADE80"
-                          : "#FBBF24"
+                          : getStatusBadgeConfig(booking.status).text ===
+                            "text-amber-400"
+                            ? "#FBBF24"
+                            : getStatusBadgeConfig(booking.status).text ===
+                              "text-red-400"
+                              ? "#F87171"
+                              : "#94A3B8"
                         : getStatusBadgeConfig(booking.status).text ===
                             "text-green-600"
                           ? "#16A34A"
-                          : "#D97706"
+                          : getStatusBadgeConfig(booking.status).text ===
+                            "text-amber-600"
+                            ? "#D97706"
+                            : getStatusBadgeConfig(booking.status).text ===
+                              "text-red-600"
+                              ? "#DC2626"
+                              : "#64748B"
                     }
                   />
                   <Text
-                    className={`text-[11px] font-black ml-1 uppercase tracking-wide ${
+                    className={`text-base font-black ml-1 uppercase tracking-wide ${
                       getStatusBadgeConfig(booking.status).text
                     }`}
                   >
-                    {booking.status}
+                    {MAP_STATUS_VN[booking.status] || booking.status}
                   </Text>
                 </View>
               </View>
@@ -370,26 +414,26 @@ export default function DetailTourScreen() {
                 }`}
               />
 
-              {/* Order ID Row */}
+              {/* Tour Code Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
-                  Mã đơn hàng
+                  Mã Tour
                 </Text>
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={handleCopyId}
+                  onPress={handleCopyTourCode}
                   className="flex-row items-center"
                 >
                   <Text
-                    className={`text-xs font-black mr-1 ${
+                    className={`text-base font-black mr-1 ${
                       isDark ? "text-slate-200" : "text-slate-700"
                     }`}
                   >
-                    #{booking.id}
+                    {booking?.departure?.tourCode ?? booking.tour.code ?? "-"}
                   </Text>
                   <Ionicons
                     name="copy-outline"
@@ -406,17 +450,58 @@ export default function DetailTourScreen() {
                 }`}
               />
 
+              {/* Departure Date Row */}
+              <View className="flex-row justify-between items-center py-2.5">
+                <Text
+                  className={`text-base font-semibold ${
+                    isDark ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  Ngày khởi hành
+                </Text>
+                <Text
+                  className={`text-base font-black ${
+                    isDark ? "text-slate-200" : "text-slate-800"
+                  }`}
+                >
+                  {booking?.departure?.departureDate
+                    ? formatDepartureDate(booking.departure.departureDate)
+                    : "Chưa cập nhật"}
+                </Text>
+              </View>
+
+              {/* Reminder Row */}
+              <View className="pb-2">
+                <Text
+                  className={`text-sm italic ${
+                    isDark ? "text-amber-400" : "text-amber-600"
+                  }`}
+                >
+                  * Thời gian chi tiết xin hãy xem ở phần{" "}
+                  <Text className="font-extrabold not-italic uppercase">
+                    LỊCH TRÌNH CHI TIẾT
+                  </Text>
+                </Text>
+              </View>
+
+              {/* Divider */}
+              <View
+                className={`h-[1px] my-1 ${
+                  isDark ? "bg-slate-700/40" : "bg-slate-100"
+                }`}
+              />
+
               {/* Quantity Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
                   Số lượng đặt
                 </Text>
                 <Text
-                  className={`text-xs font-black ${
+                  className={`text-base font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
                 >
@@ -432,12 +517,12 @@ export default function DetailTourScreen() {
                   />
                   <View className="flex-row justify-between items-center py-2.5">
                     <Text
-                      className={`text-xs font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`text-base font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
                     >
                       Tạm tính
                     </Text>
                     <Text
-                      className={`text-xs font-black ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      className={`text-base font-black ${isDark ? "text-slate-200" : "text-slate-800"}`}
                     >
                       {formatCurrency(booking.originalPrice)}
                     </Text>
@@ -453,10 +538,10 @@ export default function DetailTourScreen() {
                       className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                     />
                     <View className="flex-row justify-between items-center py-2.5">
-                      <Text className="text-xs font-semibold text-green-500">
+                      <Text className="text-base font-semibold text-green-500">
                         Giảm giá voucher
                       </Text>
-                      <Text className="text-xs font-black text-green-500">
+                      <Text className="text-base font-black text-green-500">
                         -{formatCurrency(booking.discountAmount)}
                       </Text>
                     </View>
@@ -471,7 +556,7 @@ export default function DetailTourScreen() {
                   />
                   <View className="flex-row justify-between items-center py-2.5">
                     <Text
-                      className={`text-xs font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`text-base font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
                     >
                       Voucher đã áp dụng
                     </Text>
@@ -481,7 +566,7 @@ export default function DetailTourScreen() {
                         size={14}
                         color={isDark ? "#93C5FD" : "#E51F27"}
                       />
-                      <Text className="text-xs font-extrabold text-blue-500 dark:text-blue-400 ml-1">
+                      <Text className="text-base font-extrabold text-blue-500 dark:text-blue-400 ml-1">
                         {booking.voucher.code}
                       </Text>
                     </View>
@@ -497,12 +582,12 @@ export default function DetailTourScreen() {
                   />
                   <View className="flex-col py-2.5">
                     <Text
-                      className={`text-xs font-semibold mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`text-base font-semibold mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
                     >
                       Ghi chú đặt tour
                     </Text>
                     <Text
-                      className={`text-xs italic ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      className={`text-base italic ${isDark ? "text-slate-300" : "text-slate-600"}`}
                     >
                       {booking.notice}
                     </Text>
@@ -520,14 +605,14 @@ export default function DetailTourScreen() {
               {/* Price Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
                   Tổng thanh toán
                 </Text>
                 <Text
-                  className={`text-sm font-black ${
+                  className={`text-base font-black ${
                     isDark ? "text-slate-200" : "text-[#E51F27]"
                   }`}
                 >
@@ -545,14 +630,14 @@ export default function DetailTourScreen() {
               {/* Created At Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
                   Thời gian đặt
                 </Text>
                 <Text
-                  className={`text-xs font-black ${
+                  className={`text-base font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
                 >
@@ -570,14 +655,14 @@ export default function DetailTourScreen() {
               {/* Updated At Row */}
               <View className="flex-row justify-between items-center py-2.5">
                 <Text
-                  className={`text-xs font-semibold ${
+                  className={`text-base font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
                   Cập nhật cuối
                 </Text>
                 <Text
-                  className={`text-xs font-black ${
+                  className={`text-base font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
                 >
@@ -595,20 +680,29 @@ export default function DetailTourScreen() {
             {/* Lịch trình */}
             {booking.tour.schedules?.length ? (
               <View className={sectionCardClass}>
-                <SectionTitle title="Lịch trình" />
+                <SectionTitle title="Lịch trình dự kiến" />
                 <TourScheduleAccordion schedules={booking.tour.schedules} />
+                <View
+                  className={`flex-row items-start mt-4 p-3 rounded-2xl ${isDark ? "bg-amber-950/30 border border-amber-800/40" : "bg-amber-50 border border-amber-200"}`}
+                >
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color={isDark ? "#FCD34D" : "#D97706"}
+                    style={{ marginTop: 1 }}
+                  />
+                  <Text
+                    className={`flex-1 ml-2 text-base italic leading-5 ${isDark ? "text-amber-300" : "text-amber-700"}`}
+                  >
+                    Lưu ý: Đây là lịch trình dự kiến cho chuyến đi, lịch trình
+                    chi tiết chúng tôi sẽ cập nhật cho quý khách trước ngày khởi
+                    hành 3 ngày.
+                  </Text>
+                </View>
               </View>
             ) : null}
 
             {/* Lưu ý riêng  */}
-            {booking.tour.notes ? (
-              <View className={sectionCardClass}>
-                <SectionTitle title="Lưu ý riêng" />
-                <Text className={isDark ? "text-slate-300" : "text-slate-700"}>
-                  {booking.tour.notes}
-                </Text>
-              </View>
-            ) : null}
 
             {/* Điều khoản và Lưu ý chung */}
             <View className={sectionCardClass}>
@@ -632,7 +726,7 @@ export default function DetailTourScreen() {
                 color={isDark ? "#94A3B8" : "#475569"}
               />
               <Text
-                className={`text-xs font-black ml-2 ${
+                className={`text-base font-black ml-2 ${
                   isDark ? "text-slate-300" : "text-slate-700"
                 }`}
               >

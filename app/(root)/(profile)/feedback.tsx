@@ -96,7 +96,7 @@ export default function FeedbackScreen() {
                 ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             } mb-5`}>
-              <Text className={`text-sm font-bold leading-5 ${isDark ? "text-slate-200" : "text-slate-700"}`}>
+              <Text className={`text-base font-bold leading-5 ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                 BenThanh Tourist luôn sẵn sàng lắng nghe ý kiến đóng góp của Quý khách để không ngừng cải tiến và đem lại dịch vụ tốt nhất.
               </Text>
             </View>
@@ -108,7 +108,7 @@ export default function FeedbackScreen() {
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             }`}>
               {/* Họ và Tên (Prefilled) */}
-              <Text className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}>
                 Người gửi
@@ -128,7 +128,7 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Email (Prefilled) */}
-              <Text className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}>
                 Địa chỉ Email
@@ -146,7 +146,7 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Chủ đề góp ý */}
-              <Text className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}>
                 Chủ đề góp ý
@@ -181,7 +181,7 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Nội dung góp ý */}
-              <Text className={`text-xs font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}>
                 Nội dung góp ý chi tiết

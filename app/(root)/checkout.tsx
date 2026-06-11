@@ -1,5 +1,6 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
-import { booking } from "@/services/booking";
+import { booking, PaymentMethod } from "@/services/booking";
 import { getVouchers } from "@/services/voucher";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -48,6 +49,40 @@ const DEFAULT_TOUR = {
   hasVat: true,
 };
 
+const PAYMENT_METHODS: {
+  id: PaymentMethod;
+  label: string;
+  icon: string;
+  detail: string;
+}[] = [
+  {
+    id: "AT_OFFICE",
+    label: "Tại Văn Phòng",
+    icon: "🏢",
+    detail: `CÔNG TY CỔ PHẦN DỊCH VỤ DU LỊCH BẾN THÀNH (BENTHANH TOURIST)
+Trụ sở: Số 03 - 05 Nguyễn Huệ, Phường Sài Gòn, TP. Hồ Chí Minh
+Tel: 028 3822 7788`,
+  },
+  {
+    id: "BANK_TRANSFER",
+    label: "Chuyển khoản ngân hàng",
+    icon: "🏦",
+    detail: `THÔNG TIN THANH TOÁN CHUYỂN KHOẢN
+- Ngân hàng TMCP Ngoại Thương Việt Nam - CN TP.HCM (VCB)
+- Tên đơn vị hưởng: CÔNG TY CỔ PHẦN DỊCH VỤ DU LỊCH BẾN THÀNH
+- Số tài khoản VNĐ: 007.1001204617
+- Tại Ngân Hàng VCB - CN TP.HCM`,
+  },
+];
+
+const formatFullDate = (iso: string) => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return `${String(d.getDate()).padStart(2, "0")}/${String(
+    d.getMonth() + 1,
+  ).padStart(2, "0")}/${d.getFullYear()}`;
+};
+
 export default function CheckoutScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -57,6 +92,7 @@ export default function CheckoutScreen() {
   // Parse parameters passed from index.tsx or fallback to defaults
   const tourId = (params.id as string) || DEFAULT_TOUR.id;
   const tourName = (params.name as string) || DEFAULT_TOUR.name;
+  const tourCode = (params.tourCode as string) || "";
   const tourImageUrl = (params.imageUrl as string) || DEFAULT_TOUR.imageUrl;
   const tourPrice = params.price
     ? parseFloat(params.price as string)
@@ -73,13 +109,22 @@ export default function CheckoutScreen() {
       ? params.hasVat === "true"
       : DEFAULT_TOUR.hasVat;
 
+  // Departure info passed from the tour detail screen.
+  const departureId = (params.departureId as string) || "";
+  const departureDate = (params.departureDate as string) || "";
+  const availableSeats = params.availableSeats
+    ? parseInt(params.availableSeats as string, 10)
+    : Infinity;
+
   const [quantity, setQuantity] = useState(2);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+    null,
+  );
   const [notice, setNotice] = useState("");
   const [vouchers, setVouchers] = useState<ExtendedVoucher[]>([]);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
   const [selectedVoucher, setSelectedVoucher] =
     useState<ExtendedVoucher | null>(null);
-  const [showVoucherList, setShowVoucherList] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
 
@@ -180,6 +225,20 @@ export default function CheckoutScreen() {
   };
 
   const handleBookingSubmit = () => {
+    // Validation before confirming.
+    if (!departureId) {
+      Alert.alert("Thông báo", "Vui lòng chọn ngày khởi hành");
+      return;
+    }
+    if (!paymentMethod) {
+      Alert.alert("Thông báo", "Vui lòng chọn phương thức thanh toán");
+      return;
+    }
+    if (availableSeats < quantity) {
+      Alert.alert("Thông báo", "Số chỗ không đủ, vui lòng giảm số lượng");
+      return;
+    }
+
     Alert.alert(
       "Xác nhận đặt tour",
       "Bạn có chắc chắn muốn đặt chuyến đi này không?",
@@ -201,9 +260,11 @@ export default function CheckoutScreen() {
       setSubmitting(true);
       const bookingData = {
         idTour: tourId,
-        quantity: quantity,
-        voucherCode: selectedVoucher ? selectedVoucher.code : "",
-        notice: notice,
+        departureId,
+        quantity,
+        paymentMethod: paymentMethod as PaymentMethod,
+        voucherCode: selectedVoucher ? selectedVoucher.code : null,
+        notice: notice || null,
       };
 
       const res = await booking(bookingData);
@@ -290,19 +351,19 @@ export default function CheckoutScreen() {
               >
                 <Ionicons name="star" size={14} color="#F59E0B" />
                 <Text
-                  className={`text-xs font-black ml-1 ${
+                  className={`text-base font-black ml-1 ${
                     isDark ? "text-slate-100" : "text-slate-800"
                   }`}
                 >
                   {tourRating}
                 </Text>
-                <Text className="text-[10px] text-slate-400 ml-0.5">
+                <Text className="text-base text-slate-400 ml-0.5">
                   ({tourReviewsCount})
                 </Text>
               </View>
 
               <View className="absolute bottom-4 left-4 bg-[#E51F27] px-3 py-1 rounded-2xl shadow-md">
-                <Text className="text-[10px] text-white font-black uppercase tracking-wider">
+                <Text className="text-base text-white font-black uppercase tracking-wider">
                   {tourDuration}
                 </Text>
               </View>
@@ -310,15 +371,51 @@ export default function CheckoutScreen() {
 
             <View className="p-5">
               <Text
-                className={`text-base font-black leading-6 ${
+                style={{ fontSize: FONT_SIZE.lg }}
+                className={`font-black leading-7 ${
                   isDark ? "text-slate-100" : "text-slate-800"
                 }`}
               >
                 {tourName}
               </Text>
+
+              {/* Selected departure summary */}
+              {!!departureDate && (
+                <View className="mt-2.5">
+                  {!!tourCode && (
+                    <Text
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      className={`font-semibold ${
+                        isDark ? "text-slate-300" : "text-slate-600"
+                      }`}
+                    >
+                      🏷️ Mã tour: {tourCode}
+                    </Text>
+                  )}
+                  <Text
+                    style={{ fontSize: FONT_SIZE.xs }}
+                    className={`font-semibold ${
+                      isDark ? "text-slate-300" : "text-slate-600"
+                    } ${!!tourCode ? "mt-1" : ""}`}
+                  >
+                    📅 Ngày khởi hành: {formatFullDate(departureDate)}
+                  </Text>
+                  {availableSeats !== Infinity && (
+                    <Text
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      className={`mt-1 font-semibold ${
+                        isDark ? "text-slate-300" : "text-slate-600"
+                      }`}
+                    >
+                      👥 Số chỗ còn: {availableSeats}
+                    </Text>
+                  )}
+                </View>
+              )}
+
               <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-slate-100/50">
                 <View>
-                  <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                  <Text className="text-base font-bold text-slate-400 uppercase tracking-wide">
                     Đơn giá trọn gói
                   </Text>
                   <Text
@@ -338,7 +435,7 @@ export default function CheckoutScreen() {
                         : "border-red-100 bg-red-50/50"
                     }`}
                   >
-                    <Text className="text-[9px] font-black uppercase text-red-500">
+                    <Text className="text-base font-black uppercase text-red-500">
                       Đã gồm VAT
                     </Text>
                   </View>
@@ -358,13 +455,13 @@ export default function CheckoutScreen() {
             <View className="flex-row justify-between items-center">
               <View>
                 <Text
-                  className={`text-sm font-black uppercase tracking-wider ${
+                  className={`text-base font-black uppercase tracking-wider ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
                 >
                   Số lượng khách
                 </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
+                <Text className="text-base text-slate-400 mt-0.5">
                   Đặt chỗ cho chuyến đi của bạn
                 </Text>
               </View>
@@ -396,7 +493,9 @@ export default function CheckoutScreen() {
 
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => setQuantity(quantity + 1)}
+                  onPress={() =>
+                    setQuantity(Math.min(availableSeats, quantity + 1))
+                  }
                   className={`w-10 h-10 rounded-xl items-center justify-center border ${
                     isDark
                       ? "bg-slate-700 border-slate-600 active:bg-slate-650"
@@ -418,7 +517,7 @@ export default function CheckoutScreen() {
               {/* Input Voucher */}
               <View className="mb-5">
                 <Text
-                  className={`text-xs font-bold mb-2 ${
+                  className={`text-base font-bold mb-2 ${
                     isDark ? "text-slate-300" : "text-slate-700"
                   }`}
                 >
@@ -464,7 +563,7 @@ export default function CheckoutScreen() {
                 </View>
 
                 <Text
-                  className={`text-[10px] mt-2 ${
+                  className={`text-base mt-2 ${
                     isDark ? "text-slate-500" : "text-slate-400"
                   }`}
                 >
@@ -509,7 +608,7 @@ export default function CheckoutScreen() {
 
                         <View className="ml-3.5 flex-1">
                           <Text
-                            className={`text-[9px] font-black uppercase tracking-wider ${
+                            className={`text-base font-black uppercase tracking-wider ${
                               isDark ? "text-blue-400" : "text-[#E51F27]"
                             }`}
                           >
@@ -517,21 +616,21 @@ export default function CheckoutScreen() {
                           </Text>
 
                           <Text
-                            className={`text-sm font-black mt-0.5 ${
+                            className={`text-base font-black mt-0.5 ${
                               isDark ? "text-slate-200" : "text-slate-800"
                             }`}
                           >
                             {item.title}
                           </Text>
 
-                          <Text className="text-[9px] font-semibold text-slate-400 mt-0.5">
+                          <Text className="text-base font-semibold text-slate-400 mt-0.5">
                             {item.expiry}
                           </Text>
                         </View>
                       </View>
 
                       <Text
-                        className={`text-xs mt-3 leading-5 ${
+                        className={`text-base mt-3 leading-5 ${
                           isDark ? "text-slate-400" : "text-slate-500"
                         }`}
                       >
@@ -546,7 +645,7 @@ export default function CheckoutScreen() {
 
                       <View className="flex-row justify-end items-center">
                         {isApplied && (
-                          <Text className="text-green-600 text-xs font-semibold mr-3">
+                          <Text className="text-green-600 text-base font-semibold mr-3">
                             Đang sử dụng
                           </Text>
                         )}
@@ -565,7 +664,7 @@ export default function CheckoutScreen() {
                                 : "bg-[#E51F27] active:bg-[#C41A21]"
                           }`}
                         >
-                          <Text className="text-white font-bold text-xs">
+                          <Text className="text-white font-bold text-base">
                             {isApplied ? "Đã áp dụng" : "Áp dụng"}
                           </Text>
                         </TouchableOpacity>
@@ -575,7 +674,7 @@ export default function CheckoutScreen() {
                 })
               ) : (
                 <Text
-                  className={`text-xs text-center py-4 ${
+                  className={`text-base text-center py-4 ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
@@ -594,7 +693,7 @@ export default function CheckoutScreen() {
             }`}
           >
             <Text
-              className={`text-sm font-black uppercase tracking-wider mb-2.5 ${
+              className={`text-base font-black uppercase tracking-wider mb-2.5 ${
                 isDark ? "text-slate-200" : "text-slate-800"
               }`}
             >
@@ -607,13 +706,96 @@ export default function CheckoutScreen() {
               placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
               value={notice}
               onChangeText={setNotice}
-              className={`rounded-xl p-3 border text-xs font-medium min-h-[80px] text-left vertical-align-top ${
+              className={`rounded-xl p-3 border text-base font-medium min-h-[80px] text-left vertical-align-top ${
                 isDark
                   ? "bg-slate-900/60 border-slate-700/50 text-slate-100"
                   : "bg-slate-50 border-slate-200 text-slate-800"
               }`}
               style={{ textAlignVertical: "top" }}
             />
+          </View>
+
+          {/* 4b. PAYMENT METHOD PICKER */}
+          <View
+            className={`rounded-[32px] p-5 mt-6 border shadow-sm ${
+              isDark
+                ? "bg-slate-800/90 border-slate-700/60"
+                : "bg-white border-slate-100"
+            }`}
+          >
+            <Text
+              style={{ fontSize: FONT_SIZE.md }}
+              className={`font-black mb-3 ${
+                isDark ? "text-slate-200" : "text-slate-800"
+              }`}
+            >
+              💳 Phương thức thanh toán
+            </Text>
+
+            {PAYMENT_METHODS.map((method) => {
+              const isSelected = paymentMethod === method.id;
+              return (
+                <View key={method.id} className="mb-3">
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setPaymentMethod(method.id)}
+                    className={`flex-row items-center rounded-2xl px-4 py-3.5 border-2 ${
+                      isSelected
+                        ? "border-[#E51F27]"
+                        : isDark
+                          ? "border-slate-700"
+                          : "border-slate-200"
+                    } ${isDark ? "bg-slate-900/40" : "bg-slate-50"}`}
+                  >
+                    <Ionicons
+                      name={
+                        isSelected
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      size={22}
+                      color={isSelected ? "#E51F27" : "#94A3B8"}
+                    />
+                    <Text style={{ fontSize: FONT_SIZE.lg }} className="ml-2">
+                      {method.icon}
+                    </Text>
+                    <Text
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      className={`ml-2 flex-1 font-bold ${
+                        isDark ? "text-slate-100" : "text-slate-800"
+                      }`}
+                    >
+                      {method.label}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color="#16A34A"
+                      />
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Expanded detail when selected */}
+                  {isSelected && (
+                    <View
+                      className={`rounded-2xl px-4 py-3 mt-2 ${
+                        isDark ? "bg-slate-900/60" : "bg-red-50/60"
+                      }`}
+                    >
+                      <Text
+                        style={{ fontSize: FONT_SIZE.xs, lineHeight: 22 }}
+                        className={`${
+                          isDark ? "text-slate-300" : "text-slate-700"
+                        }`}
+                      >
+                        {method.detail}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
 
           {/* 5. PRICE BREAKDOWN */}
@@ -625,7 +807,7 @@ export default function CheckoutScreen() {
             }`}
           >
             <Text
-              className={`text-sm font-black uppercase tracking-wider mb-3.5 ${
+              className={`text-base font-black uppercase tracking-wider mb-3.5 ${
                 isDark ? "text-slate-200" : "text-slate-800"
               }`}
             >
@@ -635,14 +817,14 @@ export default function CheckoutScreen() {
             {/* Subtotal */}
             <View className="flex-row justify-between items-center mb-2.5">
               <Text
-                className={`text-xs font-semibold ${
+                className={`text-base font-semibold ${
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
               >
                 Tạm tính ({quantity} khách)
               </Text>
               <Text
-                className={`text-xs font-bold ${
+                className={`text-base font-bold ${
                   isDark ? "text-slate-200" : "text-slate-700"
                 }`}
               >
@@ -653,10 +835,10 @@ export default function CheckoutScreen() {
             {/* Discount */}
             {discountAmount > 0 && (
               <View className="flex-row justify-between items-center mb-2.5">
-                <Text className="text-xs font-semibold text-green-500">
+                <Text className="text-base font-semibold text-green-500">
                   Giảm giá voucher
                 </Text>
-                <Text className="text-xs font-black text-green-500">
+                <Text className="text-base font-black text-green-500">
                   -{formatCurrency(discountAmount)}
                 </Text>
               </View>
@@ -672,7 +854,7 @@ export default function CheckoutScreen() {
             {/* Total */}
             <View className="flex-row justify-between items-center">
               <Text
-                className={`text-sm font-black ${
+                className={`text-base font-black ${
                   isDark ? "text-slate-100" : "text-slate-800"
                 }`}
               >
@@ -698,7 +880,7 @@ export default function CheckoutScreen() {
           }`}
         >
           <View>
-            <Text className="text-[10px] font-bold text-slate-400 uppercase">
+            <Text className="text-base font-bold text-slate-400 uppercase">
               Tổng số tiền
             </Text>
             <Text
@@ -724,7 +906,7 @@ export default function CheckoutScreen() {
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
-                <Text className="text-white font-black text-sm uppercase tracking-wide mr-1.5">
+                <Text className="text-white font-black text-base uppercase tracking-wide mr-1.5">
                   Đặt tour ngay
                 </Text>
                 <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />

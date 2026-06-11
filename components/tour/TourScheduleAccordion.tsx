@@ -101,7 +101,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
               >
                 <View className="flex-row items-center">
                   <View className="w-8 h-8 rounded-full bg-red-500 items-center justify-center">
-                    <Text className="text-white font-bold text-xs">
+                    <Text className="text-white font-bold text-base">
                       {schedule.dayNumber}
                     </Text>
                   </View>
@@ -126,7 +126,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                 <View className="mt-4">
                   {/* Title */}
                   <Text
-                    className={`font-bold text-sm leading-6 ${
+                    className={`font-bold text-base leading-6 ${
                       isDark ? "text-slate-200" : "text-slate-800"
                     }`}
                   >
@@ -204,7 +204,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                             />
 
                             <Text
-                              className={`ml-1 text-xs font-semibold ${
+                              className={`ml-1 text-base font-semibold ${
                                 isDark ? "text-red-300" : "text-red-600"
                               }`}
                             >

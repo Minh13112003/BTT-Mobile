@@ -1,16 +1,19 @@
 import * as urls from "./api/constants";
 import { apiService } from "./api/interceptor";
+import type { Departure } from "./departure";
 
 export interface TourItem {
   id: string;
   name: string;
   imageUrl: string;
   imagePublicId: string;
-  price: number;
+  /** @deprecated Backend đã xóa — giá lấy từ departures[].price */
+  price?: number;
   duration: string;
   rating: number;
   reviewsCount: number;
   hasVat: boolean;
+  departures?: Departure[];
 }
 
 export interface TourSchedule {

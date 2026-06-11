@@ -36,7 +36,7 @@ function InfoRow({
           style={{ marginRight: 7 }}
         />
         <Text
-          className={`text-[11.5px] font-semibold ${
+          className={`text-base font-semibold ${
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
@@ -44,7 +44,7 @@ function InfoRow({
         </Text>
       </View>
       <Text
-        className={`text-[11.5px] font-bold text-right max-w-[180px] ${
+        className={`text-base font-bold text-right max-w-[180px] ${
           isDark ? "text-slate-100" : "text-slate-800"
         }`}
       >
@@ -61,10 +61,10 @@ function InfoRow({
 export function TripInfoCard({ tour }: { tour: TourDetail }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const subClass = `text-[11px] font-black uppercase tracking-wide mt-4 mb-2 ${
+  const subClass = `text-base font-black uppercase tracking-wide mt-4 mb-2 ${
     isDark ? "text-slate-300" : "text-slate-600"
   }`;
-  const bodyClass = `flex-1 text-[11.5px] leading-5 ${
+  const bodyClass = `flex-1 text-base leading-5 ${
     isDark ? "text-slate-300" : "text-slate-600"
   }`;
 
@@ -110,7 +110,7 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
           style={{ borderLeftWidth: 3, borderLeftColor: "#F59E0B" }}
         >
           <Text
-            className={`text-[11px] italic leading-5 ${
+            className={`text-base italic leading-5 ${
               isDark ? "text-amber-200" : "text-amber-700"
             }`}
           >

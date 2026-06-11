@@ -17,7 +17,7 @@ export function TermsAccordion() {
             <View key={j} className="flex-row items-start py-1">
               <Text style={{ color: "#E5953B", marginRight: 8, lineHeight: 18 }}>•</Text>
               <Text
-                className={`flex-1 text-[10.5px] leading-5 ${
+                className={`flex-1 text-base leading-5 ${
                   isDark ? "text-slate-300" : "text-slate-600"
                 }`}
               >

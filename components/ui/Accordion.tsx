@@ -31,11 +31,11 @@ export function Accordion({ title, number, defaultOpen = false, children }: Acco
         <View className="flex-row items-center flex-1 pr-3">
           {number != null && (
             <View className="w-6 h-6 rounded-lg items-center justify-center mr-2.5 bg-[#E51F27]/15">
-              <Text className="text-[10px] font-black text-[#E51F27]">{number}</Text>
+              <Text className="text-base font-black text-[#E51F27]">{number}</Text>
             </View>
           )}
           <Text
-            className={`text-xs font-bold flex-1 ${
+            className={`text-base font-bold flex-1 ${
               isDark ? "text-slate-100" : "text-slate-800"
             }`}
           >

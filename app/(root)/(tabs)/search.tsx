@@ -5,6 +5,7 @@ import { getPalette } from "@/constants/theme";
 import { useTheme } from "@/context/Theme_Context";
 import { TourFilter, useTourSearch } from "@/hooks/useTourSearch";
 import { TourItem } from "@/services/tour";
+import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -48,7 +49,7 @@ function FilterChips({
             }`}
           >
             <Text
-              className={`text-[11.5px] font-bold ${
+              className={`text-base font-bold ${
                 on ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
               }`}
             >
@@ -83,13 +84,15 @@ export default function SearchScreen() {
   } = useTourSearch();
 
   const openDetail = (tour: TourItem) => {
+    const nearest = getNearestDeparture(tour.departures ?? []);
+    const displayPrice = nearest?.price ?? null;
     router.push({
       pathname: "/(root)/tour/[id]",
       params: {
         id: tour.id,
         name: tour.name,
         imageUrl: tour.imageUrl,
-        price: String(tour.price),
+        price: displayPrice != null ? String(displayPrice) : "0",
         duration: tour.duration,
         rating: String(tour.rating),
         reviewsCount: String(tour.reviewsCount),
@@ -107,7 +110,7 @@ export default function SearchScreen() {
         {/* Sticky search header (kept outside FlatList so the input never loses focus) */}
         <View className="px-5 pt-4 pb-1">
           <Text
-            className={`text-[11px] font-bold uppercase tracking-wide mb-1 ${
+            className={`text-base font-bold uppercase tracking-wide mb-1 ${
               isDark ? "text-slate-500" : "text-slate-400"
             }`}
           >
@@ -117,7 +120,7 @@ export default function SearchScreen() {
             <Text className={`text-xl font-black ${isDark ? "text-slate-50" : "text-slate-900"}`}>
               Tìm kiếm tour
             </Text>
-            <Text className="text-xs font-semibold text-slate-400">{results.length} kết quả</Text>
+            <Text className="text-base font-semibold text-slate-400">{results.length} kết quả</Text>
           </View>
           <SearchBar value={query} onChangeText={setQuery} />
           <FilterChips filters={filters} active={activeFilter} onSelect={setActiveFilter} isDark={isDark} />
@@ -126,7 +129,7 @@ export default function SearchScreen() {
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={palette.spinner} />
-            <Text className={`text-sm mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <Text className={`text-base mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Đang tải danh sách tour...
             </Text>
           </View>
@@ -150,7 +153,7 @@ export default function SearchScreen() {
                 </View>
               ) : !hasNext && results.length > 0 ? (
                 <View className="py-3 items-center">
-                  <Text className="text-[11px] font-semibold text-slate-400">
+                  <Text className="text-base font-semibold text-slate-400">
                     ✓ Đã hiển thị tất cả tour
                   </Text>
                 </View>
@@ -164,13 +167,13 @@ export default function SearchScreen() {
               >
                 <Ionicons name="search-outline" size={42} color="#94A3B8" />
                 <Text
-                  className={`font-bold text-sm mt-3 text-center ${
+                  className={`font-bold text-base mt-3 text-center ${
                     isDark ? "text-slate-300" : "text-slate-600"
                   }`}
                 >
                   {query ? "Không tìm thấy tour phù hợp" : "Chưa có tour nào"}
                 </Text>
-                <Text className="text-slate-400 text-xs text-center mt-1.5">
+                <Text className="text-slate-400 text-base text-center mt-1.5">
                   {query ? "Vui lòng thử từ khoá khác." : "Danh sách tour sẽ hiển thị tại đây."}
                 </Text>
               </View>

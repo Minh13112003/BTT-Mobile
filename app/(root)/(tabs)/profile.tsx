@@ -90,7 +90,7 @@ export default function ProfileScreen() {
             </Text>
             {/* Hiển thị Email kèm theo Chức vụ (Role) nhỏ bên cạnh để dễ nhận biết */}
             <Text
-              className={`text-sm font-medium mt-1 text-center ${
+              className={`text-base font-medium mt-1 text-center ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}
             >
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
                 >
                   Thông tin cá nhân
                 </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
+                <Text className="text-base text-slate-400 mt-0.5">
                   Xem chi tiết hồ sơ tài khoản
                 </Text>
               </View>
@@ -167,7 +167,7 @@ export default function ProfileScreen() {
                 >
                   Kho voucher của bạn
                 </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
+                <Text className="text-base text-slate-400 mt-0.5">
                   Quản lý mã giảm giá, khuyến mãi
                 </Text>
               </View>
@@ -205,7 +205,7 @@ export default function ProfileScreen() {
                 >
                   Giới thiệu bạn bè
                 </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
+                <Text className="text-base text-slate-400 mt-0.5">
                   Chia sẻ nhận điểm thưởng, quà tặng
                 </Text>
               </View>
@@ -247,7 +247,7 @@ export default function ProfileScreen() {
                 >
                   Gửi góp ý phản hồi
                 </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
+                <Text className="text-base text-slate-400 mt-0.5">
                   Đóng góp ý kiến nâng cao dịch vụ
                 </Text>
               </View>
@@ -286,7 +286,7 @@ export default function ProfileScreen() {
                   >
                     Đăng ký khách hàng
                   </Text>
-                  <Text className="text-xs text-slate-400 mt-0.5">
+                  <Text className="text-base text-slate-400 mt-0.5">
                     Thêm mới thông tin khách hàng tiềm năng
                   </Text>
                 </View>
