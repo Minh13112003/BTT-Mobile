@@ -7,19 +7,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface HeaderProps {
   title?: string;
   showActions?: boolean;
+  /** When false, skips the top safe-area inset (the parent already provides it). */
+  safeArea?: boolean;
 }
 
 export default function Header({
   title = "BENTHANH TOURIST",
   showActions = true,
+  safeArea = true,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
+  const Wrapper = safeArea ? SafeAreaView : View;
+
   return (
-    <SafeAreaView
+    <Wrapper
       className={isDark ? "bg-[#1E222B]" : "bg-[#E51F27]"}
-      edges={["top"]}
+      {...(safeArea ? { edges: ["top"] as const } : {})}
     >
       <View
         className={`flex-row items-center px-5 py-3.5 shadow-md ${
@@ -70,6 +75,6 @@ export default function Header({
           </View>
         )}
       </View>
-    </SafeAreaView>
+    </Wrapper>
   );
 }

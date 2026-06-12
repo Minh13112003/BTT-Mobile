@@ -1,0 +1,55 @@
+/**
+ * Filter taxonomy for Home sections and the Search screen.
+ *
+ * Mirrors the backend contract in `tour-type-query.md`:
+ *  - `domestic` => GET /tours/by-type?country=Trong nước
+ *  - `foreign`  => GET /tours/by-type?country=Nước ngoài
+ * `region` values must be sent EXACTLY (dấu + hoa thường) to match the API.
+ */
+export type SearchMode = "newest" | "hot" | "popular" | "domestic" | "foreign";
+
+/** Khu vực hợp lệ cho country = "Trong nước". */
+export const DOMESTIC_REGIONS = ["Miền Bắc", "Miền Trung", "Miền Nam"] as const;
+
+/** Khu vực (châu lục) hợp lệ cho country = "Nước ngoài". */
+export const FOREIGN_REGIONS = ["Châu Á", "Châu Âu", "Châu Phi"] as const;
+
+/** Tiêu đề brush-stroke trên màn Home. */
+export const SECTION_LABELS: Record<SearchMode, string> = {
+  newest: "TOUR MỚI NHẤT",
+  hot: "TOUR ĐANG HOT",
+  popular: "TOUR BÁN CHẠY NHẤT",
+  domestic: "TOUR TRONG NƯỚC",
+  foreign: "TOUR QUỐC TẾ",
+};
+
+/** Nhãn ngắn cho chip lọc trên màn Search. */
+export const MODE_CHIP_LABELS: Record<SearchMode, string> = {
+  newest: "Mới nhất",
+  hot: "Đang hot",
+  popular: "Bán chạy",
+  domestic: "Trong nước",
+  foreign: "Quốc tế",
+};
+
+/** Thứ tự hiển thị các section trên Home & thứ tự chip trên Search. */
+export const SECTION_ORDER: SearchMode[] = [
+  "newest",
+  "hot",
+  "popular",
+  "domestic",
+  "foreign",
+];
+
+/** Giá trị `country` gửi lên API cho 2 mode theo vị trí. */
+export const MODE_COUNTRY: Partial<Record<SearchMode, string>> = {
+  domestic: "Trong nước",
+  foreign: "Nước ngoài",
+};
+
+/** Mode có sub-filter khu vực hay không. */
+export function regionsForMode(mode: SearchMode): readonly string[] | null {
+  if (mode === "domestic") return DOMESTIC_REGIONS;
+  if (mode === "foreign") return FOREIGN_REGIONS;
+  return null;
+}

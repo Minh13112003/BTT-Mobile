@@ -1,64 +1,67 @@
-import Header from "@/components/Header";
+import { Collapsible, CollapsingHeader } from "@/components/CollapsingHeader";
 import { SearchBar } from "@/components/SearchBar";
+import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
+import {
+  MODE_CHIP_LABELS,
+  SECTION_ORDER,
+  SearchMode,
+  regionsForMode,
+} from "@/constants/tourFilters";
 import { getPalette } from "@/constants/theme";
+import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
-import { TourFilter, useTourSearch } from "@/hooks/useTourSearch";
+import { useTourSearch } from "@/hooks/useTourSearch";
 import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-function FilterChips({
-  filters,
+/** Pill chip used for both the mode bar and the region sub-filter. */
+function Chip({
+  label,
   active,
-  onSelect,
+  onPress,
   isDark,
 }: {
-  filters: TourFilter[];
-  active: string;
-  onSelect: (key: string) => void;
+  label: string;
+  active: boolean;
+  onPress: () => void;
   isDark: boolean;
 }) {
   return (
-    <View className="flex-row flex-wrap gap-2 mt-3">
-      {filters.map((f) => {
-        const on = f.key === active;
-        return (
-          <TouchableOpacity
-            key={f.key}
-            activeOpacity={0.8}
-            onPress={() => onSelect(f.key)}
-            className={`px-3.5 py-2 rounded-full border ${
-              on
-                ? "bg-[#E51F27] border-[#E51F27]"
-                : isDark
-                  ? "bg-[#1E222B] border-slate-700/60"
-                  : "bg-white border-slate-200"
-            }`}
-          >
-            <Text
-              className={`text-base font-bold ${
-                on ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
-              }`}
-            >
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      className={`px-4 py-2 rounded-full border mr-2 ${
+        active
+          ? "bg-[#E51F27] border-[#E51F27]"
+          : isDark
+            ? "bg-[#1E222B] border-slate-700/60"
+            : "bg-white border-slate-200"
+      }`}
+    >
+      <Text
+        className={`font-bold ${
+          active ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
+        }`}
+        style={{ fontSize: 16 }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -68,20 +71,44 @@ export default function SearchScreen() {
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
 
+  // Pre-filter from the Home "Xem tất cả" buttons / search box.
+  const params = useLocalSearchParams<{ mode?: string; q?: string }>();
+  const initialMode = (
+    SECTION_ORDER as string[]
+  ).includes(params.mode ?? "")
+    ? (params.mode as SearchMode)
+    : "newest";
+
   const {
+    mode,
+    setMode,
+    region,
+    setRegion,
     query,
     setQuery,
-    activeFilter,
-    setActiveFilter,
-    filters,
     results,
-    loading,
-    refreshing,
-    loadingMore,
+    meta,
     hasNext,
+    loading,
+    loadingMore,
+    refreshing,
     onRefresh,
     loadMore,
-  } = useTourSearch();
+  } = useTourSearch({ mode: initialMode, query: params.q ?? "" });
+
+  const onScroll = useHideOnScroll();
+
+  // SubFilterBar slide-down animation (height 0 -> 56).
+  const regions = regionsForMode(mode);
+  const subVisible = !!regions && !query.trim();
+  const subHeight = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(subHeight, {
+      toValue: subVisible ? 56 : 0,
+      duration: 220,
+      useNativeDriver: false,
+    }).start();
+  }, [subVisible, subHeight]);
 
   const openDetail = (tour: TourItem) => {
     const nearest = getNearestDeparture(tour.departures ?? []);
@@ -104,32 +131,71 @@ export default function SearchScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#E51F27"} />
-      <Header title="BENTHANH TOURIST" showActions={true} />
+      <CollapsingHeader title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
-        {/* Sticky search header (kept outside FlatList so the input never loses focus) */}
-        <View className="px-5 pt-4 pb-1">
-          <Text
-            className={`text-base font-bold uppercase tracking-wide mb-1 ${
-              isDark ? "text-slate-500" : "text-slate-400"
-            }`}
-          >
-            Khám phá
-          </Text>
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className={`text-xl font-black ${isDark ? "text-slate-50" : "text-slate-900"}`}>
-              Tìm kiếm tour
-            </Text>
-            <Text className="text-base font-semibold text-slate-400">{results.length} kết quả</Text>
+        {/* Sticky search header — hides on scroll down, reappears on scroll up */}
+        <Collapsible>
+          <View className="px-5 pt-4 pb-1">
+            <View className="flex-row items-center justify-between mb-3">
+              <SectionHeader title="Tìm kiếm tour" />
+              <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
+                {meta?.total ?? results.length} kết quả
+              </Text>
+            </View>
+
+            <SearchBar value={query} onChangeText={setQuery} />
+
+            {/* Mode chips */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mt-3"
+              contentContainerStyle={{ paddingRight: 12 }}
+            >
+              {SECTION_ORDER.map((m) => (
+                <Chip
+                  key={m}
+                  label={MODE_CHIP_LABELS[m]}
+                  active={mode === m && !query.trim()}
+                  onPress={() => setMode(m)}
+                  isDark={isDark}
+                />
+              ))}
+            </ScrollView>
+
+            {/* Region sub-filter (slides down for domestic / foreign) */}
+            <Animated.View style={{ height: subHeight, overflow: "hidden" }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mt-3"
+                contentContainerStyle={{ paddingRight: 12 }}
+              >
+                <Chip
+                  label="Tất cả"
+                  active={region === null}
+                  onPress={() => setRegion(null)}
+                  isDark={isDark}
+                />
+                {(regions ?? []).map((r) => (
+                  <Chip
+                    key={r}
+                    label={r}
+                    active={region === r}
+                    onPress={() => setRegion(r)}
+                    isDark={isDark}
+                  />
+                ))}
+              </ScrollView>
+            </Animated.View>
           </View>
-          <SearchBar value={query} onChangeText={setQuery} />
-          <FilterChips filters={filters} active={activeFilter} onSelect={setActiveFilter} isDark={isDark} />
-        </View>
+        </Collapsible>
 
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={palette.spinner} />
-            <Text className={`text-base mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <Text className={`mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`} style={{ fontSize: 16 }}>
               Đang tải danh sách tour...
             </Text>
           </View>
@@ -138,14 +204,22 @@ export default function SearchScreen() {
             data={results}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100 }}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: 100,
+            }}
             keyboardShouldPersistTaps="handled"
+            onScroll={onScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.spinner} />
             }
             onEndReached={loadMore}
             onEndReachedThreshold={0.3}
-            renderItem={({ item }) => <TourCard tour={item} onPress={() => openDetail(item)} />}
+            renderItem={({ item }) => (
+              <TourCard tour={item} onPress={() => openDetail(item)} />
+            )}
             ListFooterComponent={
               loadingMore ? (
                 <View className="py-4 items-center">
@@ -153,7 +227,7 @@ export default function SearchScreen() {
                 </View>
               ) : !hasNext && results.length > 0 ? (
                 <View className="py-3 items-center">
-                  <Text className="text-base font-semibold text-slate-400">
+                  <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
                     ✓ Đã hiển thị tất cả tour
                   </Text>
                 </View>
@@ -165,16 +239,17 @@ export default function SearchScreen() {
                   isDark ? "bg-[#1E222B]/40 border-slate-700" : "bg-white border-slate-200"
                 }`}
               >
-                <Ionicons name="search-outline" size={42} color="#94A3B8" />
+                <Text style={{ fontSize: 40 }}>🔍</Text>
                 <Text
-                  className={`font-bold text-base mt-3 text-center ${
+                  className={`font-bold mt-3 text-center ${
                     isDark ? "text-slate-300" : "text-slate-600"
                   }`}
+                  style={{ fontSize: 18 }}
                 >
-                  {query ? "Không tìm thấy tour phù hợp" : "Chưa có tour nào"}
+                  Không tìm thấy tour
                 </Text>
-                <Text className="text-slate-400 text-base text-center mt-1.5">
-                  {query ? "Vui lòng thử từ khoá khác." : "Danh sách tour sẽ hiển thị tại đây."}
+                <Text className="text-slate-400 text-center mt-1.5" style={{ fontSize: 16 }}>
+                  Thử thay đổi từ khoá hoặc bộ lọc.
                 </Text>
               </View>
             }

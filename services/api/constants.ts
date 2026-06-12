@@ -27,6 +27,10 @@ export const URL_GetVouchers = `${API_BASE_URL}/api/v1/vouchers?`;
 //Tour APIs
 export const URL_GetTours = `${API_BASE_URL}/api/v1/tours?`;
 export const URL_GetTourById = `${API_BASE_URL}/api/v1/tours/`;
+export const URL_GetNewestTours = `${API_BASE_URL}/api/v1/tours/newest`;
+export const URL_GetHotTours = `${API_BASE_URL}/api/v1/tours/hot`;
+export const URL_GetPopularTours = `${API_BASE_URL}/api/v1/tours/popular`;
+export const URL_GetToursByType = `${API_BASE_URL}/api/v1/tours/by-type`;
 
 //Departure APIs
 export const URL_GetDeparturesByTour = `${API_BASE_URL}/api/v1/departures/tour/`;

@@ -1,108 +1,163 @@
-import { getTours, TourItem } from "@/services/tour";
-import { getNearestDeparture } from "@/utils/tour";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { MODE_COUNTRY, SearchMode } from "@/constants/tourFilters";
+import {
+  getHotTours,
+  getNewestTours,
+  getPopularTours,
+  getToursByType,
+  PaginatedMeta,
+  TourItem,
+} from "@/services/tour";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "./useDebounce";
 
-const LIMIT = 10;
+const LIMIT = 5;
 
-export interface TourFilter {
-  key: string;
-  label: string;
-  match: (tour: TourItem) => boolean;
+export interface UseTourSearchInit {
+  mode?: SearchMode;
+  region?: string | null;
+  query?: string;
 }
 
-/** Parse the leading day count out of a duration string e.g. "6 Ngày 5 Đêm" -> 6. */
-function parseDays(duration: string): number {
-  const match = duration?.match(/(\d+)\s*ng/i);
-  return match ? parseInt(match[1], 10) : 0;
+interface FetchResult {
+  items: TourItem[];
+  meta: PaginatedMeta | null;
 }
-
-const getTourPrice = (t: TourItem) => {
-  const nearest = getNearestDeparture(t.departures ?? []);
-  return nearest?.price ?? 0;
-};
-
-export const TOUR_FILTERS: TourFilter[] = [
-  { key: "all", label: "Tất cả", match: () => true },
-  { key: "short", label: "≤ 3 ngày", match: (t) => parseDays(t.duration) > 0 && parseDays(t.duration) <= 3 },
-  { key: "long", label: "4 ngày trở lên", match: (t) => parseDays(t.duration) >= 4 },
-  { key: "budget", label: "Dưới 7 triệu", match: (t) => getTourPrice(t) < 7_000_000 },
-  { key: "premium", label: "Cao cấp", match: (t) => getTourPrice(t) >= 10_000_000 },
-];
-
-type FetchMode = "init" | "refresh" | "more";
 
 /**
- * Server list + client-side search/filter for the search screen.
- * Text search is debounced; filters and query compose over the loaded tours.
+ * Server-driven tour search backing the Search screen.
+ *
+ * Behaviour follows `tour-type-query.md`:
+ *  - Non-empty (debounced) `query` => GET /tours/by-type?city=… (contains match),
+ *    taking priority over the mode chips.
+ *  - Otherwise the active `mode` selects the endpoint; `region` further narrows
+ *    the two location modes.
+ * Page resets to 1 whenever mode / region / query changes; `loadMore` appends.
  */
-export function useTourSearch() {
-  const [query, setQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [tours, setTours] = useState<TourItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+export function useTourSearch(init?: UseTourSearchInit) {
+  const [mode, setModeState] = useState<SearchMode>(init?.mode ?? "newest");
+  const [region, setRegion] = useState<string | null>(init?.region ?? null);
+  const [query, setQuery] = useState(init?.query ?? "");
+
+  const [results, setResults] = useState<TourItem[]>([]);
+  const [meta, setMeta] = useState<PaginatedMeta | null>(null);
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
-  const debouncedQuery = useDebounce(query, 300);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchTours = useCallback(async (pageNumber: number, mode: FetchMode) => {
-    try {
-      const res = await getTours(pageNumber, LIMIT);
-      const items: TourItem[] = Array.isArray(res?.data?.items) ? res.data.items : [];
-      const meta = res?.data?.meta;
-      setTours((prev) => (mode === "more" ? [...prev, ...items] : items));
-      setHasNext(meta?.hasNext ?? false);
-    } catch (err) {
-      console.error("Lỗi khi tải danh sách tour:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
-    }
+  const debouncedQuery = useDebounce(query, 500);
+
+  // Setting the mode always resets the region sub-filter to "Tất cả".
+  const setMode = useCallback((next: SearchMode) => {
+    setModeState(next);
+    setRegion(null);
   }, []);
 
+  const fetchPage = useCallback(
+    async (pageNum: number): Promise<FetchResult> => {
+      const city = debouncedQuery.trim();
+      let res: any;
+
+      if (city) {
+        res = await getToursByType({ city, page: pageNum, limit: LIMIT });
+      } else if (mode === "newest") {
+        res = await getNewestTours(pageNum, LIMIT);
+      } else if (mode === "hot") {
+        res = await getHotTours(pageNum, LIMIT);
+      } else if (mode === "popular") {
+        res = await getPopularTours(pageNum, LIMIT);
+      } else {
+        // domestic | foreign
+        res = await getToursByType({
+          country: MODE_COUNTRY[mode],
+          region: region ?? undefined,
+          page: pageNum,
+          limit: LIMIT,
+        });
+      }
+
+      const items: TourItem[] = Array.isArray(res?.data?.items)
+        ? res.data.items
+        : [];
+      return { items, meta: res?.data?.meta ?? null };
+    },
+    [mode, region, debouncedQuery],
+  );
+
+  // Reset + reload whenever the query descriptor changes.
+  const reqId = useRef(0);
   useEffect(() => {
+    const id = ++reqId.current;
     setLoading(true);
-    fetchTours(1, "init");
-  }, [fetchTours]);
+    setPage(1);
+    fetchPage(1)
+      .then((r) => {
+        if (id !== reqId.current) return; // a newer request superseded this one
+        setResults(r.items);
+        setMeta(r.meta);
+        setHasNext(r.meta?.hasNext ?? false);
+      })
+      .catch((err) => {
+        if (id !== reqId.current) return;
+        console.error("Lỗi tìm kiếm tour:", err);
+        setResults([]);
+        setHasNext(false);
+      })
+      .finally(() => {
+        if (id === reqId.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      });
+  }, [fetchPage]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    // Re-run the active query by nudging fetchPage via a fresh request id.
+    const id = ++reqId.current;
     setPage(1);
-    fetchTours(1, "refresh");
-  }, [fetchTours]);
+    fetchPage(1)
+      .then((r) => {
+        if (id !== reqId.current) return;
+        setResults(r.items);
+        setMeta(r.meta);
+        setHasNext(r.meta?.hasNext ?? false);
+      })
+      .finally(() => {
+        if (id === reqId.current) setRefreshing(false);
+      });
+  }, [fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (!hasNext || loadingMore) return;
+    if (!hasNext || loadingMore || loading) return;
     const next = page + 1;
     setLoadingMore(true);
-    setPage(next);
-    fetchTours(next, "more");
-  }, [hasNext, loadingMore, page, fetchTours]);
-
-  const results = useMemo(() => {
-    const q = debouncedQuery.trim().toLowerCase();
-    const filter = TOUR_FILTERS.find((f) => f.key === activeFilter) ?? TOUR_FILTERS[0];
-    return tours.filter(
-      (t) => (q ? t.name.toLowerCase().includes(q) : true) && filter.match(t),
-    );
-  }, [tours, debouncedQuery, activeFilter]);
+    fetchPage(next)
+      .then((r) => {
+        setResults((prev) => [...prev, ...r.items]);
+        setMeta(r.meta);
+        setHasNext(r.meta?.hasNext ?? false);
+        setPage(next);
+      })
+      .catch((err) => console.error("Lỗi tải thêm tour:", err))
+      .finally(() => setLoadingMore(false));
+  }, [hasNext, loadingMore, loading, page, fetchPage]);
 
   return {
+    mode,
+    setMode,
+    region,
+    setRegion,
     query,
     setQuery,
-    activeFilter,
-    setActiveFilter,
-    filters: TOUR_FILTERS,
     results,
-    totalLoaded: tours.length,
-    loading,
-    refreshing,
-    loadingMore,
+    meta,
     hasNext,
+    loading,
+    loadingMore,
+    refreshing,
     onRefresh,
     loadMore,
   };

@@ -13,6 +13,18 @@ export interface TourItem {
   rating: number;
   reviewsCount: number;
   hasVat: boolean;
+  // Loại hình / điểm đến — dùng cho lọc & hiển thị (xem tour-type-query.md)
+  departureFrom?: string;
+  transport?: string;
+  included?: string[];
+  notIncluded?: string[];
+  notes?: string | null;
+  tourCountry?: string | null;
+  tourRegion?: string | null;
+  tourCity?: string | null;
+  /** Chỉ có ở API /tours/popular; các API khác trả undefined */
+  bookingCount?: number;
+  schedules?: TourSchedule[];
   departures?: Departure[];
 }
 
@@ -29,8 +41,6 @@ export interface TourSchedule {
   meals: string[];
 }
 
-
-
 /**
  * Extended tour fields returned by the API for the tour detail screen.
  * Detail fields are optional so the UI degrades gracefully when the backend
@@ -45,7 +55,7 @@ export interface TourDetail extends TourItem {
   highlights?: string[];
   included?: string[];
   notIncluded?: string[];
-  notes?: string;
+  notes?: string | null;
   schedules?: TourSchedule[];
   singleRoomSupplement?: number;
 }
@@ -56,12 +66,60 @@ export interface ListMeta {
   page?: number;
 }
 
+/** Envelope phân trang dùng chung cho /newest, /hot, /popular, /by-type. */
+export interface PaginatedMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  meta: PaginatedMeta;
+}
+
+/** Tham số cho GET /tours/by-type (tất cả độc lập, không bắt buộc). */
+export interface TourTypeQuery {
+  country?: string;
+  region?: string;
+  city?: string;
+  page?: number;
+  limit?: number;
+}
+
 export function getTours(page: number, limit: number) {
   return apiService.get(urls.URL_GetTours + `page=${page}&limit=${limit}`);
 }
 
 export function getTourById(id: string) {
   return apiService.get(urls.URL_GetTourById + id);
+}
+
+/** Tour mới nhất theo createdAt giảm dần. */
+export function getNewestTours(page = 1, limit = 10) {
+  return apiService.get(urls.URL_GetNewestTours, { page, limit });
+}
+
+/** Tour rating cao nhất ("đang hot"). */
+export function getHotTours(page = 1, limit = 10) {
+  return apiService.get(urls.URL_GetHotTours, { page, limit });
+}
+
+/** Tour nhiều booking nhất ("bán chạy"). Trả thêm bookingCount. */
+export function getPopularTours(page = 1, limit = 10) {
+  return apiService.get(urls.URL_GetPopularTours, { page, limit });
+}
+
+/**
+ * Lọc tour theo loại hình. `country`/`region` khớp chính xác, `city` là
+ * tìm-chứa-chuỗi không phân biệt hoa thường. Tham số undefined được bỏ qua.
+ */
+export function getToursByType(params: TourTypeQuery) {
+  const { page = 1, limit = 10, ...rest } = params;
+  return apiService.get(urls.URL_GetToursByType, { ...rest, page, limit });
 }
 
 // Generic fallbacks so the "Thông tin chuyến đi" card always renders a complete

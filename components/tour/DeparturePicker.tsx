@@ -2,13 +2,13 @@
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
+import { formatCurrency } from "@/helper/format";
 import {
   Departure,
   extractDepartures,
   getDeparturesByTour,
   sortUpcoming,
 } from "@/services/departure";
-import { formatCurrency } from "@/helper/format";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -198,7 +198,7 @@ export function DeparturePicker({
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
               >
-                Departure đã chọn:
+                Thông tin khởi hành đã chọn:
               </Text>
               <Text
                 style={{ fontSize: FONT_SIZE.xs }}
