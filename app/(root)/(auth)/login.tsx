@@ -74,7 +74,7 @@ export default function LoginScreen() {
 
   const gradientColors = isDark
     ? (["#3E4451", "#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -128,7 +128,7 @@ export default function LoginScreen() {
                   borderColor: isDark
                     ? "rgba(71,85,105,0.6)"
                     : "rgba(229,31,39,0.15)",
-                  shadowColor: isDark ? "#000" : "#E51F27",
+                  shadowColor: isDark ? "#000" : "#D0021B",
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.18,
                   shadowRadius: 14,

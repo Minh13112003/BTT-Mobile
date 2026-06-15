@@ -8,7 +8,7 @@ export function SectionTitle({ title }: { title: string }) {
   const isDark = theme === "dark";
   return (
     <View className="flex-row items-center mb-3">
-      <View className="w-1 h-3.5 rounded-sm bg-[#E51F27] mr-2" />
+      <View className="w-1 h-3.5 rounded-sm bg-[#D0021B] mr-2" />
       <Text
         className={`text-base font-black uppercase tracking-wider ${
           isDark ? "text-slate-100" : "text-slate-800"

@@ -33,15 +33,15 @@ export function BookingBar({
         >
           Chỉ từ
         </Text>
-        <Text className={`text-lg font-black ${isDark ? "text-slate-100" : "text-[#E51F27]"}`}>
+        <Text className={`text-lg font-black ${isDark ? "text-slate-100" : "text-[#D0021B]"}`}>
           {formatPrice(price)}
-          <Text className="text-base font-bold text-[#E51F27]"> /khách</Text>
+          <Text className="text-base font-bold text-[#D0021B]"> /khách</Text>
         </Text>
       </View>
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.85}
-        className="bg-[#E51F27] active:bg-[#C41A21] rounded-2xl px-7 py-3.5"
+        className="bg-[#D0021B] active:bg-[#A80016] rounded-2xl px-7 py-3.5"
       >
         <Text className="text-white font-black text-base">{label}</Text>
       </TouchableOpacity>

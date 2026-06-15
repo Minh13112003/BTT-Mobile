@@ -23,14 +23,14 @@ export default function Header({
 
   return (
     <Wrapper
-      className={isDark ? "bg-[#1E222B]" : "bg-[#E51F27]"}
+      className={isDark ? "bg-[#1E222B]" : "bg-[#D0021B]"}
       {...(safeArea ? { edges: ["top"] as const } : {})}
     >
       <View
         className={`flex-row items-center px-5 py-3.5 shadow-md ${
           showActions ? "justify-between" : "justify-center"
         } ${
-          isDark ? "bg-[#1E222B] border-b border-slate-800" : "bg-[#E51F27]"
+          isDark ? "bg-[#1E222B] border-b border-slate-800" : "bg-[#D0021B]"
         }`}
       >
         {title === "BENTHANH TOURIST" ? (

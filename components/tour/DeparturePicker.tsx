@@ -99,7 +99,7 @@ export function DeparturePicker({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={isDark ? "#94A3B8" : "#E51F27"}
+          color={isDark ? "#94A3B8" : "#D0021B"}
           style={{ paddingVertical: 16 }}
         />
       ) : departures.length === 0 ? (
@@ -130,7 +130,7 @@ export function DeparturePicker({
                         ? "bg-slate-800/40 border-slate-700"
                         : "bg-slate-100 border-slate-200"
                       : isSelected
-                        ? "bg-[#E51F27] border-[#E51F27]"
+                        ? "bg-[#D0021B] border-[#D0021B]"
                         : isDark
                           ? "bg-slate-800 border-slate-700"
                           : "bg-white border-slate-200"
@@ -211,7 +211,7 @@ export function DeparturePicker({
               </Text>
               <Text
                 style={{ fontSize: FONT_SIZE.md }}
-                className="mt-1.5 font-black text-[#E51F27]"
+                className="mt-1.5 font-black text-[#D0021B]"
               >
                 💰 {formatCurrency(selected.price)} / người
               </Text>

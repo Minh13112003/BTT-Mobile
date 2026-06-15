@@ -65,7 +65,7 @@ export function TourCard({ tour, onPress }: { tour: TourItem; onPress: () => voi
         </View>
         <View
           className={`absolute bottom-3 left-3 rounded-xl px-2.5 py-1 ${
-            isDark ? "bg-slate-700/95" : "bg-[#E51F27]/90"
+            isDark ? "bg-slate-700/95" : "bg-[#D0021B]/90"
           }`}
         >
           <Text className="text-base text-white font-black uppercase">
@@ -106,7 +106,7 @@ export function TourCard({ tour, onPress }: { tour: TourItem; onPress: () => voi
             <Text
               style={{ fontSize: FONT_SIZE.xs }}
               className={`ml-1.5 font-bold ${
-                isDark ? "text-slate-200" : "text-[#E51F27]"
+                isDark ? "text-slate-200" : "text-[#D0021B]"
               }`}
             >
               Từ {formatPrice(displayPrice)}
@@ -136,7 +136,7 @@ export function TourCard({ tour, onPress }: { tour: TourItem; onPress: () => voi
             className={`rounded-xl px-5 py-2.5 ${
               isDark
                 ? "bg-slate-700 border border-slate-600 active:bg-slate-600"
-                : "bg-[#E51F27] active:bg-[#C41A21]"
+                : "bg-[#D0021B] active:bg-[#A80016]"
             }`}
           >
             <Text className="text-white font-bold text-base">

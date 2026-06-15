@@ -69,7 +69,7 @@ export function TourHero({ tour, onBack }: { tour: TourDetail; onBack: () => voi
       </View>
 
       {/* Duration badge */}
-      <View className="absolute left-4 bottom-4 bg-[#E51F27] px-3 py-1.5 rounded-xl">
+      <View className="absolute left-4 bottom-4 bg-[#D0021B] px-3 py-1.5 rounded-xl">
         <Text className="text-base text-white font-black uppercase tracking-wide">
           {tour.duration}
         </Text>

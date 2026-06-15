@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { TourDetail } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,11 @@ function InfoRow({
   return (
     <View
       className={`flex-row items-center justify-between py-2.5 ${
-        top ? (isDark ? "border-t border-[#232938]" : "border-t border-slate-100") : ""
+        top
+          ? isDark
+            ? "border-t border-[#232938]"
+            : "border-t border-slate-100"
+          : ""
       }`}
     >
       <View className="flex-row items-center">
@@ -36,7 +41,8 @@ function InfoRow({
           style={{ marginRight: 7 }}
         />
         <Text
-          className={`text-base font-semibold ${
+          style={{ fontSize: FONT_SIZE.xs }}
+          className={`font-semibold ${
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
@@ -44,7 +50,8 @@ function InfoRow({
         </Text>
       </View>
       <Text
-        className={`text-base font-bold text-right max-w-[180px] ${
+        style={{ fontSize: FONT_SIZE.xs }}
+        className={`font-bold text-right max-w-[180px] ${
           isDark ? "text-slate-100" : "text-slate-800"
         }`}
       >
@@ -61,10 +68,10 @@ function InfoRow({
 export function TripInfoCard({ tour }: { tour: TourDetail }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const subClass = `text-base font-black uppercase tracking-wide mt-4 mb-2 ${
+  const subClass = `font-black uppercase tracking-wide mt-4 mb-2 ${
     isDark ? "text-slate-300" : "text-slate-600"
   }`;
-  const bodyClass = `flex-1 text-base leading-5 ${
+  const bodyClass = `flex-1 ${
     isDark ? "text-slate-300" : "text-slate-600"
   }`;
 
@@ -72,12 +79,23 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
     <Card className="mt-4">
       <SectionTitle title="Thông tin chuyến đi" />
 
-      <InfoRow icon="location-outline" label="Nơi khởi hành" value={tour.departureFrom} isDark={isDark} />
-      <InfoRow icon="bus-outline" label="Phương tiện" value={tour.transport} top isDark={isDark} />
+      <InfoRow
+        icon="location-outline"
+        label="Nơi khởi hành"
+        value={tour.departureFrom}
+        isDark={isDark}
+      />
+      <InfoRow
+        icon="bus-outline"
+        label="Phương tiện"
+        value={tour.transport}
+        top
+        isDark={isDark}
+      />
 
       {tour.included?.length ? (
         <>
-          <Text className={subClass}>Dịch vụ bao gồm</Text>
+          <Text style={{ fontSize: FONT_SIZE.xs }} className={subClass}>Dịch vụ bao gồm</Text>
           {tour.included.map((item, i) => (
             <View key={i} className="flex-row items-start py-1">
               <Ionicons
@@ -86,7 +104,7 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
                 color={isDark ? "#4CAF50" : "#16A34A"}
                 style={{ marginRight: 8, marginTop: 1 }}
               />
-              <Text className={bodyClass}>{item}</Text>
+              <Text style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }} className={bodyClass}>{item}</Text>
             </View>
           ))}
         </>
@@ -94,11 +112,21 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
 
       {tour.notIncluded?.length ? (
         <>
-          <Text className={subClass}>Chưa bao gồm</Text>
+          <Text style={{ fontSize: FONT_SIZE.xs }} className={subClass}>Chưa bao gồm</Text>
           {tour.notIncluded.map((item, i) => (
             <View key={i} className="flex-row items-start py-1">
-              <Text style={{ color: "#E5953B", fontWeight: "900", marginRight: 9, lineHeight: 18 }}>•</Text>
-              <Text className={bodyClass}>{item}</Text>
+              <Text
+                style={{
+                  color: "#E5953B",
+                  fontWeight: "900",
+                  marginRight: 9,
+                  fontSize: FONT_SIZE.xs,
+                  lineHeight: 24,
+                }}
+              >
+                •
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }} className={bodyClass}>{item}</Text>
             </View>
           ))}
         </>
@@ -110,7 +138,8 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
           style={{ borderLeftWidth: 3, borderLeftColor: "#F59E0B" }}
         >
           <Text
-            className={`text-base italic leading-5 ${
+            style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }}
+            className={`italic ${
               isDark ? "text-amber-200" : "text-amber-700"
             }`}
           >

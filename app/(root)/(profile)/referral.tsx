@@ -55,7 +55,7 @@ export default function ReferralScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -67,7 +67,7 @@ export default function ReferralScreen() {
             onPress={() => router.back()}
             className={`p-2 rounded-full ${isDark ? "bg-slate-800" : "bg-white/60"}`}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#93C5FD" : "#E51F27"} />
+            <Ionicons name="arrow-back" size={24} color={isDark ? "#93C5FD" : "#D0021B"} />
           </TouchableOpacity>
           <Text className={`text-xl font-black ml-4 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
             Giới thiệu bạn bè
@@ -76,7 +76,7 @@ export default function ReferralScreen() {
 
         {loading ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#E51F27"} />
+            <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#D0021B"} />
             <Text className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Đang tải thông tin...
             </Text>
@@ -95,7 +95,7 @@ export default function ReferralScreen() {
               <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 shadow-lg ${
                 isDark
                   ? "bg-slate-700 border border-slate-600 shadow-black/20"
-                  : "bg-[#E51F27] shadow-red-500/20"
+                  : "bg-[#D0021B] shadow-red-500/20"
               }`}>
                 <Ionicons name="people" size={32} color={isDark ? "#93C5FD" : "#FFFFFF"} />
               </View>
@@ -134,7 +134,7 @@ export default function ReferralScreen() {
                 className={`w-full rounded-2xl h-14 items-center justify-center shadow-md ${
                   isDark
                     ? "bg-slate-750 bg-slate-700 active:bg-slate-600 border border-slate-600 shadow-black/20"
-                    : "bg-[#E51F27] shadow-red-500/20"
+                    : "bg-[#D0021B] shadow-red-500/20"
                 }`}
               >
                 <Text className="text-white font-bold text-base tracking-wide">
@@ -221,7 +221,7 @@ export default function ReferralScreen() {
                       : "bg-red-50 border-red-100"
                   }`}>
                     <Text className={`font-black text-base ${
-                      isDark ? "text-blue-400" : "text-[#E51F27]"
+                      isDark ? "text-blue-400" : "text-[#D0021B]"
                     }`}>
                       {item.step}
                     </Text>

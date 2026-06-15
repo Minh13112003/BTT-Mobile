@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import { FONT_SIZE } from "@/constants/typography";
+import { getPalette } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
@@ -14,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
+  ImageBackground,
   RefreshControl,
   ScrollView,
   Text,
@@ -66,6 +67,26 @@ export const MAP_STATUS_VN: Record<string, string> = {
 
 const STATUS_OPTIONS = ["Tất cả", "Chờ xử lý", "Đã xác nhận", "Đã thanh toán", "Đang diễn ra", "Đã hoàn thành", "Đã hủy", "Đã hoàn tiền"];
 
+const GREEN_STATUSES = ["Đã thanh toán", "Đã nhận hàng", "Đã xác nhận", "Đã hoàn thành"];
+const RED_STATUSES = ["Đã hủy", "Đã hoàn tiền"];
+
+/** Resolve the pill colors for a status, supporting light & dark themes. */
+function statusTone(statusVn: string, isDark: boolean) {
+  if (GREEN_STATUSES.includes(statusVn)) {
+    return isDark
+      ? { bg: "bg-slate-700", text: "text-emerald-300" }
+      : { bg: "bg-green-50", text: "text-green-700" };
+  }
+  if (RED_STATUSES.includes(statusVn)) {
+    return isDark
+      ? { bg: "bg-slate-700", text: "text-red-300" }
+      : { bg: "bg-red-50", text: "text-red-600" };
+  }
+  return isDark
+    ? { bg: "bg-slate-700", text: "text-amber-300" }
+    : { bg: "bg-[#FFF3DC]", text: "text-[#B5710A]" };
+}
+
 export default function HistoryScreen() {
   const router = useRouter();
   useAuth();
@@ -87,6 +108,7 @@ export default function HistoryScreen() {
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const palette = getPalette(isDark);
 
   // Tải danh sách đơn hàng từ booking service
   const fetchOrders = async (pageNumber = 1, isLoadMore = false) => {
@@ -117,7 +139,6 @@ export default function HistoryScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchOrders();
     setPage(1);
     fetchOrders(1);
   };
@@ -140,22 +161,37 @@ export default function HistoryScreen() {
     }).format(value);
   };
 
-  const gradientColors = isDark
-    ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+  const pendingCount = orders.filter(
+    (o) => (MAP_STATUS_VN[o.status] || o.status) === "Chờ xử lý",
+  ).length;
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
-      <StatusBar
-        style="light"
-        backgroundColor={isDark ? "#1E222B" : "#E51F27"}
-      />
+    <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
+      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
 
       <Header title="BENTHANH TOURIST" showActions={true} />
 
-      <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
+      <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
+        {/* Title */}
+        <View className="px-5 pt-4 pb-1">
+          <Text
+            className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
+            style={{ fontSize: 22 }}
+          >
+            Lịch sử đặt tour
+          </Text>
+          <Text
+            className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-400"}`}
+            style={{ fontSize: 16 }}
+          >
+            {pendingCount > 0
+              ? `${pendingCount} đơn hàng đang xử lý`
+              : `${orders.length} đơn hàng`}
+          </Text>
+        </View>
+
         {/* Horizontal filter chips */}
-        <View style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+        <View style={{ paddingTop: 10, paddingBottom: 6 }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -167,13 +203,24 @@ export default function HistoryScreen() {
                 <TouchableOpacity
                   key={status}
                   onPress={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-full border ${
+                  className={`px-[18px] py-2 rounded-full ${
                     isActive
-                      ? "bg-[#E51F27] border-[#E51F27]"
+                      ? "bg-[#D0021B]"
                       : isDark
-                        ? "bg-slate-800 border-slate-700"
-                        : "bg-white border-slate-200"
+                        ? "bg-[#1E222B] border border-slate-700"
+                        : "bg-white"
                   }`}
+                  style={
+                    isActive || isDark
+                      ? undefined
+                      : {
+                          shadowColor: "#000",
+                          shadowOpacity: 0.07,
+                          shadowRadius: 6,
+                          shadowOffset: { width: 0, height: 1 },
+                          elevation: 1,
+                        }
+                  }
                   activeOpacity={0.8}
                 >
                   <Text
@@ -196,10 +243,7 @@ export default function HistoryScreen() {
 
         {loading && !refreshing ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator
-              size="large"
-              color={isDark ? "#94A3B8" : "#E51F27"}
-            />
+            <ActivityIndicator size="large" color={palette.spinner} />
             <Text
               className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
             >
@@ -212,15 +256,15 @@ export default function HistoryScreen() {
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 16,
+              paddingHorizontal: 16,
+              paddingTop: 10,
               paddingBottom: 100,
             }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor={isDark ? "#94A3B8" : "#E51F27"}
+                tintColor={palette.spinner}
               />
             }
             onEndReached={handleLoadMore}
@@ -228,10 +272,7 @@ export default function HistoryScreen() {
             ListFooterComponent={
               loadingMore ? (
                 <View className="py-4 justify-center items-center">
-                  <ActivityIndicator
-                    size="small"
-                    color={isDark ? "#94A3B8" : "#E51F27"}
-                  />
+                  <ActivityIndicator size="small" color={palette.spinner} />
                 </View>
               ) : null
             }
@@ -243,7 +284,7 @@ export default function HistoryScreen() {
                     : "bg-white border-slate-200"
                 }`}
               >
-                <Ionicons name="receipt-outline" size={48} color="#94A3B8" />
+                <Ionicons name="receipt-outline" size={48} color="#9CA3AF" />
                 <Text
                   className={`font-bold text-base mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
                 >
@@ -254,228 +295,175 @@ export default function HistoryScreen() {
                 </Text>
               </View>
             }
-            renderItem={({ item }) => (
-              <View
-                className={`p-4 rounded-[24px] mb-4 border ${
-                  isDark
-                    ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
-                    : "bg-white border-slate-100 shadow-sm"
-                }`}
-              >
-                {/* Top info card: status badge */}
-                <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-1 mr-3">
-                    <Text
-                      style={{ fontSize: FONT_SIZE.md }}
-                      className={`font-black leading-6 ${isDark ? "text-slate-100" : "text-slate-800"}`}
-                      numberOfLines={2}
-                    >
-                      {item.tour.name}
-                    </Text>
-                    
-                    {/* Mã tour */}
-                    <Text
-                      style={{ fontSize: FONT_SIZE.xs }}
-                      className={`font-semibold mt-1.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                    >
-                      Mã tour: {item.departure?.tourCode || (item.tour as any).code || "-"}
-                    </Text>
+            renderItem={({ item }) => {
+              const statusVn = MAP_STATUS_VN[item.status] || item.status;
+              const tone = statusTone(statusVn, isDark);
+              const hasDiscount = !!item.discountAmount && item.discountAmount > 0;
+              const pct =
+                hasDiscount && item.originalPrice
+                  ? Math.round((item.discountAmount! / item.originalPrice) * 100)
+                  : null;
 
-                    {/* Ngày khởi hành */}
-                    <Text
-                      style={{ fontSize: FONT_SIZE.xs }}
-                      className={`font-semibold mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                    >
-                      Ngày khởi hành: {formatDepartureDate(item.departure?.departureDate)}
-                    </Text>
-                  </View>
-                  <View
-                    className={`px-2.5 py-1.5 rounded-xl self-start ${
-                      isDark
-                        ? "bg-slate-700"
-                        : (MAP_STATUS_VN[item.status] || item.status) === "Đã thanh toán" ||
-                          (MAP_STATUS_VN[item.status] || item.status) === "Đã nhận hàng" ||
-                          (MAP_STATUS_VN[item.status] || item.status) === "Đã xác nhận" ||
-                          (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn thành"
-                          ? "bg-green-50 border border-green-200"
-                          : (MAP_STATUS_VN[item.status] || item.status) === "Đã hủy" ||
-                            (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn tiền"
-                            ? "bg-red-50 border border-red-200"
-                            : "bg-amber-50 border border-amber-200"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-black uppercase ${
-                        isDark
-                          ? "text-slate-200"
-                          : (MAP_STATUS_VN[item.status] || item.status) === "Đã thanh toán" ||
-                            (MAP_STATUS_VN[item.status] || item.status) === "Đã nhận hàng" ||
-                            (MAP_STATUS_VN[item.status] || item.status) === "Đã xác nhận" ||
-                            (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn thành"
-                            ? "text-green-600"
-                            : (MAP_STATUS_VN[item.status] || item.status) === "Đã hủy" ||
-                              (MAP_STATUS_VN[item.status] || item.status) === "Đã hoàn tiền"
-                              ? "text-red-600"
-                              : "text-amber-600"
-                      }`}
-                    >
-                      {MAP_STATUS_VN[item.status] || item.status}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Divider */}
+              return (
                 <View
-                  className={`h-[1px] my-2 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
-                />
-
-                {/* Body info card: image + price/quantity */}
-                <View className="flex-row items-center py-2">
-                  <Image
+                  className={`rounded-[24px] mb-4 overflow-hidden border ${
+                    isDark
+                      ? "bg-slate-800/90 border-slate-700/50"
+                      : "bg-white border-slate-100"
+                  }`}
+                  style={
+                    isDark
+                      ? undefined
+                      : {
+                          shadowColor: "#000",
+                          shadowOpacity: 0.07,
+                          shadowRadius: 16,
+                          shadowOffset: { width: 0, height: 2 },
+                          elevation: 2,
+                        }
+                  }
+                >
+                  {/* Faint tour image blended under the card background */}
+                  <ImageBackground
                     source={{ uri: item.tour.imageUrl }}
-                    className="w-20 h-20 rounded-2xl bg-slate-900/10"
                     resizeMode="cover"
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                    imageStyle={{ opacity: isDark ? 0.3 : 0.22 }}
                   />
-                  <View className="flex-1 ml-3.5">
-                    {item.discountAmount && item.discountAmount > 0 ? (
-                      <View>
-                        <View className="flex-row items-center flex-wrap gap-x-2">
-                          <Text
-                            className={`text-base font-black ${isDark ? "text-slate-200" : "text-[#E51F27]"}`}
-                          >
-                            {formatCurrency(item.price)}
-                          </Text>
-                          <Text className="text-xs text-slate-400 line-through">
-                            {formatCurrency(item.originalPrice || 0)}
-                          </Text>
-                        </View>
-                        <Text className="text-xs text-green-500 font-bold mt-0.5">
-                          Giảm {formatCurrency(item.discountAmount)}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text
-                        className={`text-base font-black ${isDark ? "text-slate-200" : "text-[#E51F27]"}`}
-                      >
-                        {formatCurrency(item.price)}
-                      </Text>
-                    )}
 
-                    <Text
-                      className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                    >
-                      {item.quantity} khách · {item.tour.duration}
-                    </Text>
-
-                    {item.tour.hasVat && (
-                      <View
-                        className={`self-start mt-1.5 px-2 py-0.5 rounded-full border ${
-                          isDark
-                            ? "border-slate-600 bg-slate-700"
-                            : "border-red-200 bg-red-50"
-                        }`}
-                      >
+                  <View className="p-4">
+                    {/* Top: name + code | status pill */}
+                    <View className="flex-row justify-between items-start">
+                      <View className="flex-1 mr-3">
                         <Text
-                          className={`text-xs font-black uppercase ${isDark ? "text-slate-300" : "text-red-500"}`}
+                          style={{ fontSize: FONT_SIZE.md }}
+                          className={`font-black leading-6 ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
+                          numberOfLines={2}
                         >
-                          Đã xuất VAT
+                          {item.tour.name}
                         </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                {/* Voucher & Notice details if present */}
-                {((item as any).voucher || (item as any).notice) && (
-                  <View
-                    className={`mt-2 p-3 rounded-2xl border ${
-                      isDark
-                        ? "bg-slate-900/40 border-slate-700/40"
-                        : "bg-slate-50 border-slate-100"
-                    }`}
-                  >
-                    {(item as any).voucher && (
-                      <View className="flex-row items-center mb-1">
-                        <Ionicons
-                          name="gift-outline"
-                          size={12}
-                          color={isDark ? "#93C5FD" : "#E51F27"}
-                        />
                         <Text
-                          className={`text-base font-bold ml-1.5 ${
-                            isDark ? "text-slate-300" : "text-slate-600"
-                          }`}
+                          style={{ fontSize: FONT_SIZE.xs }}
+                          className={`font-medium mt-1.5 ${isDark ? "text-slate-500" : "text-slate-400"}`}
                         >
-                          Voucher:{" "}
-                          <Text className="font-extrabold text-blue-500 dark:text-blue-400">
-                            {(item as any).voucher.code}
-                          </Text>{" "}
-                          ({(item as any).voucher.title})
+                          # {item.departure?.tourCode || (item.tour as any).code || "—"}
                         </Text>
                       </View>
-                    )}
-                    {(item as any).notice && (
-                      <View className="flex-row items-start mt-0.5">
-                        <Ionicons
-                          name="chatbox-ellipses-outline"
-                          size={12}
-                          color={isDark ? "#94A3B8" : "#64748B"}
-                          style={{ marginTop: 1 }}
-                        />
-                        <Text
-                          className={`text-base ml-1.5 flex-1 italic ${
-                            isDark ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          Ghi chú: {(item as any).notice}
+                      <View className={`px-2.5 py-1.5 rounded-full self-start ${tone.bg}`}>
+                        <Text className={`text-xs font-extrabold uppercase ${tone.text}`}>
+                          {statusVn}
                         </Text>
                       </View>
-                    )}
-                  </View>
-                )}
+                    </View>
 
-                {/* Divider */}
-                <View
-                  className={`h-[1px] my-2 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
-                />
+                    {/* Divider */}
+                    <View
+                      className={`h-[1px] my-3 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
+                    />
 
-                {/* Footer info card: booking date & details button */}
-                <View className="mt-1.5 gap-y-2">
-                  <Text className="text-base text-slate-400 font-semibold">
-                    Ngày đặt: {formatDateTime(item.createdAt)}
-                  </Text>
-                  <View className="flex-row justify-end">
-                    <TouchableOpacity
-                      onPress={() =>
-                        router.push({
-                          pathname: "/detailTour" as any,
-                          params: { id: item.id },
-                        })
-                      }
-                      activeOpacity={0.7}
-                      className={`flex-row items-center px-3.5 py-2 rounded-xl border ${
-                        isDark
-                          ? "bg-slate-700 border-slate-600"
-                          : "bg-slate-50 border-slate-100"
-                      }`}
-                    >
+                    {/* Departure row */}
+                    <View className="flex-row items-center mb-2">
                       <Ionicons
-                        name="eye-outline"
+                        name="calendar-outline"
                         size={15}
-                        color={isDark ? "#E5E7EB" : "#64748B"}
+                        color={isDark ? "#94A3B8" : "#9CA3AF"}
                       />
                       <Text
-                        className={`text-base font-bold ml-1.5 ${
-                          isDark ? "text-slate-200" : "text-slate-600"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                        className={`ml-2 font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      >
+                        Khởi hành: {formatDepartureDate(item.departure?.departureDate)} ·{" "}
+                        {item.tour.duration}
+                      </Text>
+                    </View>
+
+                    {/* Guests + voucher / booking date */}
+                    <View className="flex-row items-center mb-2">
+                      <Ionicons
+                        name="person-outline"
+                        size={15}
+                        color={isDark ? "#94A3B8" : "#9CA3AF"}
+                      />
+                      <Text
+                        style={{ fontSize: FONT_SIZE.xs }}
+                        className={`ml-2 font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                        numberOfLines={1}
+                      >
+                        {item.quantity} khách ·{" "}
+                        {item.voucher
+                          ? `Voucher: ${item.voucher.code}`
+                          : `Ngày đặt: ${formatDateTime(item.createdAt)}`}
+                      </Text>
+                    </View>
+
+                    {/* Price row */}
+                    <View className="flex-row items-center flex-wrap">
+                      <Ionicons name="cash-outline" size={15} color="#D0021B" />
+                      <Text className="ml-2 text-[#D0021B] font-black" style={{ fontSize: 16 }}>
+                        {formatCurrency(item.price)}
+                      </Text>
+                      {hasDiscount && (
+                        <>
+                          <Text className="ml-2 text-slate-400 line-through text-xs">
+                            {formatCurrency(item.originalPrice || 0)}
+                          </Text>
+                          {pct != null && (
+                            <Text className="ml-2 text-green-600 font-bold text-xs">
+                              −{pct}%
+                            </Text>
+                          )}
+                        </>
+                      )}
+                      {item.tour.hasVat && (
+                        <View className="ml-2 px-2 py-0.5 rounded-full bg-[#D0021B]/10">
+                          <Text className="text-[#D0021B] font-extrabold text-xs uppercase">
+                            Đã xuất VAT
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Notice if present */}
+                    {!!item.notice && (
+                      <Text
+                        style={{ fontSize: FONT_SIZE.xs }}
+                        className={`italic mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      >
+                        Ghi chú: {item.notice}
+                      </Text>
+                    )}
+
+                    {/* Actions */}
+                    <View className="flex-row justify-end mt-3">
+                      <TouchableOpacity
+                        onPress={() =>
+                          router.push({
+                            pathname: "/detailTour" as any,
+                            params: { id: item.id },
+                          })
+                        }
+                        activeOpacity={0.8}
+                        className={`flex-row items-center px-4 py-2 rounded-xl ${
+                          isDark ? "bg-slate-700" : "bg-[#D0021B]/10"
                         }`}
                       >
-                        Chi tiết đơn
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          className={`font-extrabold mr-1.5 ${isDark ? "text-slate-200" : "text-[#D0021B]"}`}
+                          style={{ fontSize: 16 }}
+                        >
+                          Chi tiết đơn
+                        </Text>
+                        <Ionicons
+                          name="arrow-forward"
+                          size={14}
+                          color={isDark ? "#E5E7EB" : "#D0021B"}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
-            )}
+              );
+            }}
           />
         )}
       </LinearGradient>

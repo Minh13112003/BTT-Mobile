@@ -1,85 +1,74 @@
 import { BRAND } from "@/constants/theme";
+import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 /**
- * "Brush stroke" section label — a skewed red sticker with white uppercase
- * text, layered with a faint offset stroke for a hand-painted feel. Brand red
- * (#E51F27) is used to stay consistent with the rest of the app.
+ * Clean section label — bold dark title with an optional accent badge
+ * (e.g. "HOT" pill or a 🔥 emoji), matching the redesigned home mockup.
  */
-export function SectionHeader({ title }: { title: string }) {
+export function SectionHeader({
+  title,
+  badge,
+}: {
+  title: string;
+  badge?: string;
+}) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const isEmojiBadge = badge ? /\p{Extended_Pictographic}/u.test(badge) : false;
+
   return (
-    <View style={{ alignSelf: "flex-start" }}>
-      {/* faint offset stroke behind for a layered, painted look */}
-      <View
-        style={{
-          position: "absolute",
-          left: 5,
-          top: 5,
-          right: -5,
-          bottom: -1,
-          backgroundColor: BRAND.redActive,
-          opacity: 0.3,
-          transform: [{ skewX: "-11deg" }],
-          borderTopLeftRadius: 16,
-          borderBottomRightRadius: 16,
-          borderTopRightRadius: 4,
-          borderBottomLeftRadius: 4,
-        }}
-      />
-      <View
-        style={{
-          backgroundColor: BRAND.red,
-          paddingHorizontal: 18,
-          paddingVertical: 8,
-          transform: [{ skewX: "-11deg" }],
-          borderTopLeftRadius: 16,
-          borderBottomRightRadius: 16,
-          borderTopRightRadius: 5,
-          borderBottomLeftRadius: 5,
-          shadowColor: BRAND.red,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.35,
-          shadowRadius: 8,
-          elevation: 5,
-        }}
+    <View className="flex-row items-center">
+      <Text
+        style={{ fontSize: 19, letterSpacing: -0.3 }}
+        className={`font-black ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
       >
-        <Text
-          style={{
-            color: "#FFFFFF",
-            fontWeight: "800",
-            fontSize: 18,
-            letterSpacing: 1.2,
-            transform: [{ skewX: "11deg" }],
-          }}
-        >
-          {title.toUpperCase()}
-        </Text>
-      </View>
+        {title}
+      </Text>
+      {!!badge &&
+        (isEmojiBadge ? (
+          <Text style={{ fontSize: 16, marginLeft: 6 }}>{badge}</Text>
+        ) : (
+          <View
+            style={{ backgroundColor: BRAND.red }}
+            className="ml-1.5 px-2 py-[3px] rounded-full"
+          >
+            <Text
+              className="text-white font-extrabold"
+              style={{ fontSize: 13, letterSpacing: 0.4 }}
+            >
+              {badge}
+            </Text>
+          </View>
+        ))}
     </View>
   );
 }
 
-/** Section title row: brush-stroke header on the left, "Xem tất cả →" on the right. */
+/** Section title row: clean header on the left, "Tất cả →" link on the right. */
 export function SectionRow({
   title,
+  badge,
   onSeeAll,
 }: {
   title: string;
+  badge?: string;
   onSeeAll?: () => void;
 }) {
   return (
-    <View className="flex-row items-end justify-between mx-5 mt-7 mb-3">
-      <SectionHeader title={title} />
+    <View className="flex-row items-center justify-between mx-5 mt-7 mb-3">
+      <SectionHeader title={title} badge={badge} />
       {onSeeAll && (
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={onSeeAll}
-          className="flex-row items-center pb-1"
+          className="flex-row items-center"
         >
           <Text style={{ color: BRAND.red, fontSize: 16, fontWeight: "700" }}>
-            Xem tất cả
+            Tất cả
           </Text>
           <Ionicons name="chevron-forward" size={16} color={BRAND.red} />
         </TouchableOpacity>

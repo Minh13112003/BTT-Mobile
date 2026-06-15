@@ -50,13 +50,13 @@ export default function ProfileScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
+    <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F5F6FA]"}`}>
       <StatusBar
         style="light"
-        backgroundColor={isDark ? "#1E222B" : "#E51F27"}
+        backgroundColor={isDark ? "#1E222B" : "#D0021B"}
       />
       <Header title="BENTHANH TOURIST" showActions={true} />
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -70,7 +70,7 @@ export default function ProfileScreen() {
               className={`w-24 h-24 rounded-full items-center justify-center mb-4 shadow-xl border-4 ${
                 isDark
                   ? "bg-slate-700 border-slate-650 shadow-black/50 border-slate-650"
-                  : "bg-blue-600 border-white shadow-blue-600/30"
+                  : "bg-[#D0021B] border-white shadow-[#D0021B]/30"
               }`}
             >
               <Ionicons

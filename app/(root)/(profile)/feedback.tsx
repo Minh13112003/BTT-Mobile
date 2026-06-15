@@ -62,7 +62,7 @@ export default function FeedbackScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -74,7 +74,7 @@ export default function FeedbackScreen() {
             onPress={() => router.back()}
             className={`p-2 rounded-full ${isDark ? "bg-slate-800" : "bg-white/60"}`}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#93C5FD" : "#E51F27"} />
+            <Ionicons name="arrow-back" size={24} color={isDark ? "#93C5FD" : "#D0021B"} />
           </TouchableOpacity>
           <Text className={`text-xl font-black ml-4 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
             Gửi góp ý phản hồi
@@ -222,7 +222,7 @@ export default function FeedbackScreen() {
                 className={`rounded-2xl h-14 items-center justify-center mt-2 shadow-md ${
                   isDark
                     ? "bg-slate-700 border border-slate-600 shadow-black/20"
-                    : "bg-[#E51F27] shadow-red-500/20"
+                    : "bg-[#D0021B] shadow-red-500/20"
                 } ${sending ? "opacity-70" : isDark ? "active:bg-slate-600" : "active:bg-red-600"}`}
               >
                 {sending ? (

@@ -116,7 +116,9 @@ export default function CheckoutScreen() {
     ? parseInt(params.availableSeats as string, 10)
     : Infinity;
 
-  const [quantity, setQuantity] = useState(2);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null,
   );
@@ -157,8 +159,11 @@ export default function CheckoutScreen() {
     }).format(value);
   };
 
-  // Pricing calculations
-  const originalPrice = tourPrice * quantity;
+  // Pricing calculations per docs: adults 100%, children 80%, infants 40%
+  const adultTotal = adults * tourPrice;
+  const childTotal = children * tourPrice * 0.8;
+  const infantTotal = infants * tourPrice * 0.4;
+  const originalPrice = adultTotal + childTotal + infantTotal;
 
   // Smart discount calculation parser
   const calculateDiscount = (
@@ -234,7 +239,11 @@ export default function CheckoutScreen() {
       Alert.alert("Thông báo", "Vui lòng chọn phương thức thanh toán");
       return;
     }
-    if (availableSeats < quantity) {
+    if (adults < 1) {
+      Alert.alert("Thông báo", "Phải có ít nhất 1 người lớn");
+      return;
+    }
+    if (availableSeats < adults + children + infants) {
       Alert.alert("Thông báo", "Số chỗ không đủ, vui lòng giảm số lượng");
       return;
     }
@@ -261,7 +270,9 @@ export default function CheckoutScreen() {
       const bookingData = {
         idTour: tourId,
         departureId,
-        quantity,
+        adults,
+        children,
+        infants,
         paymentMethod: paymentMethod as PaymentMethod,
         voucherCode: selectedVoucher ? selectedVoucher.code : null,
         notice: notice || null,
@@ -292,7 +303,7 @@ export default function CheckoutScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -309,7 +320,7 @@ export default function CheckoutScreen() {
             <Ionicons
               name="arrow-back"
               size={22}
-              color={isDark ? "#93C5FD" : "#E51F27"}
+              color={isDark ? "#93C5FD" : "#D0021B"}
             />
           </TouchableOpacity>
           <Text
@@ -362,7 +373,7 @@ export default function CheckoutScreen() {
                 </Text>
               </View>
 
-              <View className="absolute bottom-4 left-4 bg-[#E51F27] px-3 py-1 rounded-2xl shadow-md">
+              <View className="absolute bottom-4 left-4 bg-[#D0021B] px-3 py-1 rounded-2xl shadow-md">
                 <Text className="text-base text-white font-black uppercase tracking-wider">
                   {tourDuration}
                 </Text>
@@ -420,7 +431,7 @@ export default function CheckoutScreen() {
                   </Text>
                   <Text
                     className={`text-base font-black mt-0.5 ${
-                      isDark ? "text-slate-200" : "text-[#E51F27]"
+                      isDark ? "text-slate-200" : "text-[#D0021B]"
                     }`}
                   >
                     {formatCurrency(tourPrice)}
@@ -444,7 +455,7 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          {/* 2. QUANTITY SELECTOR */}
+          {/* 2. PASSENGER SELECTOR */}
           <View
             className={`rounded-[32px] p-5 mt-6 border shadow-sm ${
               isDark
@@ -452,63 +463,145 @@ export default function CheckoutScreen() {
                 : "bg-white border-slate-100"
             }`}
           >
-            <View className="flex-row justify-between items-center">
-              <View>
-                <Text
-                  className={`text-base font-black uppercase tracking-wider ${
-                    isDark ? "text-slate-200" : "text-slate-800"
-                  }`}
-                >
-                  Số lượng khách
-                </Text>
-                <Text className="text-base text-slate-400 mt-0.5">
-                  Đặt chỗ cho chuyến đi của bạn
-                </Text>
+            <Text
+              className={`text-base font-black uppercase tracking-wider mb-4 ${
+                isDark ? "text-slate-200" : "text-slate-800"
+              }`}
+            >
+              Số lượng khách
+            </Text>
+
+            {(
+              [
+                {
+                  label: "Người lớn",
+                  sublabel: "Từ 16 tuổi · 100%",
+                  value: adults,
+                  onDec: () => setAdults(Math.max(1, adults - 1)),
+                  onInc: () =>
+                    setAdults(
+                      Math.min(availableSeats - children - infants, adults + 1),
+                    ),
+                  unitPrice: tourPrice,
+                },
+                {
+                  label: "Trẻ em",
+                  sublabel: "Từ 06 – 10 tuổi · 80%",
+                  value: children,
+                  onDec: () => setChildren(Math.max(0, children - 1)),
+                  onInc: () =>
+                    setChildren(
+                      Math.min(availableSeats - adults - infants, children + 1),
+                    ),
+                  unitPrice: tourPrice * 0.8,
+                },
+                {
+                  label: "Em bé",
+                  sublabel: "Dưới 05 tuổi · 40%",
+                  value: infants,
+                  onDec: () => setInfants(Math.max(0, infants - 1)),
+                  onInc: () =>
+                    setInfants(
+                      Math.min(availableSeats - adults - children, infants + 1),
+                    ),
+                  unitPrice: tourPrice * 0.4,
+                },
+              ] as const
+            ).map((row) => (
+              <View
+                key={row.label}
+                className="flex-row items-center justify-between py-3 border-b border-slate-100/40"
+              >
+                <View className="flex-1">
+                  <Text
+                    className={`text-base font-bold ${
+                      isDark ? "text-slate-200" : "text-slate-800"
+                    }`}
+                  >
+                    {row.label}
+                  </Text>
+                  <Text className="text-base text-slate-400 mt-0.5">
+                    {row.sublabel}
+                  </Text>
+                  <Text
+                    className={`text-base font-semibold mt-0.5 ${
+                      isDark ? "text-slate-300" : "text-[#D0021B]"
+                    }`}
+                  >
+                    {formatCurrency(row.unitPrice)}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-center ml-3">
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={row.onDec}
+                    className={`w-9 h-9 rounded-xl items-center justify-center border ${
+                      isDark
+                        ? "bg-slate-700 border-slate-600"
+                        : "bg-slate-100 border-slate-200"
+                    }`}
+                  >
+                    <Ionicons
+                      name="remove"
+                      size={18}
+                      color={isDark ? "#E5E7EB" : "#1F2937"}
+                    />
+                  </TouchableOpacity>
+
+                  <Text
+                    className={`text-base font-black w-10 text-center ${
+                      isDark ? "text-slate-100" : "text-slate-800"
+                    }`}
+                  >
+                    {row.value}
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={row.onInc}
+                    className={`w-9 h-9 rounded-xl items-center justify-center border ${
+                      isDark
+                        ? "bg-slate-700 border-slate-600"
+                        : "bg-slate-100 border-slate-200"
+                    }`}
+                  >
+                    <Ionicons
+                      name="add"
+                      size={18}
+                      color={isDark ? "#E5E7EB" : "#1F2937"}
+                    />
+                  </TouchableOpacity>
+
+                  <Text
+                    className={`text-base font-semibold ml-3 w-28 text-right ${
+                      isDark ? "text-slate-300" : "text-slate-600"
+                    }`}
+                  >
+                    {row.value > 0
+                      ? formatCurrency(row.value * row.unitPrice)
+                      : "0 VNĐ"}
+                  </Text>
+                </View>
               </View>
+            ))}
 
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                  className={`w-10 h-10 rounded-xl items-center justify-center border ${
-                    isDark
-                      ? "bg-slate-700 border-slate-600 active:bg-slate-650"
-                      : "bg-slate-100 border-slate-200 active:bg-slate-200"
-                  }`}
-                >
-                  <Ionicons
-                    name="remove"
-                    size={20}
-                    color={isDark ? "#E5E7EB" : "#1F2937"}
-                  />
-                </TouchableOpacity>
-
-                <Text
-                  className={`text-base font-black px-4 ${
-                    isDark ? "text-slate-100" : "text-slate-800"
-                  }`}
-                >
-                  {quantity}
-                </Text>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() =>
-                    setQuantity(Math.min(availableSeats, quantity + 1))
-                  }
-                  className={`w-10 h-10 rounded-xl items-center justify-center border ${
-                    isDark
-                      ? "bg-slate-700 border-slate-600 active:bg-slate-650"
-                      : "bg-slate-100 border-slate-200 active:bg-slate-200"
-                  }`}
-                >
-                  <Ionicons
-                    name="add"
-                    size={20}
-                    color={isDark ? "#E5E7EB" : "#1F2937"}
-                  />
-                </TouchableOpacity>
-              </View>
+            {/* Total passengers + total cost summary */}
+            <View className="flex-row justify-between items-center mt-4 pt-3 border-t border-slate-200/60">
+              <Text
+                className={`text-base font-black uppercase tracking-wide ${
+                  isDark ? "text-slate-300" : "text-slate-700"
+                }`}
+              >
+                Tổng chi phí
+              </Text>
+              <Text
+                className={`text-base font-black ${
+                  isDark ? "text-slate-100" : "text-[#D0021B]"
+                }`}
+              >
+                {formatCurrency(originalPrice)}
+              </Text>
             </View>
           </View>
 
@@ -539,7 +632,7 @@ export default function CheckoutScreen() {
                   />
 
                   <TouchableOpacity
-                    className="ml-2 bg-[#E51F27] rounded-xl px-4 py-3"
+                    className="ml-2 bg-[#D0021B] rounded-xl px-4 py-3"
                     onPress={() => {
                       const voucher = vouchers.find(
                         (v) =>
@@ -575,7 +668,7 @@ export default function CheckoutScreen() {
               {loadingVouchers ? (
                 <ActivityIndicator
                   size="small"
-                  color={isDark ? "#94A3B8" : "#E51F27"}
+                  color={isDark ? "#94A3B8" : "#D0021B"}
                   className="py-4"
                 />
               ) : vouchers.length > 0 ? (
@@ -596,7 +689,7 @@ export default function CheckoutScreen() {
                           className={`w-10 h-10 rounded-xl items-center justify-center ${
                             isDark
                               ? "bg-slate-800 border border-slate-700"
-                              : "bg-[#E51F27] shadow-sm shadow-red-500/10"
+                              : "bg-[#D0021B] shadow-sm shadow-red-500/10"
                           }`}
                         >
                           <Ionicons
@@ -609,7 +702,7 @@ export default function CheckoutScreen() {
                         <View className="ml-3.5 flex-1">
                           <Text
                             className={`text-base font-black uppercase tracking-wider ${
-                              isDark ? "text-blue-400" : "text-[#E51F27]"
+                              isDark ? "text-blue-400" : "text-[#D0021B]"
                             }`}
                           >
                             {item.subtitle}
@@ -661,7 +754,7 @@ export default function CheckoutScreen() {
                               ? "bg-green-600 active:bg-green-700"
                               : isDark
                                 ? "bg-slate-700 active:bg-slate-650 border border-slate-600"
-                                : "bg-[#E51F27] active:bg-[#C41A21]"
+                                : "bg-[#D0021B] active:bg-[#A80016]"
                           }`}
                         >
                           <Text className="text-white font-bold text-base">
@@ -741,7 +834,7 @@ export default function CheckoutScreen() {
                     onPress={() => setPaymentMethod(method.id)}
                     className={`flex-row items-center rounded-2xl px-4 py-3.5 border-2 ${
                       isSelected
-                        ? "border-[#E51F27]"
+                        ? "border-[#D0021B]"
                         : isDark
                           ? "border-slate-700"
                           : "border-slate-200"
@@ -754,7 +847,7 @@ export default function CheckoutScreen() {
                           : "radio-button-off"
                       }
                       size={22}
-                      color={isSelected ? "#E51F27" : "#94A3B8"}
+                      color={isSelected ? "#D0021B" : "#94A3B8"}
                     />
                     <Text style={{ fontSize: FONT_SIZE.lg }} className="ml-2">
                       {method.icon}
@@ -821,7 +914,7 @@ export default function CheckoutScreen() {
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
               >
-                Tạm tính ({quantity} khách)
+                Tạm tính ({adults + children + infants} khách)
               </Text>
               <Text
                 className={`text-base font-bold ${
@@ -862,7 +955,7 @@ export default function CheckoutScreen() {
               </Text>
               <Text
                 className={`text-base font-black ${
-                  isDark ? "text-slate-200" : "text-[#E51F27]"
+                  isDark ? "text-slate-200" : "text-[#D0021B]"
                 }`}
               >
                 {formatCurrency(finalPrice)}
@@ -885,7 +978,7 @@ export default function CheckoutScreen() {
             </Text>
             <Text
               className={`text-base font-black ${
-                isDark ? "text-slate-200" : "text-[#E51F27]"
+                isDark ? "text-slate-200" : "text-[#D0021B]"
               }`}
             >
               {formatCurrency(finalPrice)}
@@ -899,7 +992,7 @@ export default function CheckoutScreen() {
             className={`rounded-2xl px-6 py-3.5 flex-row items-center justify-center ${
               isDark
                 ? "bg-slate-700 active:bg-slate-650 border border-slate-600"
-                : "bg-[#E51F27] active:bg-[#C41A21]"
+                : "bg-[#D0021B] active:bg-[#A80016]"
             }`}
           >
             {submitting ? (

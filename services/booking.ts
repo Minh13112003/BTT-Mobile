@@ -9,7 +9,9 @@ export type PaymentMethod = "AT_OFFICE" | "BANK_TRANSFER";
 interface Booking {
   idTour: string;
   departureId: string;
-  quantity: number;
+  adults: number;
+  children?: number;
+  infants?: number;
   paymentMethod: PaymentMethod;
   voucherCode?: string | null;
   notice?: string | null;

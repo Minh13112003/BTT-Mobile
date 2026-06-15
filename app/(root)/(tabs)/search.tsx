@@ -47,7 +47,7 @@ function Chip({
       onPress={onPress}
       className={`px-4 py-2 rounded-full border mr-2 ${
         active
-          ? "bg-[#E51F27] border-[#E51F27]"
+          ? "bg-[#D0021B] border-[#D0021B]"
           : isDark
             ? "bg-[#1E222B] border-slate-700/60"
             : "bg-white border-slate-200"
@@ -130,7 +130,7 @@ export default function SearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#E51F27"} />
+      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
       <CollapsingHeader title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>

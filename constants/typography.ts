@@ -6,7 +6,8 @@
  * one place.
  */
 export const FONT_SIZE = {
-  xs: 16, // nhỏ nhất
+  card: 14, // chỉ dùng trong card membership
+  xs: 16, // nhỏ nhất cho text thường
   sm: 17,
   md: 18,
   lg: 20,

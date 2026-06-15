@@ -4,21 +4,42 @@ import {
 } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  BottomTabBar,
-  BottomTabBarProps,
-} from "@react-navigation/bottom-tabs";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const ACTIVE = "#D0021B";
+
+/** Per-route icon (filled when focused, outline otherwise) — matches the mockup. */
+const ICONS: Record<
+  string,
+  { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap }
+> = {
+  index: { on: "home", off: "home-outline" },
+  search: { on: "search", off: "search-outline" },
+  history: { on: "time", off: "time-outline" },
+  profile: { on: "person", off: "person-outline" },
+};
 
 /**
- * Default tab bar that dims to a silvery overlay while the user scrolls and
- * snaps back to normal the moment it's touched. The overlay is non-interactive
- * so the touch still reaches the underlying tab buttons.
+ * Custom bottom nav styled after the redesign mockup: outline→filled icon on
+ * focus, an active red dot under the label, and a silvery dim overlay while the
+ * user scrolls (non-interactive so taps still reach the buttons).
  */
-function AnimatedTabBar(props: BottomTabBarProps) {
+function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { hidden, setHidden } = useScrollVisibility();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const insets = useSafeAreaInsets();
+
   const contentOpacity = hidden.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.55],
@@ -28,11 +49,80 @@ function AnimatedTabBar(props: BottomTabBarProps) {
     outputRange: [0, 0.5],
   });
 
+  const inactive = isDark ? "#6B7280" : "#9CA3AF";
+
   return (
     <View onTouchStart={() => setHidden(false)}>
-      <Animated.View style={{ opacity: contentOpacity }}>
-        <BottomTabBar {...props} />
+      <Animated.View
+        style={{
+          opacity: contentOpacity,
+          flexDirection: "row",
+          backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
+          borderTopWidth: 1,
+          borderTopColor: isDark ? "#2D3748" : "#EEF0F5",
+          paddingTop: 10,
+          paddingBottom: Math.max(insets.bottom, 12),
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label =
+            typeof options.title === "string" ? options.title : route.name;
+          const focused = state.index === index;
+          const icon =
+            ICONS[route.name] ?? { on: "ellipse", off: "ellipse-outline" };
+          const color = focused ? ACTIVE : inactive;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              onPress={onPress}
+              activeOpacity={0.7}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
+              <Ionicons
+                name={focused ? icon.on : icon.off}
+                size={23}
+                color={color}
+              />
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color,
+                  marginTop: 3,
+                }}
+              >
+                {label}
+              </Text>
+              {/* Active red dot indicator */}
+              <View
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: 2.5,
+                  marginTop: 3,
+                  backgroundColor: focused ? ACTIVE : "transparent",
+                }}
+              />
+            </TouchableOpacity>
+          );
+        })}
       </Animated.View>
+
       <Animated.View
         pointerEvents="none"
         style={[
@@ -45,68 +135,16 @@ function AnimatedTabBar(props: BottomTabBarProps) {
 }
 
 export default function TabLayout() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   return (
     <ScrollVisibilityProvider>
       <Tabs
         tabBar={(props) => <AnimatedTabBar {...props} />}
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: isDark ? "#F3F4F6" : "#E51F27",
-          tabBarInactiveTintColor: isDark ? "#6B7280" : "#64748B",
-          tabBarStyle: {
-            backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: isDark ? "#2D3748" : "#E2E8F0",
-            height: 75,
-            paddingBottom: 20,
-            paddingTop: 8,
-          },
-
-          tabBarLabelStyle: {
-            fontSize: 16,
-            fontWeight: "bold",
-          },
-        }}
+        screenOptions={{ headerShown: false }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "Tổng quan",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="home" size={20} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="search"
-          options={{
-            title: "Tìm kiếm",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="search" size={20} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="history"
-          options={{
-            title: "Lịch sử",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="time" size={20} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Tài khoản",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="person" size={20} color={color} />
-            ),
-          }}
-        />
+        <Tabs.Screen name="index" options={{ title: "Tổng quan" }} />
+        <Tabs.Screen name="search" options={{ title: "Tìm kiếm" }} />
+        <Tabs.Screen name="history" options={{ title: "Lịch sử" }} />
+        <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
       </Tabs>
     </ScrollVisibilityProvider>
   );

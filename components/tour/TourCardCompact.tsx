@@ -145,7 +145,7 @@ export function TourCardCompact({
 
         <Text
           className="mt-2 font-black"
-          style={{ fontSize: 17, color: isDark ? "#F1F5F9" : "#E51F27" }}
+          style={{ fontSize: 17, color: isDark ? "#F5F6FA" : "#D0021B" }}
         >
           {price != null ? `Từ ${formatPrice(price)}` : "Liên hệ"}
         </Text>

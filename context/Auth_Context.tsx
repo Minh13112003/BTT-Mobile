@@ -1,8 +1,9 @@
 import * as SecureStore from "expo-secure-store";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { getMe } from "@/services/user";
 
 // Định nghĩa cấu trúc User để đồng bộ với Backend
-interface User {
+export interface User {
   id?: string;
   email: string;
   firstName: string;
@@ -11,17 +12,22 @@ interface User {
   createdAt?: Date;
   updatedAt?: Date;
   age?: number;
+  earnedPoints?: number;
+  rewardPoints?: number;
 }
 
 interface AuthContextType {
   isLoggedIn: boolean;
   accessToken: string | null;
-  user: User | null; // Thêm biến user vào đây
+  user: User | null;
+  earnedPoints: number;
+  rewardPoints: number;
+  refreshPoints: () => Promise<void>;
   saveAuth: (
     accessToken: string,
     refreshToken: string,
     user: User,
-  ) => Promise<void>; // Nhận thêm user khi login
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -30,18 +36,29 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null); // State lưu trữ user
+  const [user, setUser] = useState<User | null>(null);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [rewardPoints, setRewardPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const refreshPoints = useCallback(async () => {
+    try {
+      const res = await getMe();
+      const me = res?.data?.data ?? res?.data;
+      setEarnedPoints(typeof me?.earnedPoints === "number" ? me.earnedPoints : 0);
+      setRewardPoints(typeof me?.rewardPoints === "number" ? me.rewardPoints : 0);
+    } catch {
+      // giữ nguyên giá trị cũ nếu lỗi
+    }
+  }, []);
 
   useEffect(() => {
     const loadStorageData = async () => {
       try {
-        // Lấy song song token và thông tin user đã lưu
         const [token, savedUser] = await Promise.all([
           SecureStore.getItemAsync("accessToken"),
           SecureStore.getItemAsync("user"),
         ]);
-        
 
         if (token) {
           setAccessToken(token);
@@ -49,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (savedUser) {
-          setUser(JSON.parse(savedUser)); // Chuyển từ chuỗi string sang Object
+          setUser(JSON.parse(savedUser));
         }
       } catch (error) {
         console.error("Lỗi khi nạp dữ liệu từ SecureStore:", error);
@@ -61,9 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadStorageData();
   }, []);
 
+  // Fetch points sau khi đã xác nhận đăng nhập
+  useEffect(() => {
+    if (isLoggedIn) {
+      refreshPoints();
+    }
+  }, [isLoggedIn, refreshPoints]);
+
   if (isLoading) return null;
 
-  // Cập nhật hàm saveAuth để lưu cả object user
   const saveAuth = async (
     accessToken: string,
     refreshToken: string,
@@ -73,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await Promise.all([
         SecureStore.setItemAsync("accessToken", accessToken),
         SecureStore.setItemAsync("refreshToken", refreshToken),
-        SecureStore.setItemAsync("user", JSON.stringify(userData)), // Lưu user dưới dạng string JSON
+        SecureStore.setItemAsync("user", JSON.stringify(userData)),
       ]);
 
       setAccessToken(accessToken);
@@ -95,6 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setAccessToken(null);
       setUser(null);
+      setEarnedPoints(0);
+      setRewardPoints(0);
       setIsLoggedIn(false);
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
@@ -103,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, accessToken, user, saveAuth, logout }}
+      value={{ isLoggedIn, accessToken, user, earnedPoints, rewardPoints, refreshPoints, saveAuth, logout }}
     >
       {children}
     </AuthContext.Provider>

@@ -14,13 +14,20 @@ export const DOMESTIC_REGIONS = ["Miền Bắc", "Miền Trung", "Miền Nam"] a
 /** Khu vực (châu lục) hợp lệ cho country = "Nước ngoài". */
 export const FOREIGN_REGIONS = ["Châu Á", "Châu Âu", "Châu Phi"] as const;
 
-/** Tiêu đề brush-stroke trên màn Home. */
+/** Tiêu đề section trên màn Home. */
 export const SECTION_LABELS: Record<SearchMode, string> = {
-  newest: "TOUR MỚI NHẤT",
-  hot: "TOUR ĐANG HOT",
-  popular: "TOUR BÁN CHẠY NHẤT",
-  domestic: "TOUR TRONG NƯỚC",
-  foreign: "TOUR QUỐC TẾ",
+  newest: "Tour mới nhất",
+  hot: "Tour đang hot",
+  popular: "Tour bán chạy",
+  domestic: "Tour trong nước",
+  foreign: "Tour quốc tế",
+};
+
+/** Badge nhỏ cạnh tiêu đề section (pill chữ hoặc emoji), bỏ trống nếu không có. */
+export const SECTION_BADGES: Partial<Record<SearchMode, string>> = {
+  newest: "HOT",
+  hot: "🔥",
+  popular: "🔥",
 };
 
 /** Nhãn ngắn cho chip lọc trên màn Search. */

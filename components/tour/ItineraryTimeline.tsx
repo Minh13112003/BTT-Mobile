@@ -17,10 +17,10 @@ export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
             {/* Rail: dot + connecting line */}
             <View className="items-center mr-3" style={{ width: 16 }}>
               <View
-                className="w-4 h-4 rounded-full items-center justify-center border-2 border-[#E51F27]"
+                className="w-4 h-4 rounded-full items-center justify-center border-2 border-[#D0021B]"
                 style={{ backgroundColor: isDark ? "#121620" : "#F4F7FB" }}
               >
-                <View className="w-1.5 h-1.5 rounded-full bg-[#E51F27]" />
+                <View className="w-1.5 h-1.5 rounded-full bg-[#D0021B]" />
               </View>
               {!last && (
                 <View

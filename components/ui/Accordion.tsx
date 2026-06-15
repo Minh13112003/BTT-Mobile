@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -30,12 +31,13 @@ export function Accordion({ title, number, defaultOpen = false, children }: Acco
       >
         <View className="flex-row items-center flex-1 pr-3">
           {number != null && (
-            <View className="w-6 h-6 rounded-lg items-center justify-center mr-2.5 bg-[#E51F27]/15">
-              <Text className="text-base font-black text-[#E51F27]">{number}</Text>
+            <View className="w-7 h-7 rounded-lg items-center justify-center mr-2.5 bg-[#D0021B]/15">
+              <Text style={{ fontSize: FONT_SIZE.xs }} className="font-black text-[#D0021B]">{number}</Text>
             </View>
           )}
           <Text
-            className={`text-base font-bold flex-1 ${
+            style={{ fontSize: FONT_SIZE.xs }}
+            className={`font-bold flex-1 ${
               isDark ? "text-slate-100" : "text-slate-800"
             }`}
           >

@@ -1,5 +1,5 @@
 import { CollapsingHeader } from "@/components/CollapsingHeader";
-import MembershipBanner from "@/components/MembershipBanner";
+import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
 import { SectionRow } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
@@ -33,7 +33,7 @@ const HOME_SECTIONS: SearchMode[] = ["hot", "popular", "domestic", "foreign"];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, rewardPoints } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -138,6 +138,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               className="px-5 mt-4"
+              style={{ overflow: "visible" }}
               onPress={() =>
                 router.push({
                   pathname: "/(root)/membership" as any,
@@ -145,14 +146,17 @@ export default function HomeScreen() {
                 })
               }
             >
-              <MembershipBanner
-                earnedPoints={earnedPoints}
-                name={
-                  user?.firstName && user?.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : undefined
-                }
-              />
+              <View style={{ overflow: "visible", alignItems: "center", paddingVertical: 10 }}>
+                <RedesignedMembershipBanner
+                  earnedPoints={earnedPoints}
+                  rewardPoints={rewardPoints}
+                  name={
+                    user?.firstName && user?.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : undefined
+                  }
+                />
+              </View>
               <Text
                 className={`text-base font-semibold text-right mt-1 pr-1 ${
                   isDark ? "text-slate-400" : "text-slate-500"

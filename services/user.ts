@@ -1,12 +1,14 @@
 import * as urls from "./api/constants";
 import { apiService } from "./api/interceptor";
 
-interface User {
+export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
   phone?: string;
   age?: number;
+  earnedPoints?: number;
+  rewardPoints?: number;
 }
 
 interface Password {
@@ -14,7 +16,7 @@ interface Password {
   newPassword: string;
 }
 
-export function updateProfile(payload: User) {
+export function updateProfile(payload: Omit<UserProfile, "earnedPoints" | "rewardPoints">) {
   return apiService.patch(urls.URL_UpdateProfile, payload);
 }
 

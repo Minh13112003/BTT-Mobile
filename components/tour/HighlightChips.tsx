@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import React from "react";
 import { Text, View } from "react-native";
@@ -23,6 +24,7 @@ export function HighlightChips({ items }: { items?: string[] }) {
             className={`text-base font-bold ${
               isDark ? "text-[#7FE08A]" : "text-green-700"
             }`}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             {item}
           </Text>

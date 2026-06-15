@@ -6,13 +6,22 @@
  * a single source of truth instead of being copy-pasted across screens.
  */
 export const BRAND = {
-  red: "#E51F27",
-  redActive: "#C41A21",
+  red: "#D0021B",
+  redActive: "#A80016",
+  redLight: "#FF1F37",
+  gold: "#E8A020",
+  goldLight: "#FFF3DC",
   green: "#16A34A",
   greenDark: "#15803D",
   greenAccent: "#4CAF50",
   amber: "#F59E0B",
   star: "#F59E0B",
+  /** Flat screen background (light) — matches the redesign mockup. */
+  bgLight: "#F5F6FA",
+  bgDark: "#111318",
+  textPrimary: "#1A1A2E",
+  textSecondary: "#6B7280",
+  textMuted: "#9CA3AF",
 } as const;
 
 export interface Palette {
@@ -31,13 +40,15 @@ export function getPalette(isDark: boolean): Palette {
   return {
     isDark,
     brand: BRAND.red,
+    // Light theme uses a flat near-white background with a hair of vertical
+    // fade so the red curved header reads cleanly against it (matches mockup).
     gradient: isDark
       ? (["#1E222B", "#111318"] as const)
-      : (["#E0F2FE", "#F1F5F9"] as const),
-    screenBg: isDark ? "#111318" : "#F1F5F9",
-    icon: isDark ? "#93C5FD" : "#E51F27",
-    iconMuted: isDark ? "#6B7280" : "#94A3B8",
+      : (["#F5F6FA", "#F5F6FA"] as const),
+    screenBg: isDark ? "#111318" : "#F5F6FA",
+    icon: isDark ? "#93C5FD" : "#D0021B",
+    iconMuted: isDark ? "#6B7280" : "#9CA3AF",
     star: BRAND.star,
-    spinner: isDark ? "#94A3B8" : "#E51F27",
+    spinner: isDark ? "#94A3B8" : "#D0021B",
   };
 }

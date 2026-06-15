@@ -50,7 +50,7 @@ export default function VouchersScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -65,7 +65,7 @@ export default function VouchersScreen() {
             <Ionicons
               name="arrow-back"
               size={24}
-              color={isDark ? "#93C5FD" : "#E51F27"}
+              color={isDark ? "#93C5FD" : "#D0021B"}
             />
           </TouchableOpacity>
           <Text
@@ -79,7 +79,7 @@ export default function VouchersScreen() {
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator
               size="large"
-              color={isDark ? "#94A3B8" : "#E51F27"}
+              color={isDark ? "#94A3B8" : "#D0021B"}
             />
             <Text
               className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
@@ -111,7 +111,7 @@ export default function VouchersScreen() {
                     className={`w-12 h-12 rounded-2xl items-center justify-center shadow-md ${
                       isDark
                         ? "bg-slate-700 border border-slate-600 shadow-black/20"
-                        : "bg-[#E51F27] shadow-red-500/20"
+                        : "bg-[#D0021B] shadow-red-500/20"
                     }`}
                   >
                     <Ionicons
@@ -123,7 +123,7 @@ export default function VouchersScreen() {
                   <View className="ml-4 flex-1">
                     <Text
                       className={`text-base font-black uppercase tracking-wider ${
-                        isDark ? "text-blue-400" : "text-[#E51F27]"
+                        isDark ? "text-blue-400" : "text-[#D0021B]"
                       }`}
                     >
                       {item.subtitle}
@@ -189,7 +189,7 @@ export default function VouchersScreen() {
                     className={`rounded-xl px-4 py-2 ${
                       isDark
                         ? "bg-slate-700 active:bg-slate-600 border border-slate-600"
-                        : "bg-[#E51F27]"
+                        : "bg-[#D0021B]"
                     }`}
                   >
                     <Text className="text-white font-bold text-base">

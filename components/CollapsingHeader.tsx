@@ -67,7 +67,7 @@ export function CollapsingHeader({
       <View
         style={{
           height: insets.top,
-          backgroundColor: isDark ? "#1E222B" : "#E51F27",
+          backgroundColor: isDark ? "#1E222B" : "#D0021B",
         }}
       />
       <Collapsible>

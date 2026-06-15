@@ -138,7 +138,7 @@ export default function DetailTourScreen() {
 
   const gradientColors = isDark
     ? (["#1E222B", "#111318"] as const)
-    : (["#E0F2FE", "#F1F5F9"] as const);
+    : (["#F5F6FA", "#F5F6FA"] as const);
 
   // Chọn màu status badge
   const getStatusBadgeConfig = (status: string) => {
@@ -201,7 +201,7 @@ export default function DetailTourScreen() {
             <Ionicons
               name="arrow-back"
               size={22}
-              color={isDark ? "#93C5FD" : "#E51F27"}
+              color={isDark ? "#93C5FD" : "#D0021B"}
             />
           </TouchableOpacity>
           <Text
@@ -218,7 +218,7 @@ export default function DetailTourScreen() {
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator
               size="large"
-              color={isDark ? "#94A3B8" : "#E51F27"}
+              color={isDark ? "#94A3B8" : "#D0021B"}
             />
             <Text
               className={`text-base font-semibold mt-3 ${
@@ -245,7 +245,7 @@ export default function DetailTourScreen() {
             <TouchableOpacity
               onPress={fetchBookingDetail}
               className={`mt-6 px-6 py-2.5 rounded-full ${
-                isDark ? "bg-slate-700" : "bg-[#E51F27]"
+                isDark ? "bg-slate-700" : "bg-[#D0021B]"
               }`}
             >
               <Text className="text-white font-bold text-base">Thử lại</Text>
@@ -295,7 +295,7 @@ export default function DetailTourScreen() {
                 </View>
 
                 {/* Duration Badge */}
-                <View className="absolute bottom-4 left-4 bg-[#E51F27] px-3.5 py-1.5 rounded-2xl shadow-md">
+                <View className="absolute bottom-4 left-4 bg-[#D0021B] px-3.5 py-1.5 rounded-2xl shadow-md">
                   <Text className="text-base text-white font-black uppercase tracking-wider">
                     {booking.tour.duration}
                   </Text>
@@ -320,7 +320,7 @@ export default function DetailTourScreen() {
 
                     <Text
                       className={`text-lg font-black mt-0.5 ${
-                        isDark ? "text-slate-200" : "text-[#E51F27]"
+                        isDark ? "text-slate-200" : "text-[#D0021B]"
                       }`}
                     >
                       {formatCurrency(booking.price)}
@@ -564,7 +564,7 @@ export default function DetailTourScreen() {
                       <Ionicons
                         name="gift-outline"
                         size={14}
-                        color={isDark ? "#93C5FD" : "#E51F27"}
+                        color={isDark ? "#93C5FD" : "#D0021B"}
                       />
                       <Text className="text-base font-extrabold text-blue-500 dark:text-blue-400 ml-1">
                         {booking.voucher.code}
@@ -613,7 +613,7 @@ export default function DetailTourScreen() {
                 </Text>
                 <Text
                   className={`text-base font-black ${
-                    isDark ? "text-slate-200" : "text-[#E51F27]"
+                    isDark ? "text-slate-200" : "text-[#D0021B]"
                   }`}
                 >
                   {formatCurrency(booking.price)}

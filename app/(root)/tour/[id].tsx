@@ -165,7 +165,7 @@ export default function TourDetailScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={refetch}
-              className="px-6 py-2.5 rounded-full bg-[#E51F27]"
+              className="px-6 py-2.5 rounded-full bg-[#D0021B]"
             >
               <Text className="text-white font-bold text-base">Thử lại</Text>
             </TouchableOpacity>
