@@ -69,15 +69,32 @@ export function useScrollVisibility() {
 export function useHideOnScroll() {
   const { setHidden } = useScrollVisibility();
   const lastY = useRef(0);
+  // Quãng cuộn tích luỹ cùng một hướng kể từ lần đổi hướng gần nhất.
+  const accum = useRef(0);
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = e.nativeEvent.contentOffset.y;
       const dy = y - lastY.current;
-      if (y <= 8) setHidden(false);
-      else if (dy > 6) setHidden(true);
-      else if (dy < -6) setHidden(false);
       lastY.current = y;
+
+      // Sát đỉnh thì luôn hiện lại header.
+      if (y <= 8) {
+        accum.current = 0;
+        setHidden(false);
+        return;
+      }
+
+      // Bỏ qua rung dưới 2px (sub-pixel jitter) — nguồn gây toggle liên tục.
+      if (Math.abs(dy) < 2) return;
+
+      // Đổi hướng -> đếm lại từ đầu (tạo vùng trễ/hysteresis).
+      if (Math.sign(dy) !== Math.sign(accum.current)) accum.current = 0;
+      accum.current += dy;
+
+      // Chỉ ẩn/hiện khi đã cuộn đủ xa cùng hướng -> không giật khi rung nhẹ.
+      if (accum.current > 24) setHidden(true);
+      else if (accum.current < -24) setHidden(false);
     },
     [setHidden],
   );
@@ -85,6 +102,7 @@ export function useHideOnScroll() {
   useFocusEffect(
     useCallback(() => {
       lastY.current = 0;
+      accum.current = 0;
       setHidden(false);
       return () => setHidden(false);
     }, [setHidden]),

@@ -81,10 +81,16 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Không thử refresh-token cho chính các endpoint auth (login/register/refresh).
+    // Nếu không, lỗi 401 thật (vd "Invalid email or password") sẽ bị che thành "No refresh token".
+    const requestUrl: string = originalRequest?.url ?? '';
+    const isAuthRoute = /\/auth\/(login|register|refresh-token)/.test(requestUrl);
+
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isAuthRoute
     ) {
       originalRequest._retry = true;
 
