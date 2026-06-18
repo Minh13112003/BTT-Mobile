@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getMe } from "@/services/user";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 // Định nghĩa cấu trúc User để đồng bộ với Backend
 export interface User {
@@ -84,6 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshPoints();
     }
   }, [isLoggedIn, refreshPoints]);
+
+  // Đăng ký push notification token khi đăng nhập
+  usePushNotifications(isLoggedIn);
 
   if (isLoading) return null;
 

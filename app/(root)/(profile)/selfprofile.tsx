@@ -9,6 +9,8 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -22,7 +24,7 @@ export default function SelfProfileScreen() {
   const router = useRouter();
 
   // Lấy chính xác object 'user' từ Auth_Context ra làm fallback
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Các state quản lý thông tin profile và cache
   const [profile, setProfile] = useState<any>(null);
@@ -166,7 +168,7 @@ export default function SelfProfileScreen() {
   // Xử lý đổi mật khẩu
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword) {
-      setErrorMsg("Vui lòng nhập đầy đủ thông tin mật khẩu cũ và mới.");
+      setErrorMsg("Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.");
       return;
     }
     if (newPassword.length < 6) {
@@ -180,26 +182,40 @@ export default function SelfProfileScreen() {
       setSuccessMsg("");
 
       await changePassword({
-        oldPassword,
+        currentPassword: oldPassword,
         newPassword,
       });
 
-      setSuccessMsg("Cập nhật mật khẩu thành công!");
+      setSuccessMsg("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...");
       setOldPassword("");
       setNewPassword("");
-      Alert.alert("Thành công", "Cập nhật mật khẩu thành công!");
 
-      // Ẩn form sau khi thành công
-      setTimeout(() => {
-        setShowChangePassword(false);
-        setSuccessMsg("");
-      }, 1500);
+      Alert.alert(
+        "Thành công",
+        "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
+        [
+          {
+            text: "OK",
+            onPress: async () => {
+              await logout();
+            },
+          },
+        ],
+      );
     } catch (err: any) {
       console.error(err);
-      const msg =
-        err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật mật khẩu.";
-      setErrorMsg(msg);
-      Alert.alert("Thất bại", msg);
+      const rawMsg = err?.response?.data?.message;
+      const status = err?.response?.status;
+
+      let displayMsg = "Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.";
+      if (status === 400 || status === 401) {
+        displayMsg = "Sai mật khẩu cũ, xin vui lòng nhập đúng mật khẩu cũ của bạn.";
+      } else if (rawMsg) {
+        displayMsg = Array.isArray(rawMsg) ? rawMsg.join(", ") : rawMsg.toString();
+      }
+
+      setErrorMsg(displayMsg);
+      Alert.alert("Thất bại", displayMsg);
     } finally {
       setUpdatingPassword(false);
     }
@@ -228,8 +244,14 @@ export default function SelfProfileScreen() {
           )}
         </View>
 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingTop: 20,
@@ -758,6 +780,7 @@ export default function SelfProfileScreen() {
             )}
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

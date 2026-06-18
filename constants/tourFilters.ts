@@ -17,8 +17,8 @@ export const FOREIGN_REGIONS = ["Châu Á", "Châu Âu", "Châu Phi"] as const;
 /** Tiêu đề section trên màn Home. */
 export const SECTION_LABELS: Record<SearchMode, string> = {
   newest: "Tour mới nhất",
-  hot: "Tour đang hot",
-  popular: "Tour bán chạy",
+  hot: "Tour hot nhất",
+  popular: "Tour bán chạy nhất",
   domestic: "Tour trong nước",
   foreign: "Tour quốc tế",
 };

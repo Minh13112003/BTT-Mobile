@@ -36,6 +36,17 @@ interface BookingDetail {
     availableSeats?: number;
   };
   quantity: number;
+  passengers?: {
+    adults?: number;
+    adultUnitPrice?: number;
+    adultTotal?: number;
+    children?: number;
+    childUnitPrice?: number;
+    childTotal?: number;
+    infants?: number;
+    infantUnitPrice?: number;
+    infantTotal?: number;
+  };
   originalPrice?: number;
   discountAmount?: number;
   price: number;
@@ -53,6 +64,7 @@ interface BookingDetail {
     reuse?: boolean;
   };
   notice?: string;
+  paymentMethod?: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -492,21 +504,80 @@ export default function DetailTourScreen() {
               />
 
               {/* Quantity Row */}
-              <View className="flex-row justify-between items-center py-2.5">
-                <Text
-                  className={`text-base font-semibold ${
-                    isDark ? "text-slate-400" : "text-slate-500"
-                  }`}
-                >
-                  Số lượng đặt
-                </Text>
-                <Text
-                  className={`text-base font-black ${
-                    isDark ? "text-slate-200" : "text-slate-800"
-                  }`}
-                >
-                  {booking.quantity} khách
-                </Text>
+              <View className="py-2.5">
+                <View className="flex-row justify-between items-center">
+                  <Text
+                    className={`text-base font-semibold ${
+                      isDark ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Số lượng đặt
+                  </Text>
+                  <Text
+                    className={`text-base font-black ${
+                      isDark ? "text-slate-200" : "text-slate-800"
+                    }`}
+                  >
+                    {booking.quantity} khách
+                  </Text>
+                </View>
+                {/* Chi tiết người lớn / trẻ em / em bé */}
+                {booking.passengers && (
+                  <View
+                    className={`flex-row flex-wrap gap-2 mt-2 px-3 py-2.5 rounded-2xl ${
+                      isDark ? "bg-slate-900/50" : "bg-slate-50"
+                    }`}
+                  >
+                    {(booking.passengers.adults ?? 0) > 0 && (
+                      <View className="flex-row items-center mr-4">
+                        <Ionicons
+                          name="person"
+                          size={13}
+                          color={isDark ? "#94A3B8" : "#64748B"}
+                        />
+                        <Text
+                          className={`ml-1 text-sm font-semibold ${
+                            isDark ? "text-slate-300" : "text-slate-600"
+                          }`}
+                        >
+                          Người lớn: <Text className="font-black">{booking.passengers.adults}</Text>
+                        </Text>
+                      </View>
+                    )}
+                    {(booking.passengers.children ?? 0) > 0 && (
+                      <View className="flex-row items-center mr-4">
+                        <Ionicons
+                          name="happy"
+                          size={13}
+                          color={isDark ? "#94A3B8" : "#64748B"}
+                        />
+                        <Text
+                          className={`ml-1 text-sm font-semibold ${
+                            isDark ? "text-slate-300" : "text-slate-600"
+                          }`}
+                        >
+                          Trẻ em: <Text className="font-black">{booking.passengers.children}</Text>
+                        </Text>
+                      </View>
+                    )}
+                    {(booking.passengers.infants ?? 0) > 0 && (
+                      <View className="flex-row items-center">
+                        <Ionicons
+                          name="heart"
+                          size={13}
+                          color={isDark ? "#94A3B8" : "#64748B"}
+                        />
+                        <Text
+                          className={`ml-1 text-sm font-semibold ${
+                            isDark ? "text-slate-300" : "text-slate-600"
+                          }`}
+                        >
+                          Em bé: <Text className="font-black">{booking.passengers.infants}</Text>
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
 
               {/* Original Price Row (if present) */}
@@ -669,6 +740,61 @@ export default function DetailTourScreen() {
                   {formatDateTime(booking.updatedAt)}
                 </Text>
               </View>
+
+              {/* Payment Method Row */}
+              {booking.paymentMethod && (
+                <>
+                  <View
+                    className={`h-[1px] my-1 ${
+                      isDark ? "bg-slate-700/40" : "bg-slate-100"
+                    }`}
+                  />
+                  <View className="py-2.5">
+                    <View className="flex-row justify-between items-center">
+                      <Text
+                        className={`text-base font-semibold ${
+                          isDark ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Phương thức thanh toán
+                      </Text>
+                      <View className="flex-row items-center">
+                        <Text className="mr-1 text-base">
+                          {booking.paymentMethod === "AT_OFFICE" ? "🏢" : "🏦"}
+                        </Text>
+                        <Text
+                          className={`text-base font-black ${
+                            isDark ? "text-slate-200" : "text-slate-800"
+                          }`}
+                        >
+                          {booking.paymentMethod === "AT_OFFICE"
+                            ? "Tại Văn Phòng"
+                            : "Chuyển khoản"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {booking.paymentMethod === "AT_OFFICE" && (
+                      <View
+                        className={`mt-2.5 rounded-2xl px-4 py-3 ${
+                          isDark ? "bg-slate-900/60" : "bg-red-50/60"
+                        }`}
+                      >
+                        <Text
+                          style={{ lineHeight: 22 }}
+                          className={`text-base ${
+                            isDark ? "text-slate-300" : "text-slate-700"
+                          }`}
+                        >
+                          {
+                            "CÔNG TY CỔ PHẦN DỊCH VỤ DU LỊCH BẾN THÀNH (BENTHANH TOURIST)\nTrụ sở: Số 03 - 05 Nguyễn Huệ, Phường Sài Gòn, TP. Hồ Chí Minh\nTel: 028 3822 7788"
+                          }
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </>
+              )}
             </View>
 
             {/*  HIGHLIGHTS + PRICE CARD (vertical stack) */}

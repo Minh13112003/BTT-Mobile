@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610383493325",
+    "project_id": "benthanh-tourist",
+    "storage_bucket": "benthanh-tourist.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610383493325:android:e61bad028c50bbecc75184",
+        "android_client_info": {
+          "package_name": "com.benthanh.tourist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBR6bTxY3HEb2kxkH2JzrKmVhd8M0MzRpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

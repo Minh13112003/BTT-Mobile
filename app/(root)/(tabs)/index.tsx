@@ -28,8 +28,8 @@ import {
   View,
 } from "react-native";
 
-/** Vertical sections rendered below the newest-tour carousel, in order. */
-const HOME_SECTIONS: SearchMode[] = ["hot", "popular", "domestic", "foreign"];
+/** Vertical sections rendered below the hot-tour carousel, in order. */
+const HOME_SECTIONS: SearchMode[] = ["newest", "popular", "domestic", "foreign"];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -222,10 +222,10 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* SECTION: TOUR MỚI NHẤT — carousel tự động 5s */}
+          {/* SECTION: TOUR HOT NHẤT — carousel tự động 5s */}
           <SectionRow
-            title={SECTION_LABELS.newest}
-            onSeeAll={() => openSearch({ mode: "newest" })}
+            title={SECTION_LABELS.hot}
+            onSeeAll={() => openSearch({ mode: "hot" })}
           />
           {loading ? (
             <View className="py-10 items-center">
@@ -238,7 +238,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            <FeaturedCarousel tours={sections.newest} onPressTour={openDetail} />
+            <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
           )}
 
           {/* SECTIONS: HOT / POPULAR / DOMESTIC / FOREIGN */}

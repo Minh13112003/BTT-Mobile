@@ -12,7 +12,9 @@ interface ScrollVisibilityValue {
   setHidden: (hidden: boolean) => void;
 }
 
-const ScrollVisibilityContext = createContext<ScrollVisibilityValue | null>(null);
+const ScrollVisibilityContext = createContext<ScrollVisibilityValue | null>(
+  null,
+);
 
 /**
  * Shares a single "hide on scroll" animation value across the tab bar and the

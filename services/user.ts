@@ -12,7 +12,7 @@ export interface UserProfile {
 }
 
 interface Password {
-  oldPassword: string;
+  currentPassword: string;
   newPassword: string;
 }
 
@@ -26,4 +26,8 @@ export function getMe() {
 
 export function changePassword(payload: Password) {
   return apiService.patch(urls.URL_ChangePassword, payload);
+}
+
+export function registerFcmToken(fcmToken: string) {
+  return apiService.post(urls.URL_RegisterFcmToken, { fcmToken });
 }

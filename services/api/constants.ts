@@ -46,3 +46,6 @@ export const URL_GetReferralStats = `${API_BASE_URL}/api/v1/users/referral`;
 
 //Feedback APIs
 export const URL_PostFeedback = `${API_BASE_URL}/api/v1/feedbacks`;
+
+//Push notification
+export const URL_RegisterFcmToken = `${API_BASE_URL}/api/v1/users/me/fcm-token`;

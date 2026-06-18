@@ -2,6 +2,7 @@ import {
   ScrollVisibilityProvider,
   useScrollVisibility,
 } from "@/context/ScrollVisibility_Context";
+import { useNotification } from "@/context/Notification_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -24,8 +25,9 @@ const ICONS: Record<
   { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap }
 > = {
   index: { on: "home", off: "home-outline" },
-  search: { on: "search", off: "search-outline" },
+  search: { on: "compass", off: "compass-outline" },
   history: { on: "time", off: "time-outline" },
+  notifications: { on: "notifications", off: "notifications-outline" },
   profile: { on: "person", off: "person-outline" },
 };
 
@@ -39,6 +41,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
+  const { unreadCount } = useNotification();
 
   const contentOpacity = hidden.interpolate({
     inputRange: [0, 1],
@@ -84,6 +87,9 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             }
           };
 
+          const isNotif = route.name === "notifications";
+          const badge = isNotif && unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : null;
+
           return (
             <TouchableOpacity
               key={route.key}
@@ -93,11 +99,40 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               activeOpacity={0.7}
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
             >
-              <Ionicons
-                name={focused ? icon.on : icon.off}
-                size={23}
-                color={color}
-              />
+              <View style={{ position: "relative" }}>
+                <Ionicons
+                  name={focused ? icon.on : icon.off}
+                  size={23}
+                  color={color}
+                />
+                {badge && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -5,
+                      right: -8,
+                      backgroundColor: "#D0021B",
+                      borderRadius: 99,
+                      minWidth: 16,
+                      height: 16,
+                      paddingHorizontal: 3,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: 10,
+                        fontWeight: "900",
+                        lineHeight: 14,
+                      }}
+                    >
+                      {badge}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text
                 style={{
                   fontSize: 12,
@@ -142,8 +177,9 @@ export default function TabLayout() {
         screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen name="index" options={{ title: "Tổng quan" }} />
-        <Tabs.Screen name="search" options={{ title: "Tìm kiếm" }} />
+        <Tabs.Screen name="search" options={{ title: "Du lịch" }} />
         <Tabs.Screen name="history" options={{ title: "Lịch sử" }} />
+        <Tabs.Screen name="notifications" options={{ title: "Thông báo" }} />
         <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
       </Tabs>
     </ScrollVisibilityProvider>

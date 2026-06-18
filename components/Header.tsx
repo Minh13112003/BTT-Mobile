@@ -1,5 +1,7 @@
+import { useNotification } from "@/context/Notification_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +26,10 @@ export default function Header({
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const { width: screenWidth } = useWindowDimensions();
+  const { unreadCount } = useNotification();
+  const router = useRouter();
+
+  const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
 
   // Logo co giãn theo bề ngang màn hình (≈48%), chặn trên ở LOGO_MAX_WIDTH,
   // giữ nguyên tỉ lệ -> không tràn trên máy nhỏ, không quá to trên tablet.
@@ -81,12 +87,43 @@ export default function Header({
               />
             </TouchableOpacity>
 
-            <TouchableOpacity className="w-8 h-8 rounded-full bg-white/10 items-center justify-center">
+            <TouchableOpacity
+              onPress={() => router.push("/(root)/(tabs)/notifications" as any)}
+              activeOpacity={0.7}
+              className="w-8 h-8 rounded-full bg-white/10 items-center justify-center"
+            >
               <Ionicons
-                name="notifications-outline"
+                name={unreadCount > 0 ? "notifications" : "notifications-outline"}
                 size={18}
                 color="#FFFFFF"
               />
+              {unreadCount > 0 && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: -4,
+                    backgroundColor: "#D0021B",
+                    borderRadius: 99,
+                    minWidth: 16,
+                    height: 16,
+                    paddingHorizontal: 3,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 10,
+                      fontWeight: "900",
+                      lineHeight: 14,
+                    }}
+                  >
+                    {badgeLabel}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         )}
