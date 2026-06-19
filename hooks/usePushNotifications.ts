@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { registerFcmToken } from "@/services/user";
+import { useNotification } from "@/context/Notification_Context";
 
 // Hiển thị banner khi app đang mở (foreground)
 Notifications.setNotificationHandler({
@@ -16,6 +16,7 @@ Notifications.setNotificationHandler({
 
 export function usePushNotifications(isLoggedIn: boolean) {
   const listenerRef = useRef<Notifications.EventSubscription | null>(null);
+  const { refreshUnread } = useNotification();
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -23,9 +24,6 @@ export function usePushNotifications(isLoggedIn: boolean) {
     let cancelled = false;
 
     async function setup() {
-      // Chỉ chạy trên thiết bị thật (không phải simulator)
-      if (!Device.isDevice) return;
-
       // Xin quyền
       const { status: existing } = await Notifications.getPermissionsAsync();
       let finalStatus = existing;
@@ -45,28 +43,28 @@ export function usePushNotifications(isLoggedIn: boolean) {
         });
       }
 
-      // Lấy Expo Push Token
-      const tokenData = await Notifications.getExpoPushTokenAsync();
-      if (cancelled) return;
-
-      // Gửi token lên backend
+      // Lấy Expo Push Token (hoạt động cả trên giả lập có Google Play Services)
       try {
+        const tokenData = await Notifications.getExpoPushTokenAsync({
+          projectId: "da12616e-cd82-4ea6-8c64-f6912c4d4e87",
+        });
+        if (cancelled) return;
         await registerFcmToken(tokenData.data);
       } catch {
-        // Bỏ qua lỗi — không ảnh hưởng đến luồng chính
+        // Giả lập không có Google Play Services → bỏ qua, không ảnh hưởng luồng chính
       }
     }
 
     setup();
 
-    // Lắng nghe notification khi app đang mở
+    // Khi nhận notification mới → cập nhật badge ngay lập tức
     listenerRef.current = Notifications.addNotificationReceivedListener(() => {
-      // Expo tự hiển thị banner, không cần làm gì thêm
+      refreshUnread();
     });
 
     return () => {
       cancelled = true;
       listenerRef.current?.remove();
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, refreshUnread]);
 }

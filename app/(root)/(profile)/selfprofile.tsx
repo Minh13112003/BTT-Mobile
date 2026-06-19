@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  LogBox,
   Platform,
   ScrollView,
   Text,
@@ -17,6 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+LogBox.ignoreLogs(["AxiosError"]);
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/Theme_Context";
 
@@ -153,7 +156,6 @@ export default function SelfProfileScreen() {
       Alert.alert("Thành công", "Cập nhật thông tin tài khoản thành công!");
       setIsEditingProfile(false);
     } catch (err: any) {
-      console.error(err);
       const rawMsg =
         err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin.";
       const displayMsg = Array.isArray(rawMsg)

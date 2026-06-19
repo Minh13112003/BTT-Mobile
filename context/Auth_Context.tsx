@@ -1,7 +1,23 @@
 import * as SecureStore from "expo-secure-store";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { getMe } from "@/services/user";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+
+const storage = {
+  get: (key: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.getItem(key))
+      : SecureStore.getItemAsync(key),
+  set: (key: string, value: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.setItem(key, value))
+      : SecureStore.setItemAsync(key, value),
+  remove: (key: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.removeItem(key))
+      : SecureStore.deleteItemAsync(key),
+};
 
 // Định nghĩa cấu trúc User để đồng bộ với Backend
 export interface User {
@@ -57,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadStorageData = async () => {
       try {
         const [token, savedUser] = await Promise.all([
-          SecureStore.getItemAsync("accessToken"),
-          SecureStore.getItemAsync("user"),
+          storage.get("accessToken"),
+          storage.get("user"),
         ]);
 
         if (token) {
@@ -98,9 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       await Promise.all([
-        SecureStore.setItemAsync("accessToken", accessToken),
-        SecureStore.setItemAsync("refreshToken", refreshToken),
-        SecureStore.setItemAsync("user", JSON.stringify(userData)),
+        storage.set("accessToken", accessToken),
+        storage.set("refreshToken", refreshToken),
+        storage.set("user", JSON.stringify(userData)),
       ]);
 
       setAccessToken(accessToken);
@@ -114,10 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await Promise.all([
-        SecureStore.deleteItemAsync("accessToken"),
-        SecureStore.deleteItemAsync("refreshToken"),
-        SecureStore.deleteItemAsync("user"),
-        SecureStore.deleteItemAsync("user_profile"),
+        storage.remove("accessToken"),
+        storage.remove("refreshToken"),
+        storage.remove("user"),
+        storage.remove("user_profile"),
       ]);
 
       setAccessToken(null);

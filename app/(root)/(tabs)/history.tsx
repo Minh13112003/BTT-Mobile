@@ -1,7 +1,9 @@
 import Header from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { FONT_SIZE } from "@/constants/typography";
 import { getPalette } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
+import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getTransactionHistory } from "@/services/booking";
@@ -9,19 +11,23 @@ import { TourItem } from "@/services/tour";
 import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   ActivityIndicator,
   FlatList,
   ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Định nghĩa kiểu dữ liệu đơn hàng
 interface OrderItem {
@@ -90,6 +96,8 @@ function statusTone(statusVn: string, isDark: boolean) {
 export default function HistoryScreen() {
   const router = useRouter();
   useAuth();
+  const insets = useSafeAreaInsets();
+  const { setHidden } = useScrollVisibility();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -97,6 +105,42 @@ export default function HistoryScreen() {
   const [hasNext, setHasNext] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("Tất cả");
+  const [chromeH, setChromeH] = useState(0);
+
+  // Collapsing header
+  const headerOffset = useRef(new Animated.Value(0)).current;
+  const lastY = useRef(0);
+
+  const onScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: new Animated.Value(0) } } }],
+    {
+      useNativeDriver: false,
+      listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const y = e.nativeEvent.contentOffset.y;
+        const dy = y - lastY.current;
+        lastY.current = y;
+        if (y <= 8) {
+          setHidden(false);
+          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+        } else if (dy > 8) {
+          setHidden(true);
+          Animated.timing(headerOffset, { toValue: -chromeH, duration: 150, useNativeDriver: true }).start();
+        } else if (dy < -8) {
+          setHidden(false);
+          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+        }
+      },
+    },
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      headerOffset.setValue(0);
+      lastY.current = 0;
+      setHidden(false);
+      return () => setHidden(false);
+    }, [headerOffset, setHidden]),
+  );
 
   const filteredOrders = orders.filter((item) => {
     if (selectedStatus === "Tất cả") return true;
@@ -169,84 +213,14 @@ export default function HistoryScreen() {
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
 
-      <Header title="BENTHANH TOURIST" showActions={true} />
+      {/* Safe-area backdrop */}
+      <View style={{ height: insets.top, backgroundColor: isDark ? "#1E222B" : "#D0021B", zIndex: 20 }} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
-        {/* Title */}
-        <View className="px-5 pt-4 pb-1">
-          <Text
-            className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
-            style={{ fontSize: 22 }}
-          >
-            Lịch sử đặt tour
-          </Text>
-          <Text
-            className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-400"}`}
-            style={{ fontSize: 16 }}
-          >
-            {pendingCount > 0
-              ? `${pendingCount} đơn hàng đang xử lý`
-              : `${orders.length} đơn hàng`}
-          </Text>
-        </View>
-
-        {/* Horizontal filter chips */}
-        <View style={{ paddingTop: 10, paddingBottom: 6 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
-          >
-            {STATUS_OPTIONS.map((status) => {
-              const isActive = selectedStatus === status;
-              return (
-                <TouchableOpacity
-                  key={status}
-                  onPress={() => setSelectedStatus(status)}
-                  className={`px-[18px] py-2 rounded-full ${
-                    isActive
-                      ? "bg-[#D0021B]"
-                      : isDark
-                        ? "bg-[#1E222B] border border-slate-700"
-                        : "bg-white"
-                  }`}
-                  style={
-                    isActive || isDark
-                      ? undefined
-                      : {
-                          shadowColor: "#000",
-                          shadowOpacity: 0.07,
-                          shadowRadius: 6,
-                          shadowOffset: { width: 0, height: 1 },
-                          elevation: 1,
-                        }
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={{ fontSize: 16 }}
-                    className={`font-bold ${
-                      isActive
-                        ? "text-white"
-                        : isDark
-                          ? "text-slate-300"
-                          : "text-slate-600"
-                    }`}
-                  >
-                    {status}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
         {loading && !refreshing ? (
-          <View className="flex-1 justify-center items-center">
+          <View className="flex-1 justify-center items-center" style={{ paddingTop: chromeH }}>
             <ActivityIndicator size="large" color={palette.spinner} />
-            <Text
-              className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-            >
+            <Text className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Đang tải lịch sử giao dịch...
             </Text>
           </View>
@@ -257,24 +231,30 @@ export default function HistoryScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingTop: 10,
-              paddingBottom: 100,
+              paddingTop: chromeH + 10,
+              paddingBottom: 24,
             }}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 tintColor={palette.spinner}
+                progressViewOffset={chromeH}
               />
             }
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.2}
             ListFooterComponent={
-              loadingMore ? (
-                <View className="py-4 justify-center items-center">
-                  <ActivityIndicator size="small" color={palette.spinner} />
-                </View>
-              ) : null
+              <>
+                {loadingMore ? (
+                  <View className="py-4 justify-center items-center">
+                    <ActivityIndicator size="small" color={palette.spinner} />
+                  </View>
+                ) : null}
+                <Footer />
+              </>
             }
             ListEmptyComponent={
               <View
@@ -467,6 +447,93 @@ export default function HistoryScreen() {
           />
         )}
       </LinearGradient>
+
+      {/* Floating collapsing chrome: Header + filter chips */}
+      <Animated.View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h && Math.abs(h - chromeH) > 1) setChromeH(h);
+        }}
+        style={{
+          position: "absolute",
+          top: insets.top,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          transform: [{ translateY: headerOffset }],
+          backgroundColor: palette.gradient[0],
+        }}
+      >
+        <Header title="BENTHANH TOURIST" showActions={true} safeArea={false} />
+
+        <View className="px-5 pt-3 pb-1">
+          <Text
+            className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
+            style={{ fontSize: 22 }}
+          >
+            Lịch sử đặt tour
+          </Text>
+          <Text
+            className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-400"}`}
+            style={{ fontSize: 16 }}
+          >
+            {pendingCount > 0
+              ? `${pendingCount} đơn hàng đang xử lý`
+              : `${orders.length} đơn hàng`}
+          </Text>
+        </View>
+
+        {/* Horizontal filter chips */}
+        <View style={{ paddingTop: 8, paddingBottom: 8 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+          >
+            {STATUS_OPTIONS.map((status) => {
+              const isActive = selectedStatus === status;
+              return (
+                <TouchableOpacity
+                  key={status}
+                  onPress={() => setSelectedStatus(status)}
+                  className={`px-[18px] py-2 rounded-full ${
+                    isActive
+                      ? "bg-[#D0021B]"
+                      : isDark
+                        ? "bg-[#1E222B] border border-slate-700"
+                        : "bg-white"
+                  }`}
+                  style={
+                    isActive || isDark
+                      ? undefined
+                      : {
+                          shadowColor: "#000",
+                          shadowOpacity: 0.07,
+                          shadowRadius: 6,
+                          shadowOffset: { width: 0, height: 1 },
+                          elevation: 1,
+                        }
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={{ fontSize: 16 }}
+                    className={`font-bold ${
+                      isActive
+                        ? "text-white"
+                        : isDark
+                          ? "text-slate-300"
+                          : "text-slate-600"
+                    }`}
+                  >
+                    {status}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Animated.View>
     </View>
   );
 }

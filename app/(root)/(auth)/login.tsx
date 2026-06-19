@@ -17,27 +17,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { isLoggedIn, saveAuth } = useAuth();
   const { theme, toggleTheme } = useTheme();
-
+  const insets = useSafeAreaInsets();
   const isDark = theme === "dark";
 
   useEffect(() => {
-    if (isLoggedIn) {
-      router.replace("/(root)/(tabs)");
-    }
+    if (isLoggedIn) router.replace("/(root)/(tabs)");
   }, [isLoggedIn]);
 
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,300 +42,320 @@ export default function LoginScreen() {
       setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
-
     try {
       setLoading(true);
       setError("");
-
-      const res = await login({
-        identifier: identity,
-        password,
-      });
-
-      await saveAuth(
-        res.data.accessToken,
-        res.data.refreshToken,
-        res.data.user,
-      );
-
+      const res = await login({ identifier: identity, password });
+      await saveAuth(res.data.accessToken, res.data.refreshToken, res.data.user);
       router.replace("/(root)/(tabs)/profile");
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message || "Email hoặc mật khẩu không đúng",
-      );
+      setError(err?.response?.data?.message || "Email hoặc mật khẩu không đúng");
     } finally {
       setLoading(false);
     }
   };
 
-  const gradientColors = isDark
-    ? (["#3E4451", "#1E222B", "#111318"] as const)
-    : (["#F5F6FA", "#F5F6FA"] as const);
+  const headerBg: [string, string] = isDark
+    ? ["#3E4451", "#1E222B"]
+    : ["#C0001A", "#D0021B"];
+
+  const formBg = isDark ? "#1E222B" : "#FFFFFF";
+  const inputBg = isDark ? "#111318" : "#FFFFFF";
+  const inputBorder = (field: string) =>
+    focusedField === field
+      ? isDark ? "#60A5FA" : "#005AC1"
+      : isDark ? "#2D3748" : "#E7BDB8";
+  const labelColor = isDark ? "#9CA3AF" : "#5D3F3C";
+  const iconColor = (field: string) =>
+    focusedField === field ? (isDark ? "#60A5FA" : "#005AC1") : (isDark ? "#6B7280" : "#926E6A");
 
   return (
-    <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <SafeAreaView className="flex-1">
-        {/* Nút chuyển đổi Giao diện dạng biểu tượng ở góc trên bên phải */}
-        <View className="flex-row justify-end px-6 pt-2">
-          <TouchableOpacity
-            onPress={toggleTheme}
-            activeOpacity={0.7}
-            className={`w-10 h-10 rounded-full items-center justify-center border ${
-              isDark
-                ? "bg-slate-800/80 border-slate-700/50 shadow-black/20"
-                : "bg-white border-slate-200 shadow-sm shadow-slate-900/5"
-            }`}
-          >
-            <Ionicons
-              name={isDark ? "sunny-outline" : "moon-outline"}
-              size={20}
-              color={isDark ? "#F59E0B" : "#1E293B"}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <View style={{ flex: 1, backgroundColor: isDark ? "#1E222B" : "#F9F9FF" }}>
+      <StatusBar style="light" />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              flexGrow: 1,
-              justifyContent: "center",
-              paddingHorizontal: 24,
+          {/* ── Header nền đỏ ── */}
+          <LinearGradient
+            colors={headerBg}
+            style={{
+              paddingTop: insets.top + 12,
+              paddingBottom: 60,
+              alignItems: "center",
+              overflow: "hidden",
             }}
           >
-            {/* Header Section */}
-            <View className="items-center mb-8">
-              {/* Logo BTT thay cho icon */}
+            {/* Nút dark/light mode */}
+            <TouchableOpacity
+              onPress={toggleTheme}
+              activeOpacity={0.7}
+              style={{
+                position: "absolute",
+                top: insets.top + 12,
+                right: 20,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={isDark ? "sunny-outline" : "moon-outline"}
+                size={20}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
+
+            {/* Logo tròn */}
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 20,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.25,
+                shadowRadius: 16,
+                elevation: 10,
+                padding: 12,
+              }}
+            >
+              <Image
+                source={require("../../../assets/images/Logo_BTT-2018.png")}
+                style={{ width: 72, height: 72 }}
+                resizeMode="contain"
+              />
+            </View>
+
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: "900",
+                color: "#FFFFFF",
+                letterSpacing: -0.5,
+                textTransform: "uppercase",
+              }}
+            >
+              BENTHANH TOURIST
+            </Text>
+
+            <Text
+              style={{
+                fontSize: 15,
+                color: "rgba(255,255,255,0.85)",
+                marginTop: 6,
+                fontStyle: "italic",
+              }}
+            >
+              Đăng nhập để tiếp tục trải nghiệm
+            </Text>
+          </LinearGradient>
+
+          {/* ── Form card trắng bo góc trên ── */}
+          <View
+            style={{
+              flex: 1,
+              marginTop: -40,
+              borderTopLeftRadius: 40,
+              borderTopRightRadius: 40,
+              backgroundColor: formBg,
+              paddingHorizontal: 24,
+              paddingTop: 32,
+              paddingBottom: 24,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 16,
+              elevation: 12,
+            }}
+          >
+            {/* Email */}
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+                color: labelColor,
+                marginBottom: 8,
+                paddingLeft: 4,
+              }}
+            >
+              Email hoặc Số điện thoại
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: inputBorder("identity"),
+                backgroundColor: inputBg,
+                paddingHorizontal: 14,
+                height: 54,
+                marginBottom: 20,
+              }}
+            >
+              <Ionicons name="mail-outline" size={20} color={iconColor("identity")} />
+              <TextInput
+                style={{
+                  flex: 1,
+                  height: "100%",
+                  marginLeft: 10,
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: isDark ? "#F1F5F9" : "#181C23",
+                }}
+                placeholder="name@example.com hoặc 0123456789"
+                placeholderTextColor={isDark ? "#6B7280" : "#926E6A"}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={identity}
+                onChangeText={setIdentity}
+                onFocus={() => setFocusedField("identity")}
+                onBlur={() => setFocusedField("")}
+              />
+            </View>
+
+            {/* Mật khẩu */}
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+                color: labelColor,
+                marginBottom: 8,
+                paddingLeft: 4,
+              }}
+            >
+              Mật khẩu
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: inputBorder("password"),
+                backgroundColor: inputBg,
+                paddingHorizontal: 14,
+                height: 54,
+              }}
+            >
+              <Ionicons name="lock-closed-outline" size={20} color={iconColor("password")} />
+              <TextInput
+                style={{
+                  flex: 1,
+                  height: "100%",
+                  marginLeft: 10,
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: isDark ? "#F1F5F9" : "#181C23",
+                }}
+                placeholder="••••••••"
+                placeholderTextColor={isDark ? "#6B7280" : "#926E6A"}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField("")}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.5}>
+                <Ionicons
+                  name={showPassword ? "eye-outline" : "eye-off-outline"}
+                  size={20}
+                  color={isDark ? "#6B7280" : "#926E6A"}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quên mật khẩu */}
+            <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 12 }} activeOpacity={0.6}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: isDark ? "#60A5FA" : "#005AC1" }}>
+                Quên mật khẩu?
+              </Text>
+            </TouchableOpacity>
+
+            {/* Error */}
+            {error ? (
               <View
                 style={{
-                  width: 160,
-                  height: 80,
-                  borderRadius: 22,
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 20,
-                  backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-                  borderWidth: 2,
-                  borderColor: isDark
-                    ? "rgba(71,85,105,0.6)"
-                    : "rgba(229,31,39,0.15)",
-                  shadowColor: isDark ? "#000" : "#D0021B",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDark ? 0.4 : 0.18,
-                  shadowRadius: 14,
-                  elevation: 8,
-                  padding: 10,
+                  borderRadius: 12,
+                  marginTop: 14,
+                  padding: 12,
+                  backgroundColor: isDark ? "rgba(185,28,28,0.15)" : "#FEF2F2",
+                  borderWidth: 1,
+                  borderColor: isDark ? "#7F1D1D" : "#FECACA",
                 }}
               >
-                <Image
-                  source={
-                    isDark
-                      ? require("../../../assets/images/Logo_BTT-2018-02.png")
-                      : require("../../../assets/images/Logo_BTT-2018.png")
-                  }
-                  style={{ width: 140, height: 60 }}
-                  resizeMode="contain"
-                />
-              </View>
-
-              <Text
-                className={`text-3xl font-black tracking-tight ${
-                  isDark ? "text-slate-100" : "text-blue-900 color-[#1E3A8A]"
-                }`}
-              >
-                BENTHANH TOURIST
-              </Text>
-
-              <Text
-                className={`text-base font-medium mt-1 ${
-                  isDark ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                Đăng nhập để tiếp tục trải nghiệm
-              </Text>
-            </View>
-
-            {/* Khung chứa Form */}
-            <View
-              className={`rounded-[24px] p-5 shadow-2xl border ${
-                isDark
-                  ? "bg-slate-800/80 border-slate-700/50 shadow-black/40"
-                  : "bg-white border-slate-100 shadow-slate-900/5"
-              }`}
-            >
-              {/* Email Input */}
-              <Text
-                className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
-                  isDark ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                Email hoặc Số điện thoại
-              </Text>
-              <View
-                className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                  isDark
-                    ? focusedField === "identity"
-                      ? "border-slate-400 bg-slate-900/60"
-                      : "border-slate-700/60 bg-slate-900/40"
-                    : focusedField === "identity"
-                      ? "border-blue-500 bg-white"
-                      : "border-slate-100 bg-slate-50/50"
-                }`}
-              >
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={
-                    isDark
-                      ? focusedField === "identity"
-                        ? "#F3F4F6"
-                        : "#6B7280"
-                      : focusedField === "identity"
-                        ? "#3B82F6"
-                        : "#94A3B8"
-                  }
-                />
-                <TextInput
-                  className={`flex-1 h-full ml-3 font-semibold text-base ${
-                    isDark ? "text-slate-100" : "text-slate-900"
-                  }`}
-                  placeholder="name@example.com hoặc 0123456789"
-                  placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={identity}
-                  onChangeText={setIdentity}
-                  onFocus={() => setFocusedField("identity")}
-                  onBlur={() => setFocusedField("")}
-                />
-              </View>
-
-              {/* Khoảng cách giữa 2 input */}
-              <View className="h-4" />
-
-              {/* Password Input */}
-              <Text
-                className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
-                  isDark ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                Mật khẩu
-              </Text>
-              <View
-                className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                  isDark
-                    ? focusedField === "password"
-                      ? "border-slate-400 bg-slate-900/60"
-                      : "border-slate-700/60 bg-slate-900/40"
-                    : focusedField === "password"
-                      ? "border-blue-500 bg-white"
-                      : "border-slate-100 bg-slate-50/50"
-                }`}
-              >
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color={
-                    isDark
-                      ? focusedField === "password"
-                        ? "#F3F4F6"
-                        : "#6B7280"
-                      : focusedField === "password"
-                        ? "#3B82F6"
-                        : "#94A3B8"
-                  }
-                />
-                <TextInput
-                  className={`flex-1 h-full ml-3 font-semibold text-base ${
-                    isDark ? "text-slate-100" : "text-slate-900"
-                  }`}
-                  placeholder="••••••••"
-                  placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                  onFocus={() => setFocusedField("password")}
-                  onBlur={() => setFocusedField("")}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  activeOpacity={0.5}
-                  className="p-1"
-                >
-                  <Ionicons
-                    name={showPassword ? "eye-outline" : "eye-off-outline"}
-                    size={20}
-                    color={isDark ? "#6B7280" : "#94A3B8"}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              {/* Error Alert */}
-              {error ? (
-                <View
-                  className={`flex-row items-center border rounded-xl mt-4 p-3 ${
-                    isDark
-                      ? "bg-red-950/50 border-red-800/80"
-                      : "bg-red-50 border-red-100"
-                  }`}
-                >
-                  <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                  <Text
-                    className={`text-base font-medium ml-2 flex-1 ${
-                      isDark ? "text-red-400" : "text-red-600"
-                    }`}
-                  >
-                    {error}
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Forgot Password */}
-              <TouchableOpacity
-                className="self-end mt-3 py-1"
-                activeOpacity={0.6}
-              >
-                <Text
-                  className={`font-bold text-base ${
-                    isDark ? "text-slate-350 color-[#CBD5E1]" : "text-blue-500"
-                  }`}
-                >
-                  Quên mật khẩu?
+                <Ionicons name="alert-circle" size={18} color="#EF4444" />
+                <Text style={{ fontSize: 14, fontWeight: "500", color: "#EF4444", marginLeft: 8, flex: 1 }}>
+                  {error}
                 </Text>
-              </TouchableOpacity>
+              </View>
+            ) : null}
 
-              {/* Login Button */}
-              <TouchableOpacity
-                onPress={handleLogin}
-                disabled={loading}
-                activeOpacity={0.8}
-                className={`rounded-2xl h-14 items-center justify-center mt-5 shadow-lg border ${
-                  isDark
-                    ? `bg-slate-600 border-slate-500 shadow-black/30 ${
-                        loading ? "opacity-70" : "active:bg-slate-500"
-                      }`
-                    : `bg-blue-500 border-blue-400 shadow-blue-500/20 ${
-                        loading ? "opacity-70" : "active:bg-blue-600"
-                      }`
-                }`}
+            {/* Nút đăng nhập */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+              style={{
+                height: 54,
+                borderRadius: 14,
+                backgroundColor: isDark ? "#374151" : "#005AC1",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: 24,
+                opacity: loading ? 0.7 : 1,
+                shadowColor: isDark ? "#000" : "#005AC1",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 6,
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 0.3 }}>
+                  Đăng nhập
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Footer copyright */}
+            <View style={{ marginTop: 40, alignItems: "center", paddingBottom: insets.bottom + 8 }}>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: "700",
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: isDark ? "#4B5563" : "#926E6A",
+                }}
               >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text className="text-white font-bold text-base tracking-wide">
-                    Đăng nhập
-                  </Text>
-                )}
-              </TouchableOpacity>
+                © 2024 BenThanh Tourist Service Corporation
+              </Text>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

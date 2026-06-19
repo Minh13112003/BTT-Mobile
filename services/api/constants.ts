@@ -38,6 +38,7 @@ export const URL_GetDepartureById = `${API_BASE_URL}/api/v1/departures/`;
 
 //Notification APIs
 export const URL_GetNotifications = `${API_BASE_URL}/api/v1/notifications`;
+export const URL_UnreadCount = `${API_BASE_URL}/api/v1/notifications/unread-count`;
 export const URL_ReadAllNotifications = `${API_BASE_URL}/api/v1/notifications/read-all`;
 export const URL_ReadNotification = `${API_BASE_URL}/api/v1/notifications/`; // + `${id}/read`
 
@@ -49,3 +50,12 @@ export const URL_PostFeedback = `${API_BASE_URL}/api/v1/feedbacks`;
 
 //Push notification
 export const URL_RegisterFcmToken = `${API_BASE_URL}/api/v1/users/me/fcm-token`;
+
+//News APIs
+export const URL_GetNews = `${API_BASE_URL}/api/v1/news`;
+export const URL_GetNewsById = `${API_BASE_URL}/api/v1/news/`;
+
+//Travel Tips APIs
+export const URL_GetTravelTips = `${API_BASE_URL}/api/v1/travel-tips`;
+export const URL_GetTravelTipById = `${API_BASE_URL}/api/v1/travel-tips/`;
+export const URL_GetTravelTipDestinations = `${API_BASE_URL}/api/v1/travel-tips/destinations`;

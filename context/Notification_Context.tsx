@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/Auth_Context";
-import { getNotifications } from "@/services/notification";
+import { getUnreadCount } from "@/services/notification";
 import React, {
   createContext,
   useCallback,
@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { AppState } from "react-native";
 
 interface NotificationContextType {
   unreadCount: number;
@@ -36,10 +37,8 @@ export function NotificationProvider({
       return;
     }
     try {
-      const res = await getNotifications(1, 50);
-      const data = res.data as any;
-      const items: any[] = data?.items ?? data?.data ?? [];
-      setUnreadCount(items.filter((n: any) => !n.isRead).length);
+      const res = await getUnreadCount();
+      setUnreadCount((res.data as any)?.count ?? 0);
     } catch {
       // silently ignore
     }
@@ -48,6 +47,14 @@ export function NotificationProvider({
   // Fetch when user logs in/out
   useEffect(() => {
     refreshUnread();
+  }, [refreshUnread]);
+
+  // Fetch khi app quay lại foreground (từ background/bị minimize)
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshUnread();
+    });
+    return () => sub.remove();
   }, [refreshUnread]);
 
   const setAllRead = useCallback(() => {

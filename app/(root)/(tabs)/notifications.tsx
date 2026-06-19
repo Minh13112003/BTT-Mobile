@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { getPalette } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
@@ -14,9 +15,10 @@ import {
 import { getTransactionHistory } from "@/services/booking";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -79,7 +81,7 @@ export default function NotificationsScreen() {
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
   const { user } = useAuth();
-  const { refreshUnread, setAllRead, decrementUnread } = useNotification();
+  const { refreshUnread, setAllRead, unreadCount } = useNotification();
   const insets = useSafeAreaInsets();
   const onScroll = useHideOnScroll();
   const router = useRouter();
@@ -91,8 +93,7 @@ export default function NotificationsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
-
-  const unreadCount = items.filter((n) => !n.isRead).length;
+  const notifListenerRef = useRef<Notifications.EventSubscription | null>(null);
 
   const fetchPage = useCallback(
     async (p: number, replace: boolean) => {
@@ -113,8 +114,29 @@ export default function NotificationsScreen() {
 
   useEffect(() => {
     setLoading(true);
+    // Khi mở tab → sync badge + load list
+    refreshUnread();
     fetchPage(1, true).finally(() => setLoading(false));
+  }, [fetchPage, refreshUnread]);
+
+  // Tự reload list khi nhận notification mới qua push (foreground listener)
+  useEffect(() => {
+    notifListenerRef.current = Notifications.addNotificationReceivedListener(() => {
+      fetchPage(1, true);
+    });
+    return () => {
+      notifListenerRef.current?.remove();
+    };
   }, [fetchPage]);
+
+  // Khi unreadCount tăng (polling phát hiện notification mới) → reload list
+  const prevUnreadRef = useRef(unreadCount);
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      fetchPage(1, true);
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount, fetchPage]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -144,11 +166,10 @@ export default function NotificationsScreen() {
   }, [markingAll, unreadCount, setAllRead]);
 
   const handleRead = useCallback(async (id: string) => {
-    // Optimistic: cập nhật local + badge ngay lập tức
+    // Optimistic: cập nhật local ngay lập tức
     setItems((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
-    decrementUnread();
     try {
       await readNotification(id);
     } catch {
@@ -156,9 +177,10 @@ export default function NotificationsScreen() {
       setItems((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
       );
-      refreshUnread();
     }
-  }, [decrementUnread, refreshUnread]);
+    // Luôn sync badge từ BE sau khi read
+    refreshUnread();
+  }, [refreshUnread]);
 
   const handleNotifPress = useCallback(
     (item: NotificationItem) => {
@@ -458,7 +480,7 @@ export default function NotificationsScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 80 }}
+            contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
             onScroll={onScroll}
             scrollEventThrottle={16}
             refreshControl={
@@ -471,20 +493,20 @@ export default function NotificationsScreen() {
             onEndReached={loadMore}
             onEndReachedThreshold={0.3}
             ListFooterComponent={
-              loadingMore ? (
-                <View className="py-4 items-center">
-                  <ActivityIndicator size="small" color={palette.spinner} />
-                </View>
-              ) : !hasNext && items.length > 0 ? (
-                <View className="py-3 items-center">
-                  <Text
-                    className="font-semibold text-slate-400"
-                    style={{ fontSize: 15 }}
-                  >
-                    ✓ Đã hiển thị tất cả thông báo
-                  </Text>
-                </View>
-              ) : null
+              <>
+                {loadingMore ? (
+                  <View className="py-4 items-center">
+                    <ActivityIndicator size="small" color={palette.spinner} />
+                  </View>
+                ) : !hasNext && items.length > 0 ? (
+                  <View className="py-3 items-center">
+                    <Text className="font-semibold text-slate-400" style={{ fontSize: 15 }}>
+                      ✓ Đã hiển thị tất cả thông báo
+                    </Text>
+                  </View>
+                ) : null}
+                <Footer />
+              </>
             }
             ListEmptyComponent={
               <View

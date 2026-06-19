@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { logout as apiLogout } from "@/services/auth";
@@ -62,7 +63,7 @@ export default function ProfileScreen() {
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
         >
           {/* Header & Avatar */}
           <View className="items-center my-8 px-6">
@@ -316,6 +317,7 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          <Footer />
         </ScrollView>
       </LinearGradient>
     </View>

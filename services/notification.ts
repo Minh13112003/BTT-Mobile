@@ -1,6 +1,9 @@
 import * as urls from "./api/constants";
 import { apiService } from "./api/interceptor";
 
+export const getUnreadCount = () =>
+  apiService.get<{ count: number }>(urls.URL_UnreadCount);
+
 export interface NotificationItem {
   id: string;
   title: string;

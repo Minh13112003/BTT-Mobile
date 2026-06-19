@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { SearchBar } from "@/components/SearchBar";
 import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
@@ -108,13 +109,9 @@ export default function SearchScreen() {
   // collapse stays smooth even while the list is flinging. The list is padded by
   // the measured chrome height so nothing is hidden and no gap is left behind.
   const scrollY = useRef(new Animated.Value(0)).current;
+  const headerOffset = useRef(new Animated.Value(0)).current;
   const [chromeH, setChromeH] = useState(0);
   const clamp = chromeH > 0 ? chromeH : 1;
-  const headerTranslateY = Animated.diffClamp(scrollY, 0, clamp).interpolate({
-    inputRange: [0, clamp],
-    outputRange: [0, -clamp],
-    extrapolate: "clamp",
-  });
 
   // Tab-bar dim still follows scroll direction (opacity only — no layout work).
   const lastY = useRef(0);
@@ -126,21 +123,31 @@ export default function SearchScreen() {
         const y = e.nativeEvent.contentOffset.y;
         const dy = y - lastY.current;
         lastY.current = y;
-        if (y <= 8) setHidden(false);
-        else if (dy > 8) setHidden(true);
-        else if (dy < -8) setHidden(false);
+        if (y <= 8) {
+          setHidden(false);
+          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+        } else if (dy > 8) {
+          setHidden(true);
+          Animated.timing(headerOffset, { toValue: -clamp, duration: 150, useNativeDriver: true }).start();
+        } else if (dy < -8) {
+          setHidden(false);
+          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+        }
       },
     },
   );
+
+  const headerTranslateY = headerOffset;
 
   // Reset to a clean, fully-visible state whenever the tab regains focus.
   useFocusEffect(
     useCallback(() => {
       scrollY.setValue(0);
+      headerOffset.setValue(0);
       lastY.current = 0;
       setHidden(false);
       return () => setHidden(false);
-    }, [scrollY, setHidden]),
+    }, [scrollY, headerOffset, setHidden]),
   );
 
   // SubFilterBar slide-down (height 0 -> 56). Only runs on mode change (never on
@@ -210,7 +217,7 @@ export default function SearchScreen() {
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingTop: chromeH + 12,
-              paddingBottom: 100,
+              paddingBottom: 24,
             }}
             keyboardShouldPersistTaps="handled"
             onScroll={onScroll}
@@ -233,17 +240,20 @@ export default function SearchScreen() {
               <TourCard tour={item} onPress={() => openDetail(item)} />
             )}
             ListFooterComponent={
-              loadingMore ? (
-                <View className="py-4 items-center">
-                  <ActivityIndicator size="small" color={palette.spinner} />
-                </View>
-              ) : !hasNext && results.length > 0 ? (
-                <View className="py-3 items-center">
-                  <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
-                    ✓ Đã hiển thị tất cả tour
-                  </Text>
-                </View>
-              ) : null
+              <>
+                {loadingMore ? (
+                  <View className="py-4 items-center">
+                    <ActivityIndicator size="small" color={palette.spinner} />
+                  </View>
+                ) : !hasNext && results.length > 0 ? (
+                  <View className="py-3 items-center">
+                    <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
+                      ✓ Đã hiển thị tất cả tour
+                    </Text>
+                  </View>
+                ) : null}
+                <Footer />
+              </>
             }
             ListEmptyComponent={
               <View

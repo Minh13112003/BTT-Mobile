@@ -1,4 +1,5 @@
 import { CollapsingHeader } from "@/components/CollapsingHeader";
+import { Footer } from "@/components/Footer";
 import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
 import { SectionRow } from "@/components/tour/SectionHeader";
@@ -30,6 +31,52 @@ import {
 
 /** Vertical sections rendered below the hot-tour carousel, in order. */
 const HOME_SECTIONS: SearchMode[] = ["newest", "popular", "domestic", "foreign"];
+
+function QuickIcon({
+  label,
+  icon,
+  bgLight,
+  bgDark,
+  color,
+  onPress,
+  isDark,
+}: {
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  bgLight: string;
+  bgDark: string;
+  color: string;
+  onPress: () => void;
+  isDark: boolean;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={{ flex: 1, alignItems: "center" }}>
+      <View
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 16,
+          backgroundColor: isDark ? bgDark : bgLight,
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 6,
+        }}
+      >
+        <Ionicons name={icon} size={26} color={color} />
+      </View>
+      <Text
+        style={{
+          fontSize: 12,
+          fontWeight: "700",
+          color: isDark ? "#94A3B8" : "#475569",
+          textAlign: "center",
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -222,6 +269,65 @@ export default function HomeScreen() {
             </View>
           </View>
 
+          {/* QUICK ACCESS GRID — Shopee style */}
+          <View
+            className="mx-5 mt-5 rounded-2xl"
+            style={{
+              backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
+              shadowColor: "#000",
+              shadowOpacity: 0.06,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 10,
+              elevation: 3,
+              paddingVertical: 16,
+              paddingHorizontal: 8,
+            }}
+          >
+            <View style={{ flexDirection: "row" }}>
+              <QuickIcon
+                label="Du lịch"
+                icon="map-outline"
+                bgLight="#EFF6FF"
+                bgDark="#1A2640"
+                color="#3B82F6"
+                isDark={isDark}
+                onPress={() => router.push("/(root)/(tabs)/search" as any)}
+              />
+              <QuickIcon
+                label="Tin tức"
+                icon="newspaper-outline"
+                bgLight="#ECFDF5"
+                bgDark="#1A2D20"
+                color="#10B981"
+                isDark={isDark}
+                onPress={() => router.push("/(root)/news" as any)}
+              />
+              <QuickIcon
+                label="Mẹo hay"
+                icon="bulb-outline"
+                bgLight="#FFFBEB"
+                bgDark="#2A2010"
+                color="#F59E0B"
+                isDark={isDark}
+                onPress={() => router.push("/(root)/tips" as any)}
+              />
+              <QuickIcon
+                label="Ưu đãi"
+                icon="gift-outline"
+                bgLight="#FFF1F2"
+                bgDark="#2A1520"
+                color="#E11D48"
+                isDark={isDark}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(root)/(tabs)/search" as any,
+                    params: { mode: "hot" },
+                  })
+                }
+              />
+            </View>
+          </View>
+
           {/* SECTION: TOUR HOT NHẤT — carousel tự động 5s */}
           <SectionRow
             title={SECTION_LABELS.hot}
@@ -255,6 +361,9 @@ export default function HomeScreen() {
                 >
                   Tin tức nổi bật
                 </Text>
+                <TouchableOpacity onPress={() => router.push("/(root)/news" as any)} activeOpacity={0.7}>
+                  <Text className="text-base font-black text-[#D0021B]">Xem tất cả →</Text>
+                </TouchableOpacity>
               </View>
 
               <ScrollView
@@ -266,6 +375,12 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={item.id}
                     activeOpacity={0.9}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(root)/news/[id]" as any,
+                        params: { id: item.id },
+                      })
+                    }
                     className={`w-64 rounded-2xl border shadow-sm mr-3 overflow-hidden mb-2 ${
                       isDark
                         ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
@@ -304,6 +419,7 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
           )}
+          <Footer />
         </ScrollView>
       </LinearGradient>
     </View>

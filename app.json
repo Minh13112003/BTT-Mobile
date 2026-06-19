@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myfirstapp",
+    //"scheme": "myfirstapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -30,15 +30,15 @@
       "bundler": "metro"
     },
     "plugins": [
-      "@react-native-firebase/app",
+      //"@react-native-firebase/app",
       "expo-router",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "sounds": []
-        }
-      ],
+      // [
+      //   "expo-notifications",
+      //   {
+      //     "icon": "./assets/images/icon.png",
+      //     "sounds": []
+      //   }
+      // ],
       [
         "expo-splash-screen",
         {
