@@ -30,12 +30,7 @@
       "bundler": "metro"
     },
     "plugins": [
-      [
-        "@react-native-firebase/app",
-        {
-          "androidFiles": "./google-services.json"
-        }
-      ],
+      "@react-native-firebase/app",
       "expo-router",
       [
         "expo-notifications",
