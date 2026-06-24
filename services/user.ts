@@ -9,6 +9,7 @@ export interface UserProfile {
   age?: number;
   earnedPoints?: number;
   rewardPoints?: number;
+  avatarUrl?: string | null;
 }
 
 interface Password {
@@ -30,4 +31,20 @@ export function changePassword(payload: Password) {
 
 export function registerFcmToken(fcmToken: string) {
   return apiService.post(urls.URL_RegisterFcmToken, { fcmToken });
+}
+
+export function updateAvatar(localUri: string, fileName: string, mimeType: string) {
+  const formData = new FormData();
+  formData.append("avatar", {
+    uri: localUri,
+    name: fileName,
+    type: mimeType,
+  } as any);
+  return apiService.patch(urls.URL_UpdateAvatar, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
+export function removeAvatar() {
+  return apiService.patch(urls.URL_UpdateAvatar, { avatar: null });
 }

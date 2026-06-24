@@ -33,18 +33,25 @@ function CircleBtn({
 }
 
 /** Full-bleed hero image with back/heart/share, duration badge and rating. */
-export function TourHero({ tour, onBack }: { tour: TourDetail; onBack: () => void }) {
+export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onBack: () => void; onPressImage?: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
 
   return (
     <View style={{ height: 286 }}>
-      <Image
-        source={{ uri: tour.imageUrl }}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPressImage}
+        disabled={!onPressImage}
         style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-      />
+      >
+        <Image
+          source={{ uri: tour.imageUrl }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
       <LinearGradient
         colors={[
           "rgba(8,10,16,0.45)",

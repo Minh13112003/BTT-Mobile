@@ -16,6 +16,7 @@ import { useTourSearch } from "@/hooks/useTourSearch";
 import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -78,12 +79,22 @@ export default function SearchScreen() {
   const { setHidden } = useScrollVisibility();
 
   // Pre-filter from the Home "Xem tất cả" buttons / search box.
-  const params = useLocalSearchParams<{ mode?: string; q?: string }>();
+  const params = useLocalSearchParams<{
+    mode?: string;
+    q?: string;
+    dateMode?: string;
+    specificDate?: string;
+    startDate?: string;
+    endDate?: string;
+  }>();
   const initialMode = (
     SECTION_ORDER as string[]
   ).includes(params.mode ?? "")
     ? (params.mode as SearchMode)
     : "newest";
+
+  const flatListRef = useRef<any>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const {
     mode,
@@ -100,7 +111,15 @@ export default function SearchScreen() {
     refreshing,
     onRefresh,
     loadMore,
-  } = useTourSearch({ mode: initialMode, query: params.q ?? "" });
+    resetSearch,
+  } = useTourSearch({
+    mode: initialMode,
+    query: params.q ?? "",
+    dateMode: params.dateMode,
+    specificDate: params.specificDate,
+    startDate: params.startDate,
+    endDate: params.endDate,
+  });
 
   // ── Collapsing header, driven on the native (UI) thread ──────────────────
   // The chrome (brand bar + search controls) is absolutely positioned and slides
@@ -123,6 +142,7 @@ export default function SearchScreen() {
         const y = e.nativeEvent.contentOffset.y;
         const dy = y - lastY.current;
         lastY.current = y;
+        setShowBackToTop(y > 300);
         if (y <= 8) {
           setHidden(false);
           Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
@@ -164,8 +184,31 @@ export default function SearchScreen() {
   }, [subVisible, subHeight]);
 
   const openDetail = (tour: TourItem) => {
-    const nearest = getNearestDeparture(tour.departures ?? []);
+    let matchingDeparture = null;
+    if (params.dateMode === "specific" && params.specificDate) {
+      const target = new Date(params.specificDate);
+      matchingDeparture = tour.departures?.find((dep) => {
+        const depDate = new Date(dep.departureDate);
+        return (
+          depDate.getFullYear() === target.getFullYear() &&
+          depDate.getMonth() === target.getMonth() &&
+          depDate.getDate() === target.getDate()
+        );
+      });
+    } else if (params.dateMode === "range" && (params.startDate || params.endDate)) {
+      const start = params.startDate ? new Date(params.startDate) : new Date(0);
+      const end = params.endDate ? new Date(params.endDate) : new Date(8640000000000000);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      matchingDeparture = tour.departures?.find((dep) => {
+        const depDate = new Date(dep.departureDate);
+        return depDate >= start && depDate <= end;
+      });
+    }
+
+    const nearest = matchingDeparture || getNearestDeparture(tour.departures ?? []);
     const displayPrice = nearest?.price ?? null;
+
     router.push({
       pathname: "/(root)/tour/[id]",
       params: {
@@ -177,6 +220,10 @@ export default function SearchScreen() {
         rating: String(tour.rating),
         reviewsCount: String(tour.reviewsCount),
         hasVat: tour.hasVat ? "true" : "false",
+        searchDateMode: params.dateMode ?? "",
+        searchSpecificDate: params.specificDate ?? "",
+        searchStartDate: params.startDate ?? "",
+        searchEndDate: params.endDate ?? "",
       },
     });
   };
@@ -211,6 +258,7 @@ export default function SearchScreen() {
           </View>
         ) : (
           <Animated.FlatList
+            ref={flatListRef}
             data={results}
             keyExtractor={(item: TourItem) => item.id}
             showsVerticalScrollIndicator={false}
@@ -237,7 +285,14 @@ export default function SearchScreen() {
             onEndReached={loadMore}
             onEndReachedThreshold={0.3}
             renderItem={({ item }: { item: TourItem }) => (
-              <TourCard tour={item} onPress={() => openDetail(item)} />
+              <TourCard
+                tour={item}
+                onPress={() => openDetail(item)}
+                dateMode={params.dateMode}
+                specificDate={params.specificDate}
+                startDate={params.startDate}
+                endDate={params.endDate}
+              />
             )}
             ListFooterComponent={
               <>
@@ -270,9 +325,29 @@ export default function SearchScreen() {
                 >
                   Không tìm thấy tour
                 </Text>
-                <Text className="text-slate-400 text-center mt-1.5" style={{ fontSize: 16 }}>
+                <Text className="text-slate-400 text-center mt-1.5 mb-5" style={{ fontSize: 16 }}>
                   Thử thay đổi từ khoá hoặc bộ lọc.
                 </Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    resetSearch();
+                    router.setParams({
+                      q: "",
+                      mode: "newest",
+                      dateMode: "",
+                      specificDate: "",
+                      startDate: "",
+                      endDate: "",
+                      referrer: "",
+                    });
+                  }}
+                  className="px-6 py-2.5 rounded-xl bg-[#D0021B]"
+                >
+                  <Text className="text-white font-bold text-base">
+                    Quay lại ban đầu
+                  </Text>
+                </TouchableOpacity>
               </View>
             }
           />
@@ -295,7 +370,25 @@ export default function SearchScreen() {
           backgroundColor: palette.gradient[0],
         }}
       >
-        <Header title="BENTHANH TOURIST" showActions={true} safeArea={false} />
+        <Header
+          title="BENTHANH TOURIST"
+          showActions={true}
+          safeArea={false}
+          showBackButton={!!params.referrer}
+          onBackPress={() => {
+            resetSearch();
+            router.setParams({
+              q: "",
+              mode: "newest",
+              dateMode: "",
+              specificDate: "",
+              startDate: "",
+              endDate: "",
+              referrer: "",
+            });
+            router.back();
+          }}
+        />
 
         <View className="px-5 pt-4 pb-1">
           <View className="flex-row items-center justify-between mb-3">
@@ -352,6 +445,35 @@ export default function SearchScreen() {
           </Animated.View>
         </View>
       </Animated.View>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

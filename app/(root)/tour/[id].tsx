@@ -15,7 +15,7 @@ import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,8 +23,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePinchToZoom } from "@/hooks/usePinchToZoom";
 
 export default function TourDetailScreen() {
   const router = useRouter();
@@ -37,6 +40,10 @@ export default function TourDetailScreen() {
     rating?: string;
     reviewsCount?: string;
     hasVat?: string;
+    searchDateMode?: string;
+    searchSpecificDate?: string;
+    searchStartDate?: string;
+    searchEndDate?: string;
   }>();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -73,9 +80,59 @@ export default function TourDetailScreen() {
 
   const { tour, loading, error, refetch } = useTourDetail(id, fallback);
 
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
+  const { scale: imageScale, setScale: setImageScale, panHandlers: imagePanHandlers } = usePinchToZoom(1, 1, 4.0);
+
+  const handleCloseModal = () => {
+    setZoomImageUrl(null);
+    setImageScale(1);
+  };
+
   const [selectedDeparture, setSelectedDeparture] = useState<Departure | null>(
     null,
   );
+
+  useEffect(() => {
+    if (tour && tour.departures && tour.departures.length > 0) {
+      const searchDateMode = params.searchDateMode;
+      const searchSpecificDate = params.searchSpecificDate;
+      const searchStartDate = params.searchStartDate;
+      const searchEndDate = params.searchEndDate;
+
+      let matched: Departure | undefined;
+
+      if (searchDateMode === "specific" && searchSpecificDate) {
+        const target = new Date(searchSpecificDate);
+        matched = tour.departures.find((dep) => {
+          const depDate = new Date(dep.departureDate);
+          return (
+            depDate.getFullYear() === target.getFullYear() &&
+            depDate.getMonth() === target.getMonth() &&
+            depDate.getDate() === target.getDate()
+          );
+        });
+      } else if (searchDateMode === "range" && (searchStartDate || searchEndDate)) {
+        const start = searchStartDate ? new Date(searchStartDate) : new Date(0);
+        const end = searchEndDate ? new Date(searchEndDate) : new Date(8640000000000000);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        const sortedDepartures = [...tour.departures].sort(
+          (a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()
+        );
+        matched = sortedDepartures.find((dep) => {
+          const depDate = new Date(dep.departureDate);
+          return depDate >= start && depDate <= end;
+        });
+      }
+
+      if (matched) {
+        setSelectedDeparture(matched);
+      }
+    }
+  }, [tour, params.searchDateMode, params.searchSpecificDate, params.searchStartDate, params.searchEndDate]);
 
   const goCheckout = () => {
     if (!tour) return;
@@ -179,10 +236,20 @@ export default function TourDetailScreen() {
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView
+        ref={scrollViewRef}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          setShowBackToTop(offsetY > 300);
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 110 }}
       >
-        <TourHero tour={tour} onBack={() => router.back()} />
+        <TourHero
+          tour={tour}
+          onBack={() => router.back()}
+          onPressImage={() => setZoomImageUrl(tour.imageUrl)}
+        />
 
         <View className="px-4 -mt-2">
           <Text
@@ -234,6 +301,85 @@ export default function TourDetailScreen() {
         }
         onPress={goCheckout}
       />
+
+      {/* Image Zoom Modal */}
+      <Modal
+        visible={zoomImageUrl !== null}
+        transparent={true}
+        onRequestClose={handleCloseModal}
+        animationType="fade"
+      >
+        <View
+          {...imagePanHandlers}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.95)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={handleCloseModal}
+            style={{
+              position: "absolute",
+              top: insets.top + 10,
+              right: 20,
+              zIndex: 10,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: "rgba(255,255,255,0.2)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="close" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Full Screen Image */}
+          {zoomImageUrl && (
+            <Image
+              source={{ uri: zoomImageUrl }}
+              style={{
+                width: "100%",
+                height: "85%",
+                transform: [{ scale: imageScale }],
+              }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 80,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

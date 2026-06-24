@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,8 +17,10 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePinchToZoom } from "@/hooks/usePinchToZoom";
 
 import { HighlightChips } from "@/components/tour/HighlightChips";
 import { TermsAccordion } from "@/components/tour/TermsAccordion";
@@ -85,6 +87,17 @@ export default function DetailTourScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const insets = useSafeAreaInsets();
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
+  const { scale: imageScale, setScale: setImageScale, panHandlers: imagePanHandlers } = usePinchToZoom(1, 1, 4.0);
+
+  const handleCloseModal = () => {
+    setZoomImageUrl(null);
+    setImageScale(1);
+  };
 
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<BookingDetail | null>(null);
@@ -265,6 +278,12 @@ export default function DetailTourScreen() {
           </View>
         ) : (
           <ScrollView
+            ref={scrollViewRef}
+            scrollEventThrottle={16}
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              setShowBackToTop(offsetY > 300);
+            }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: 20,
@@ -282,11 +301,17 @@ export default function DetailTourScreen() {
             >
               {/* Cover image with overlays */}
               <View className="relative h-56 w-full bg-slate-900/10">
-                <Image
-                  source={{ uri: booking.tour.imageUrl }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => setZoomImageUrl(booking.tour.imageUrl)}
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <Image
+                    source={{ uri: booking.tour.imageUrl }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
                 {/* Rating Badge */}
                 <View
                   className={`absolute top-4 right-4 rounded-full px-3 py-1 flex-row items-center ${
@@ -625,19 +650,24 @@ export default function DetailTourScreen() {
                   <View
                     className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                   />
-                  <View className="flex-row justify-between items-center py-2.5">
+                  <View className="flex-row justify-between items-center py-2.5 flex-wrap gap-y-1">
                     <Text
-                      className={`text-base font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`text-base font-semibold flex-shrink-0 mr-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
                     >
                       Voucher đã áp dụng
                     </Text>
-                    <View className="flex-row items-center">
+                    <View className="flex-row items-center flex-shrink-0">
                       <Ionicons
                         name="gift-outline"
                         size={14}
                         color={isDark ? "#93C5FD" : "#D0021B"}
                       />
-                      <Text className="text-base font-extrabold text-blue-500 dark:text-blue-400 ml-1">
+                      <Text
+                        className="text-base font-extrabold text-blue-500 dark:text-blue-400 ml-1"
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.8}
+                      >
                         {booking.voucher.code}
                       </Text>
                     </View>
@@ -860,6 +890,85 @@ export default function DetailTourScreen() {
               </Text>
             </TouchableOpacity>
           </ScrollView>
+        )}
+
+        {/* Image Zoom Modal */}
+        <Modal
+          visible={zoomImageUrl !== null}
+          transparent={true}
+          onRequestClose={handleCloseModal}
+          animationType="fade"
+        >
+          <View
+            {...imagePanHandlers}
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.95)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {/* Close Button */}
+            <TouchableOpacity
+              onPress={handleCloseModal}
+              style={{
+                position: "absolute",
+                top: insets.top + 10,
+                right: 20,
+                zIndex: 10,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "rgba(255,255,255,0.2)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Full Screen Image */}
+            {zoomImageUrl && (
+              <Image
+                source={{ uri: zoomImageUrl }}
+                style={{
+                  width: "100%",
+                  height: "85%",
+                  transform: [{ scale: imageScale }],
+                }}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
+
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+            }}
+            style={{
+              position: "absolute",
+              bottom: 30,
+              right: 20,
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: "#D0021B",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 6,
+              zIndex: 99,
+            }}
+          >
+            <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         )}
       </SafeAreaView>
     </LinearGradient>

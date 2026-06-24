@@ -1,23 +1,27 @@
 import { useAuth } from "@/context/Auth_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
-import { changePassword, getMe, updateProfile } from "@/services/user";
+import { changePassword, getMe, updateAvatar, updateProfile } from "@/services/user";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   LogBox,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import CustomToast from "@/components/CustomToast";
 
 LogBox.ignoreLogs(["AxiosError"]);
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -52,6 +56,10 @@ export default function SelfProfileScreen() {
   const [focusedField, setFocusedField] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -191,19 +199,10 @@ export default function SelfProfileScreen() {
       setSuccessMsg("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...");
       setOldPassword("");
       setNewPassword("");
-
-      Alert.alert(
-        "Thành công",
-        "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
-        [
-          {
-            text: "OK",
-            onPress: async () => {
-              await logout();
-            },
-          },
-        ],
+      setToastMessage(
+        "Kính gửi Quý khách, mật khẩu tài khoản của Quý khách đã được cập nhật thành công. Nhằm bảo mật thông tin, nếu Quý khách không thực hiện thao tác này, vui lòng liên hệ ngay với bộ phận CSKH để được hỗ trợ kịp thời. Trân trọng!"
       );
+      setShowToast(true);
     } catch (err: any) {
       console.error(err);
       const rawMsg = err?.response?.data?.message;
@@ -220,6 +219,40 @@ export default function SelfProfileScreen() {
       Alert.alert("Thất bại", displayMsg);
     } finally {
       setUpdatingPassword(false);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Quyền truy cập", "Cần cho phép truy cập thư viện ảnh để đổi ảnh đại diện.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.length) return;
+    const asset = result.assets[0];
+    setLocalAvatarUri(asset.uri);
+    try {
+      setUploadingAvatar(true);
+      const fileName = asset.fileName ?? `avatar_${Date.now()}.jpg`;
+      const mimeType = asset.mimeType ?? "image/jpeg";
+      const res = await updateAvatar(asset.uri, fileName, mimeType);
+      const updatedUser = res.data?.user ?? res.data;
+      if (updatedUser) {
+        await SecureStore.setItemAsync("user_profile", JSON.stringify(updatedUser));
+        setProfile(updatedUser);
+      }
+      Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật!");
+    } catch (err: any) {
+      Alert.alert("Lỗi", "Không thể tải ảnh lên. Vui lòng thử lại.");
+      setLocalAvatarUri(null);
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -266,6 +299,82 @@ export default function SelfProfileScreen() {
               ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
               : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
           }`}>
+
+            {/* Avatar */}
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <TouchableOpacity
+                onPress={handlePickAvatar}
+                activeOpacity={0.8}
+                disabled={uploadingAvatar}
+                style={{ position: "relative" }}
+              >
+                {localAvatarUri || displayUser?.avatarUrl ? (
+                  <Image
+                    source={{ uri: localAvatarUri ?? displayUser?.avatarUrl }}
+                    style={{
+                      width: 90,
+                      height: 90,
+                      borderRadius: 45,
+                      borderWidth: 3,
+                      borderColor: isDark ? "#3B82F6" : "#D0021B",
+                    }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 90,
+                      height: 90,
+                      borderRadius: 45,
+                      borderWidth: 3,
+                      borderColor: isDark ? "#3B82F6" : "#D0021B",
+                      backgroundColor: isDark ? "#1E293B" : "#FFF1F2",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Image
+                      source={require("../../../assets/images/Logo_BTT-2018.png")}
+                      style={{ width: 60, height: 60 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: isDark ? "#3B82F6" : "#D0021B",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 2,
+                    borderColor: isDark ? "#1E293B" : "#FFFFFF",
+                  }}
+                >
+                  {uploadingAvatar ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="camera" size={14} color="#FFFFFF" />
+                  )}
+                </View>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: isDark ? "#6B7280" : "#9CA3AF",
+                  fontStyle: "italic",
+                }}
+              >
+                Nhấn để thay đổi ảnh đại diện
+              </Text>
+            </View>
+
             <View className="flex-row justify-between items-center mb-6">
               <Text className={`font-bold text-lg ${isDark ? "text-slate-100" : "text-slate-800"}`}>
                 Thông tin tài khoản
@@ -784,6 +893,24 @@ export default function SelfProfileScreen() {
         </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      {showToast && (
+        <View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 9998,
+          }}
+        />
+      )}
+      <CustomToast
+        visible={showToast}
+        type="password_success"
+        message={toastMessage}
+        onClose={async () => {
+          setShowToast(false);
+          await logout();
+        }}
+      />
     </LinearGradient>
   );
 }

@@ -41,39 +41,39 @@ type NotifIconConfig = {
 const TYPE_ICON: Record<string, NotifIconConfig> = {
   BOOKING_CREATED: {
     name: "checkmark-circle",
-    color: "#16A34A",
-    bg: "#DCFCE7",
+    color: "#007545", // tertiary-container (green)
+    bg: "#E6F2EC",    // 10% opacity tertiary green
   },
   BOOKING_STATUS_UPDATED: {
     name: "document-text",
-    color: "#2563EB",
-    bg: "#DBEAFE",
+    color: "#825500", // secondary (amber/gold)
+    bg: "#FAF3E6",    // 10% opacity amber
   },
   DEPARTURE_RESCHEDULED: {
     name: "warning",
-    color: "#D97706",
-    bg: "#FEF3C7",
+    color: "#ba1a1a", // error (red)
+    bg: "#FDF2F2",    // 10% opacity error red
   },
   SCHEDULE_UPDATED: {
     name: "calendar",
-    color: "#EA580C",
-    bg: "#FFEDD5",
+    color: "#825500", // secondary (amber/gold)
+    bg: "#FAF3E6",
   },
   PASSWORD_CHANGED: {
-    name: "lock-closed",
-    color: "#6B7280",
-    bg: "#F3F4F6",
+    name: "key", // key symbol
+    color: "#005a34", // tertiary (dark green)
+    bg: "#E6EFF0",
   },
 };
 
 const DEFAULT_ICON: NotifIconConfig = {
   name: "notifications",
-  color: "#D0021B",
-  bg: "#FEE2E2",
+  color: "#a00000", // primary (red)
+  bg: "#FAF0F0",
 };
 
 function getIconConfig(type?: string | null): NotifIconConfig {
-  return (type && TYPE_ICON[type]) ?? DEFAULT_ICON;
+  return (type && TYPE_ICON[type]) ? TYPE_ICON[type] : DEFAULT_ICON;
 }
 
 export default function NotificationsScreen() {
@@ -85,6 +85,9 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const onScroll = useHideOnScroll();
   const router = useRouter();
+
+  const flatListRef = useRef<FlatList<NotificationItem>>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [page, setPage] = useState(1);
@@ -234,24 +237,33 @@ export default function NotificationsScreen() {
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={() => handleNotifPress(item)}
-        className={`mx-4 mb-3 rounded-2xl overflow-hidden ${
-          isDark
-            ? item.isRead
-              ? "bg-[#1E222B]"
-              : "bg-[#242938]"
-            : item.isRead
-            ? "bg-white"
-            : "bg-red-50"
-        }`}
+        className={isDark
+          ? item.isRead
+            ? "bg-[#1E222B]"
+            : "bg-[#252A36]"
+          : item.isRead
+          ? "bg-white"
+          : "bg-[#FAF8F8]"
+        }
         style={{
+          marginHorizontal: 16,
+          marginBottom: 20, // 20px gap based on design guidelines
+          borderRadius: 20,
           borderWidth: 1,
+          borderLeftWidth: 4,
+          borderLeftColor: iconCfg.color,
           borderColor: isDark
             ? item.isRead
               ? "#2D3748"
               : "#3D2020"
             : item.isRead
-            ? "#F1F5F9"
-            : "#FECACA",
+            ? "#efeded"
+            : "#e8bdb6",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isDark ? 0 : 0.04,
+          shadowRadius: 10,
+          elevation: isDark ? 0 : 2,
         }}
       >
         <View className="flex-row items-start p-4">
@@ -262,11 +274,7 @@ export default function NotificationsScreen() {
               height: 40,
               borderRadius: 20,
               backgroundColor: isDark
-                ? item.isRead
-                  ? "#374151"
-                  : iconCfg.bg + "33"
-                : item.isRead
-                ? "#F1F5F9"
+                ? iconCfg.color + "22"
                 : iconCfg.bg,
               alignItems: "center",
               justifyContent: "center",
@@ -275,9 +283,9 @@ export default function NotificationsScreen() {
             }}
           >
             <Ionicons
-              name={item.isRead ? (`${iconCfg.name}-outline` as any) ?? iconCfg.name : iconCfg.name}
+              name={item.isRead ? (`${iconCfg.name}-outline` as any) : iconCfg.name}
               size={18}
-              color={item.isRead ? (isDark ? "#6B7280" : "#94A3B8") : iconCfg.color}
+              color={iconCfg.color}
             />
           </View>
 
@@ -285,30 +293,41 @@ export default function NotificationsScreen() {
           <View className="flex-1">
             <View className="flex-row items-center justify-between mb-1">
               <Text
-                className={`font-bold flex-1 mr-2 ${
-                  item.isRead
-                    ? isDark
-                      ? "text-slate-400"
-                      : "text-slate-500"
-                    : isDark
-                    ? "text-slate-100"
-                    : "text-slate-800"
-                }`}
-                style={{ fontSize: 15 }}
+                className="font-bold flex-1 mr-2"
+                style={{
+                  fontSize: 16,
+                  color: isDark
+                    ? item.isRead
+                      ? "#94A3B8"
+                      : "#F8FAFC"
+                    : item.isRead
+                    ? "#5e3f3a"
+                    : "#1b1c1c"
+                }}
                 numberOfLines={1}
               >
                 {item.title || "Thông báo mới"}
               </Text>
               {!item.isRead && (
-                <View className="w-2 h-2 rounded-full bg-[#D0021B] flex-shrink-0" />
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: "#a00000",
+                    marginLeft: 4,
+                  }}
+                />
               )}
             </View>
 
             {/* Text ẩn để đếm số dòng thật sự */}
             <View style={{ height: 0, overflow: "hidden" }}>
               <Text
-                className={`leading-5 ${isDark ? "text-slate-400" : "text-slate-600"}`}
-                style={{ fontSize: 14 }}
+                style={{
+                  fontSize: 14,
+                  lineHeight: 20,
+                }}
                 onTextLayout={(e) => {
                   if (!isLong && e.nativeEvent.lines.length > MAX_LINES) {
                     setIsLong(true);
@@ -320,8 +339,12 @@ export default function NotificationsScreen() {
             </View>
             {/* Text hiển thị thật */}
             <Text
-              className={`leading-5 ${isDark ? "text-slate-400" : "text-slate-600"}`}
-              style={{ fontSize: 14 }}
+              className="leading-5"
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                color: isDark ? "#94A3B8" : "#5e3f3a"
+              }}
               numberOfLines={expanded ? undefined : MAX_LINES}
             >
               {item.message}
@@ -332,19 +355,27 @@ export default function NotificationsScreen() {
                 onPress={() => setExpanded((v) => !v)}
                 activeOpacity={0.7}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                className="mt-1 self-start"
+                className="mt-1.5 self-start"
               >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: isDark ? "#93C5FD" : "#2563EB" }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "700",
+                    color: isDark ? "#FFA2A2" : "#a00000"
+                  }}
+                >
                   {expanded ? "Rút gọn ↑" : "Xem thêm ↓"}
                 </Text>
               </TouchableOpacity>
             )}
 
             {/* Footer: timestamp + chi tiết */}
-            <View className="flex-row items-center justify-between mt-2">
+            <View className="flex-row items-center justify-between mt-3">
               <Text
-                className={isDark ? "text-slate-600" : "text-slate-400"}
-                style={{ fontSize: 12 }}
+                style={{
+                  fontSize: 12,
+                  color: isDark ? "#64748B" : "#94A3B8"
+                }}
               >
                 {formatDateTime(item.createdAt)}
               </Text>
@@ -358,20 +389,25 @@ export default function NotificationsScreen() {
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   {navigating === item.id ? (
-                    <ActivityIndicator size="small" color="#D0021B" />
+                    <ActivityIndicator size="small" color={isDark ? "#FFA2A2" : "#a00000"} />
                   ) : (
                     <>
                       <Text
                         style={{
                           fontSize: 13,
-                          fontWeight: "700",
-                          color: "#D0021B",
+                          fontWeight: "800",
+                          color: isDark ? "#FFA2A2" : "#a00000",
                           marginRight: 2,
+                          letterSpacing: 0.5,
                         }}
                       >
-                        Chi tiết
+                        XEM CHI TIẾT
                       </Text>
-                      <Ionicons name="chevron-forward" size={13} color="#D0021B" />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={13}
+                        color={isDark ? "#FFA2A2" : "#a00000"}
+                      />
                     </>
                   )}
                 </TouchableOpacity>
@@ -476,13 +512,18 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           <FlatList
+            ref={flatListRef}
             data={items}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
-            onScroll={onScroll}
             scrollEventThrottle={16}
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              setShowBackToTop(offsetY > 300);
+              if (onScroll) onScroll(event);
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -540,6 +581,35 @@ export default function NotificationsScreen() {
           />
         )}
       </LinearGradient>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -108,11 +108,14 @@ function TipCard({
 
       <View style={{ padding: 14 }}>
         <Text
+          textBreakStrategy="simple"
+
+          allowFontScaling={false}
           style={{
             fontSize: 16,
             fontWeight: "700",
             color: isDark ? "#F1F5F9" : "#1E293B",
-            lineHeight: 22,
+            lineHeight: 23,
             marginBottom: 6,
           }}
           numberOfLines={2}
@@ -120,10 +123,13 @@ function TipCard({
           {item.title}
         </Text>
         <Text
+          textBreakStrategy="simple"
+
+          allowFontScaling={false}
           style={{
             fontSize: 14,
             color: isDark ? "#94A3B8" : "#64748B",
-            lineHeight: 20,
+            lineHeight: 21,
             marginBottom: 12,
           }}
           numberOfLines={2}
@@ -163,22 +169,24 @@ function TipCard({
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           {/* See tours button */}
-          <TouchableOpacity
-            onPress={onSearchTours}
-            activeOpacity={0.8}
-            style={{
-              flex: 1,
-              paddingVertical: 9,
-              borderRadius: 10,
-              borderWidth: 1.5,
-              borderColor: "#D0021B",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontSize: 13, fontWeight: "700", color: "#D0021B" }}>
-              🗺️ Tour {item.destination}
-            </Text>
-          </TouchableOpacity>
+          {!!item.relatedSearchQuery && (
+            <TouchableOpacity
+              onPress={onSearchTours}
+              activeOpacity={0.8}
+              style={{
+                flex: 1,
+                paddingVertical: 9,
+                borderRadius: 10,
+                borderWidth: 1.5,
+                borderColor: "#D0021B",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#D0021B" }}>
+                🗺️ Tour {item.destination}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Read tip button */}
           <TouchableOpacity
@@ -208,6 +216,9 @@ export default function TipsScreen() {
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
   const insets = useSafeAreaInsets();
+
+  const flatListRef = useRef<FlatList>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const [tips, setTips] = useState<TravelTip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -325,10 +336,16 @@ export default function TipsScreen() {
           </View>
         ) : (
           <FlatList
+            ref={flatListRef}
             data={tips}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            scrollEventThrottle={16}
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              setShowBackToTop(offsetY > 300);
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -352,7 +369,7 @@ export default function TipsScreen() {
                 onSearchTours={() =>
                   router.push({
                     pathname: "/(root)/(tabs)/search" as any,
-                    params: { q: item.relatedSearchQuery ?? item.destination },
+                    params: { q: item.relatedSearchQuery ?? item.destination, referrer: "tip" },
                   })
                 }
               />
@@ -376,6 +393,35 @@ export default function TipsScreen() {
           />
         )}
       </LinearGradient>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

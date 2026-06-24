@@ -16,11 +16,51 @@ const lightShadow = {
 };
 
 /** Tour list card — reused by Home and Search. Tapping opens the detail screen. */
-export function TourCard({ tour, onPress }: { tour: TourItem; onPress: () => void }) {
+export function TourCard({
+  tour,
+  onPress,
+  dateMode,
+  specificDate,
+  startDate,
+  endDate,
+}: {
+  tour: TourItem;
+  onPress: () => void;
+  dateMode?: string;
+  specificDate?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const nearest = getNearestDeparture(tour.departures ?? []);
+  let matchingDeparture = null;
+  if (dateMode === "specific" && specificDate) {
+    const target = new Date(specificDate);
+    matchingDeparture = tour.departures?.find((dep) => {
+      const depDate = new Date(dep.departureDate);
+      return (
+        depDate.getFullYear() === target.getFullYear() &&
+        depDate.getMonth() === target.getMonth() &&
+        depDate.getDate() === target.getDate()
+      );
+    });
+  } else if (dateMode === "range" && (startDate || endDate)) {
+    const start = startDate ? new Date(startDate) : new Date(0);
+    const end = endDate ? new Date(endDate) : new Date(8640000000000000);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const sortedDeps = tour.departures ? [...tour.departures].sort(
+      (a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()
+    ) : [];
+    matchingDeparture = sortedDeps.find((dep) => {
+      const depDate = new Date(dep.departureDate);
+      return depDate >= start && depDate <= end;
+    });
+  }
+
+  const nearest = matchingDeparture || getNearestDeparture(tour.departures ?? []);
   const displayPrice = nearest?.price ?? null;
   const displayDate = nearest?.departureDate ?? null;
 

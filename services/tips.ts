@@ -50,7 +50,7 @@ function mapTip(raw: any): TravelTip {
     date: raw.publishedAt
       ? new Date(raw.publishedAt).toLocaleDateString("vi-VN")
       : raw.date ?? "",
-    relatedSearchQuery: raw.relatedSearchQuery ?? raw.destination,
+    relatedSearchQuery: raw.relatedSearchQuery || undefined,
   };
 }
 

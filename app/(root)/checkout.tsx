@@ -12,11 +12,14 @@ import {
   Alert,
   Image,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import CustomToast from "@/components/CustomToast";
+import CustomAlert from "@/components/CustomAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Local interface that matches both mock and API fields to avoid TS compilation errors
@@ -129,6 +132,27 @@ export default function CheckoutScreen() {
     useState<ExtendedVoucher | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "confirm">("warning");
+  const [onAlertConfirm, setOnAlertConfirm] = useState<(() => void) | undefined>(undefined);
+
+  const triggerAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "confirm" = "warning",
+    onConfirm?: () => void
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setOnAlertConfirm(() => onConfirm);
+    setAlertVisible(true);
+  };
 
   // Load vouchers when component mounts
   useEffect(() => {
@@ -232,35 +256,27 @@ export default function CheckoutScreen() {
   const handleBookingSubmit = () => {
     // Validation before confirming.
     if (!departureId) {
-      Alert.alert("Thông báo", "Vui lòng chọn ngày khởi hành");
+      triggerAlert("Thông báo", "Vui lòng chọn ngày khởi hành", "warning");
       return;
     }
     if (!paymentMethod) {
-      Alert.alert("Thông báo", "Vui lòng chọn phương thức thanh toán");
+      triggerAlert("Thông báo", "Vui lòng chọn phương thức thanh toán", "warning");
       return;
     }
     if (adults < 1) {
-      Alert.alert("Thông báo", "Phải có ít nhất 1 người lớn");
+      triggerAlert("Thông báo", "Phải có ít nhất 1 người lớn", "warning");
       return;
     }
     if (availableSeats < adults + children + infants) {
-      Alert.alert("Thông báo", "Số chỗ không đủ, vui lòng giảm số lượng");
+      triggerAlert("Thông báo", "Số chỗ không đủ, vui lòng giảm số lượng", "warning");
       return;
     }
 
-    Alert.alert(
+    triggerAlert(
       "Xác nhận đặt tour",
       "Bạn có chắc chắn muốn đặt chuyến đi này không?",
-      [
-        {
-          text: "Hủy",
-          style: "cancel",
-        },
-        {
-          text: "Đồng ý",
-          onPress: performBooking,
-        },
-      ],
+      "confirm",
+      performBooking
     );
   };
 
@@ -280,21 +296,19 @@ export default function CheckoutScreen() {
 
       const res = await booking(bookingData);
       if (res) {
-        Alert.alert("Thành công", "Đặt tour thành công!", [
-          {
-            text: "Xem lịch sử",
-            onPress: () => {
-              router.replace("/(root)/(tabs)/history");
-            },
-          },
-        ]);
+        const tourCodeStr = res.data?.departure?.tourCode || res.data?.booking?.departure?.tourCode || tourCode || "đăng ký";
+        setToastMessage(
+          `Kính gửi Quý khách, yêu cầu đăng ký tour (Mã: ${tourCodeStr}) của Quý khách đã được ghi nhận thành công và đang chờ xác nhận. Bộ phận chăm sóc khách hàng sẽ liên hệ với Quý khách trong thời gian sớm nhất để hỗ trợ hoàn tất dịch vụ. Trân trọng cảm ơn!`
+        );
+        setShowToast(true);
       }
     } catch (error: any) {
       console.error("Lỗi đặt tour:", error);
-      Alert.alert(
+      triggerAlert(
         "Thất bại",
         error.response?.data?.message ||
           "Đặt tour không thành công. Vui lòng thử lại sau.",
+        "error"
       );
     } finally {
       setSubmitting(false);
@@ -641,9 +655,10 @@ export default function CheckoutScreen() {
                       );
 
                       if (!voucher) {
-                        Alert.alert(
+                        triggerAlert(
                           "Thông báo",
                           "Mã voucher không tồn tại hoặc không khả dụng.",
+                          "error"
                         );
                         return;
                       }
@@ -1008,6 +1023,36 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      {showToast && (
+        <View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 9998,
+          }}
+        />
+      )}
+      <CustomToast
+        visible={showToast}
+        type="booking_success"
+        message={toastMessage}
+        onAction={() => {
+          setShowToast(false);
+          router.replace("/(root)/(tabs)/history");
+        }}
+        onClose={() => {
+          setShowToast(false);
+          router.replace("/(root)/(tabs)/history");
+        }}
+      />
+      <CustomAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        onConfirm={onAlertConfirm}
+      />
     </LinearGradient>
   );
 }

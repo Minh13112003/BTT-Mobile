@@ -1,14 +1,12 @@
-import { Footer } from "@/components/Footer";
-import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
-import { login } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,47 +18,20 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function LoginScreen() {
+export default function ResetPasswordScreen() {
   const router = useRouter();
-  const { isLoggedIn, saveAuth } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const isDark = theme === "dark";
+  const { phone } = useLocalSearchParams<{ phone: string }>();
 
-  useEffect(() => {
-    if (isLoggedIn) router.replace("/(root)/(tabs)");
-  }, [isLoggedIn]);
-
-  const [identity, setIdentity] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [focusedField, setFocusedField] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleLogin = async () => {
-    if (!identity || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    try {
-      setLoading(true);
-      setError("");
-      const res = await login({ identifier: identity, password });
-      await saveAuth(
-        res.data.accessToken,
-        res.data.refreshToken,
-        res.data.user,
-      );
-      router.replace("/(root)/(tabs)/profile");
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message || "Email hoặc mật khẩu không đúng",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const headerBg: [string, string] = isDark
     ? ["#3E4451", "#1E222B"]
@@ -68,23 +39,44 @@ export default function LoginScreen() {
 
   const formBg = isDark ? "#1E222B" : "#FFFFFF";
   const inputBg = isDark ? "#111318" : "#FFFFFF";
-  const inputBorder = (field: string) =>
-    focusedField === field
-      ? isDark
-        ? "#60A5FA"
-        : "#005AC1"
-      : isDark
-        ? "#2D3748"
-        : "#E7BDB8";
   const labelColor = isDark ? "#9CA3AF" : "#5D3F3C";
-  const iconColor = (field: string) =>
+
+  const borderColor = (field: string) =>
     focusedField === field
-      ? isDark
-        ? "#60A5FA"
-        : "#005AC1"
-      : isDark
-        ? "#6B7280"
-        : "#926E6A";
+      ? isDark ? "#60A5FA" : "#005AC1"
+      : isDark ? "#2D3748" : "#E7BDB8";
+
+  const handleReset = async () => {
+    setError("");
+    if (!newPassword || !confirmPassword) {
+      setError("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setLoading(true);
+    // TODO: gọi API đổi mật khẩu với OTP token khi có backend
+    await new Promise((r) => setTimeout(r, 800));
+    setLoading(false);
+
+    Alert.alert(
+      "Thành công",
+      "Mật khẩu đã được đặt lại. Vui lòng đăng nhập lại.",
+      [
+        {
+          text: "Đăng nhập",
+          onPress: () => router.replace("/(root)/(auth)/login" as any),
+        },
+      ],
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#1E222B" : "#F9F9FF" }}>
@@ -98,7 +90,7 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1 }}
         >
-          {/* ── Header nền đỏ ── */}
+          {/* Header */}
           <LinearGradient
             colors={headerBg}
             style={{
@@ -108,14 +100,13 @@ export default function LoginScreen() {
               overflow: "hidden",
             }}
           >
-            {/* Nút dark/light mode */}
             <TouchableOpacity
-              onPress={toggleTheme}
+              onPress={() => router.back()}
               activeOpacity={0.7}
               style={{
                 position: "absolute",
                 top: insets.top + 12,
-                right: 20,
+                left: 20,
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -124,63 +115,58 @@ export default function LoginScreen() {
                 justifyContent: "center",
               }}
             >
-              <Ionicons
-                name={isDark ? "sunny-outline" : "moon-outline"}
-                size={20}
-                color="#FFFFFF"
-              />
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
 
-            {/* Logo tròn */}
             <View
               style={{
-                width: 100,
-                height: 100,
-                borderRadius: 50,
+                width: 90,
+                height: 90,
+                borderRadius: 45,
                 backgroundColor: "#FFFFFF",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 20,
+                marginBottom: 16,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.25,
                 shadowRadius: 16,
                 elevation: 10,
-                padding: 12,
+                padding: 10,
               }}
             >
               <Image
                 source={require("../../../assets/images/Logo_BTT-2018.png")}
-                style={{ width: 72, height: 72 }}
+                style={{ width: 66, height: 66 }}
                 resizeMode="contain"
               />
             </View>
 
             <Text
               style={{
-                fontSize: 26,
+                fontSize: 22,
                 fontWeight: "900",
                 color: "#FFFFFF",
                 letterSpacing: -0.5,
-                textTransform: "uppercase",
               }}
             >
-              BENTHANH TOURIST
+              Đặt mật khẩu mới
             </Text>
-
-            <Text
-              style={{
-                fontSize: 15,
-                color: "rgba(255,255,255,0.85)",
-                marginTop: 6,
-                fontStyle: "italic",
-              }}
-            >
-              Đăng nhập để tiếp tục trải nghiệm
-            </Text>
+            {!!phone && (
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.85)",
+                  marginTop: 6,
+                  fontStyle: "italic",
+                }}
+              >
+                Tài khoản: {phone}
+              </Text>
+            )}
           </LinearGradient>
 
-          {/* ── Form card trắng bo góc trên ── */}
+          {/* Form card */}
           <View
             style={{
               flex: 1,
@@ -190,7 +176,7 @@ export default function LoginScreen() {
               backgroundColor: formBg,
               paddingHorizontal: 24,
               paddingTop: 32,
-              paddingBottom: 24,
+              paddingBottom: 40,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -4 },
               shadowOpacity: 0.08,
@@ -198,7 +184,7 @@ export default function LoginScreen() {
               elevation: 12,
             }}
           >
-            {/* Email */}
+            {/* New password */}
             <Text
               style={{
                 fontSize: 12,
@@ -210,7 +196,7 @@ export default function LoginScreen() {
                 paddingLeft: 4,
               }}
             >
-              Email hoặc Số điện thoại
+              Mật khẩu mới
             </Text>
             <View
               style={{
@@ -218,7 +204,7 @@ export default function LoginScreen() {
                 alignItems: "center",
                 borderRadius: 14,
                 borderWidth: 1.5,
-                borderColor: inputBorder("identity"),
+                borderColor: borderColor("new"),
                 backgroundColor: inputBg,
                 paddingHorizontal: 14,
                 height: 54,
@@ -226,9 +212,9 @@ export default function LoginScreen() {
               }}
             >
               <Ionicons
-                name="mail-outline"
+                name="lock-closed-outline"
                 size={20}
-                color={iconColor("identity")}
+                color={focusedField === "new" ? (isDark ? "#60A5FA" : "#005AC1") : (isDark ? "#6B7280" : "#926E6A")}
               />
               <TextInput
                 style={{
@@ -239,18 +225,24 @@ export default function LoginScreen() {
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
-                placeholder="name@example.com hoặc 0123456789"
+                placeholder="Nhập mật khẩu mới (≥ 6 ký tự)"
                 placeholderTextColor={isDark ? "#6B7280" : "#926E6A"}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={identity}
-                onChangeText={setIdentity}
-                onFocus={() => setFocusedField("identity")}
+                secureTextEntry={!showNew}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                onFocus={() => setFocusedField("new")}
                 onBlur={() => setFocusedField("")}
               />
+              <TouchableOpacity onPress={() => setShowNew(!showNew)} activeOpacity={0.5}>
+                <Ionicons
+                  name={showNew ? "eye-outline" : "eye-off-outline"}
+                  size={20}
+                  color={isDark ? "#6B7280" : "#926E6A"}
+                />
+              </TouchableOpacity>
             </View>
 
-            {/* Mật khẩu */}
+            {/* Confirm password */}
             <Text
               style={{
                 fontSize: 12,
@@ -262,7 +254,7 @@ export default function LoginScreen() {
                 paddingLeft: 4,
               }}
             >
-              Mật khẩu
+              Xác nhận mật khẩu
             </Text>
             <View
               style={{
@@ -270,16 +262,17 @@ export default function LoginScreen() {
                 alignItems: "center",
                 borderRadius: 14,
                 borderWidth: 1.5,
-                borderColor: inputBorder("password"),
+                borderColor: borderColor("confirm"),
                 backgroundColor: inputBg,
                 paddingHorizontal: 14,
                 height: 54,
+                marginBottom: 8,
               }}
             >
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={iconColor("password")}
+                color={focusedField === "confirm" ? (isDark ? "#60A5FA" : "#005AC1") : (isDark ? "#6B7280" : "#926E6A")}
               />
               <TextInput
                 style={{
@@ -290,51 +283,52 @@ export default function LoginScreen() {
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
-                placeholder="••••••••"
+                placeholder="Nhập lại mật khẩu mới"
                 placeholderTextColor={isDark ? "#6B7280" : "#926E6A"}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                onFocus={() => setFocusedField("password")}
+                secureTextEntry={!showConfirm}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                onFocus={() => setFocusedField("confirm")}
                 onBlur={() => setFocusedField("")}
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                activeOpacity={0.5}
-              >
+              <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} activeOpacity={0.5}>
                 <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
+                  name={showConfirm ? "eye-outline" : "eye-off-outline"}
                   size={20}
                   color={isDark ? "#6B7280" : "#926E6A"}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Quên mật khẩu */}
-            <TouchableOpacity
-              style={{ alignSelf: "flex-end", marginTop: 12 }}
-              activeOpacity={0.6}
-              onPress={() => router.push("/(root)/(auth)/forgot-password" as any)}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: isDark ? "#60A5FA" : "#005AC1",
-                }}
-              >
-                Quên mật khẩu?
-              </Text>
-            </TouchableOpacity>
+            {/* Password match indicator */}
+            {confirmPassword.length > 0 && (
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                <Ionicons
+                  name={newPassword === confirmPassword ? "checkmark-circle" : "close-circle"}
+                  size={16}
+                  color={newPassword === confirmPassword ? "#22C55E" : "#EF4444"}
+                />
+                <Text
+                  style={{
+                    marginLeft: 6,
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: newPassword === confirmPassword ? "#22C55E" : "#EF4444",
+                  }}
+                >
+                  {newPassword === confirmPassword ? "Mật khẩu khớp" : "Mật khẩu không khớp"}
+                </Text>
+              </View>
+            )}
 
             {/* Error */}
-            {error ? (
+            {!!error && (
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   borderRadius: 12,
-                  marginTop: 14,
+                  marginBottom: 14,
                   padding: 12,
                   backgroundColor: isDark ? "rgba(185,28,28,0.15)" : "#FEF2F2",
                   borderWidth: 1,
@@ -342,34 +336,26 @@ export default function LoginScreen() {
                 }}
               >
                 <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: "#EF4444",
-                    marginLeft: 8,
-                    flex: 1,
-                  }}
-                >
+                <Text style={{ fontSize: 14, color: "#EF4444", marginLeft: 8, flex: 1 }}>
                   {error}
                 </Text>
               </View>
-            ) : null}
+            )}
 
-            {/* Nút đăng nhập */}
+            {/* Submit */}
             <TouchableOpacity
-              onPress={handleLogin}
+              onPress={handleReset}
               disabled={loading}
               activeOpacity={0.85}
               style={{
                 height: 54,
                 borderRadius: 14,
-                backgroundColor: isDark ? "#374151" : "#005AC1",
+                backgroundColor: isDark ? "#374151" : "#D0021B",
                 alignItems: "center",
                 justifyContent: "center",
-                marginTop: 24,
+                marginTop: 8,
                 opacity: loading ? 0.7 : 1,
-                shadowColor: isDark ? "#000" : "#005AC1",
+                shadowColor: "#D0021B",
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.3,
                 shadowRadius: 12,
@@ -379,23 +365,11 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "700",
-                    color: "#FFFFFF",
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Đăng nhập
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
+                  Đặt lại mật khẩu
                 </Text>
               )}
             </TouchableOpacity>
-
-            {/* Footer copyright */}
-            <View style={{ marginTop: "auto", paddingTop: 32 }}>
-              <Footer />
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

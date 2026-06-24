@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -28,6 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DatePickerCalendar from "@/components/tour/DatePickerCalendar";
 
 /** Vertical sections rendered below the hot-tour carousel, in order. */
 const HOME_SECTIONS: SearchMode[] = ["newest", "popular", "domestic", "foreign"];
@@ -87,9 +88,54 @@ export default function HomeScreen() {
   const { sections, loading, refreshing, onRefresh } = useHomeTours();
   const onScroll = useHideOnScroll();
 
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [news, setNews] = useState<NewsItem[]>([]);
   const [earnedPoints, setEarnedPoints] = useState<number>(0);
+
+  // States for Date filter widget
+  const [dateSearchMode, setDateSearchMode] = useState<"specific" | "range">("specific");
+  const [specificDate, setSpecificDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [pickerTarget, setPickerTarget] = useState<null | "specific" | "start" | "end">(null);
+
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    const parts = dateString.split("-");
+    if (parts.length !== 3) return dateString;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  };
+
+  const clearDateFilters = () => {
+    setSpecificDate("");
+    setStartDate("");
+    setEndDate("");
+  };
+
+  const submitSearch = () => {
+    const params: Record<string, string> = {};
+    if (searchQuery.trim()) {
+      params.q = searchQuery.trim();
+    }
+    const hasDateFilter =
+      dateSearchMode === "specific"
+        ? !!specificDate
+        : dateSearchMode === "range" && (!!startDate || !!endDate);
+
+    if (hasDateFilter) {
+      params.dateMode = dateSearchMode;
+      if (dateSearchMode === "specific" && specificDate) {
+        params.specificDate = specificDate;
+      } else if (dateSearchMode === "range") {
+        if (startDate) params.startDate = startDate;
+        if (endDate) params.endDate = endDate;
+      }
+    }
+    openSearch(params);
+  };
 
   useEffect(() => {
     getNews()
@@ -104,8 +150,31 @@ export default function HomeScreen() {
   }, []);
 
   const openDetail = (tour: TourItem) => {
-    const nearest = getNearestDeparture(tour.departures ?? []);
+    let matchingDeparture = null;
+    if (dateSearchMode === "specific" && specificDate) {
+      const target = new Date(specificDate);
+      matchingDeparture = tour.departures?.find((dep) => {
+        const depDate = new Date(dep.departureDate);
+        return (
+          depDate.getFullYear() === target.getFullYear() &&
+          depDate.getMonth() === target.getMonth() &&
+          depDate.getDate() === target.getDate()
+        );
+      });
+    } else if (dateSearchMode === "range" && (startDate || endDate)) {
+      const start = startDate ? new Date(startDate) : new Date(0);
+      const end = endDate ? new Date(endDate) : new Date(8640000000000000);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      matchingDeparture = tour.departures?.find((dep) => {
+        const depDate = new Date(dep.departureDate);
+        return depDate >= start && depDate <= end;
+      });
+    }
+
+    const nearest = matchingDeparture || getNearestDeparture(tour.departures ?? []);
     const displayPrice = nearest?.price ?? null;
+
     router.push({
       pathname: "/(root)/tour/[id]",
       params: {
@@ -117,17 +186,19 @@ export default function HomeScreen() {
         rating: String(tour.rating),
         reviewsCount: String(tour.reviewsCount),
         hasVat: tour.hasVat ? "true" : "false",
+        searchDateMode: dateSearchMode,
+        searchSpecificDate: specificDate,
+        searchStartDate: startDate,
+        searchEndDate: endDate,
       },
     });
   };
 
   const openSearch = (params?: Record<string, string>) => {
-    router.push({ pathname: "/(root)/(tabs)/search" as any, params });
-  };
-
-  const submitSearch = () => {
-    const q = searchQuery.trim();
-    openSearch(q ? { q } : undefined);
+    router.push({
+      pathname: "/(root)/(tabs)/search" as any,
+      params: { referrer: "home", ...params },
+    });
   };
 
   const gradientColors = isDark
@@ -168,9 +239,14 @@ export default function HomeScreen() {
 
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
-          onScroll={onScroll}
+          onScroll={(event) => {
+            const offsetY = event.nativeEvent.contentOffset.y;
+            setShowBackToTop(offsetY > 300);
+            if (onScroll) onScroll(event);
+          }}
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
@@ -266,6 +342,209 @@ export default function HomeScreen() {
                   />
                 </TouchableOpacity>
               )}
+            </View>
+          </View>
+
+          {/* DATE PICKER WIDGET */}
+          <View className="px-5 mt-3">
+            <View
+              style={{
+                backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: isDark ? "#334155" : "#E2E8F0",
+                padding: 14,
+                shadowColor: "#000",
+                shadowOpacity: 0.04,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 8,
+                elevation: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: isDark ? "#F8FAFC" : "#0F172A",
+                  marginBottom: 10,
+                }}
+              >
+                📅 Chọn ngày du lịch / khởi hành
+              </Text>
+
+              {/* Mode Tabs */}
+              <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setDateSearchMode("specific")}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    borderRadius: 10,
+                    backgroundColor: dateSearchMode === "specific" ? (isDark ? "#D0021B" : "#FFF1F2") : "transparent",
+                    borderWidth: 1,
+                    borderColor: dateSearchMode === "specific" ? "#D0021B" : (isDark ? "#334155" : "#E2E8F0"),
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
+                    }}
+                  >
+                    Ngày cụ thể
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setDateSearchMode("range")}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    borderRadius: 10,
+                    backgroundColor: dateSearchMode === "range" ? (isDark ? "#D0021B" : "#FFF1F2") : "transparent",
+                    borderWidth: 1,
+                    borderColor: dateSearchMode === "range" ? "#D0021B" : (isDark ? "#334155" : "#E2E8F0"),
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
+                    }}
+                  >
+                    Khoảng ngày
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Input Selectors */}
+              {dateSearchMode === "specific" ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setPickerTarget("specific")}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: isDark ? "#334155" : "#E2E8F0",
+                    backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                    marginBottom: 12,
+                  }}
+                >
+                  <Ionicons name="calendar-outline" size={18} color="#D0021B" style={{ marginRight: 8 }} />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: specificDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                    }}
+                  >
+                    {specificDate ? formatDateDisplay(specificDate) : "Chọn ngày khởi hành"}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setPickerTarget("start")}
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 12,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isDark ? "#334155" : "#E2E8F0",
+                      backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={16} color="#D0021B" style={{ marginRight: 6 }} />
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: startDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                      }}
+                    >
+                      {startDate ? formatDateDisplay(startDate) : "Từ ngày"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setPickerTarget("end")}
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 12,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isDark ? "#334155" : "#E2E8F0",
+                      backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={16} color="#D0021B" style={{ marginRight: 6 }} />
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: endDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                      }}
+                    >
+                      {endDate ? formatDateDisplay(endDate) : "Đến ngày"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                {(specificDate || startDate || endDate) && (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={clearDateFilters}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 14,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isDark ? "#4A5568" : "#CBD5E0",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="refresh-outline" size={18} color={isDark ? "#CBD5E1" : "#475569"} />
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={submitSearch}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#D0021B",
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
+                    Tìm kiếm
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -422,6 +701,66 @@ export default function HomeScreen() {
           <Footer />
         </ScrollView>
       </LinearGradient>
+
+      {/* Date Picker Calendar Modal */}
+      <DatePickerCalendar
+        visible={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        selectedDate={
+          pickerTarget === "specific"
+            ? specificDate
+            : pickerTarget === "start"
+            ? startDate
+            : pickerTarget === "end"
+            ? endDate
+            : undefined
+        }
+        onSelectDate={(dateStr) => {
+          if (pickerTarget === "specific") {
+            setSpecificDate(dateStr);
+          } else if (pickerTarget === "start") {
+            setStartDate(dateStr);
+          } else if (pickerTarget === "end") {
+            setEndDate(dateStr);
+          }
+        }}
+        title={
+          pickerTarget === "specific"
+            ? "Chọn ngày khởi hành"
+            : pickerTarget === "start"
+            ? "Chọn ngày bắt đầu"
+            : "Chọn ngày kết thúc"
+        }
+      />
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#007545",
+                    "background": "#fbf9f8",
+                    "secondary": "#825500",
+                    "primary": "#a00000",
+                    "on-tertiary-fixed": "#002110",
+                    "secondary-fixed-dim": "#ffb953",
+                    "on-background": "#1b1c1c",
+                    "surface-container": "#efeded",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#c00000",
+                    "outline-variant": "#e8bdb6",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#410000",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "surface-container-highest": "#e4e2e2",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#ffb4a8",
+                    "surface-variant": "#e4e2e2",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-fixed-variant": "#633f00",
+                    "surface-container-high": "#e9e8e7",
+                    "primary-fixed-dim": "#ffb4a8",
+                    "outline": "#936e69",
+                    "tertiary": "#005a34",
+                    "surface-container-low": "#f5f3f3",
+                    "surface-bright": "#fbf9f8",
+                    "surface": "#fbf9f8",
+                    "secondary-fixed": "#ffddb4",
+                    "on-surface": "#1b1c1c",
+                    "on-secondary-container": "#6e4700",
+                    "secondary-container": "#feb23d",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f0f0",
+                    "primary-fixed": "#ffdad4",
+                    "on-primary-fixed-variant": "#930000",
+                    "inverse-surface": "#303031",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#7cfdb2",
+                    "on-primary-container": "#ffdcd7",
+                    "on-tertiary-fixed-variant": "#00522f",
+                    "primary-container": "#ce0000",
+                    "tertiary-fixed": "#7afbb1",
+                    "on-surface-variant": "#5e3f3a",
+                    "on-secondary-fixed": "#291800",
+                    "tertiary-fixed-dim": "#5cde97",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "md": "16px",
+                    "section-gap": "20px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "sm": "8px",
+                    "container-margin": "16px",
+                    "card-padding": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "headline-md-mobile": ["Plus Jakarta Sans"],
+                    "title-sm": ["Plus Jakarta Sans"],
+                    "label-caps": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "700"}],
+                    "title-sm": ["16px", {"lineHeight": "22px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-overlay {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-x-hidden">
+<!-- Top AppBar (Simulated Background Content) -->
+<header class="bg-primary text-on-primary font-headline-md-mobile text-headline-md-mobile docked full-width top-0 shadow-sm flex items-center w-full px-container-margin h-16 z-10">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined transition-all duration-200 active:scale-95 cursor-pointer">arrow_back</span>
+<span>Thông báo</span>
+</div>
+</header>
+<!-- Main Content Canvas (Simulated Background) -->
+<main class="flex-1 p-container-margin space-y-section-gap relative">
+<!-- Blurred Content Placeholder -->
+<div class="space-y-4 opacity-40 grayscale-[0.2]">
+<div class="p-card-padding bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A cinematic photo of a luxury travel boat on the Mekong Delta, surrounded by lush green coconut trees and a warm golden sunset glow, soft focus background, BenThanh Tourist heritage style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgi0qUnmK6Emc2n44IL7TSIvNvoqIz8sE6miOao54c4M_FE236IFG9SIG8eWrVvuhU32uTTMXc0FRdrIZEwrLbGoyE-kdkl_ydleSOdXIjBoH2PoVS3ziHfwKOD4yAc2I6_L2_PEG_yBJZcOyKsSW02fcG_a7Y859LwjeDzPoIyThPvlGquczaaZRGorwuVhLC6WKW4MVfESWJMuZHTCHEIv-QSAFn9VJR8xGKfv2iTBBpXpeTkEL5_sYke9G3k6kALJER_OBr6rc"/>
+</div>
+<div class="flex-1">
+<p class="font-title-sm text-title-sm text-on-surface">Tour Du Lịch Miền Tây</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ngày khởi hành: 25/10/2023</p>
+<div class="mt-2 flex justify-between items-end">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full font-label-bold text-label-bold">Chờ thanh toán</span>
+<span class="font-headline-md text-headline-md text-primary">5.200.000đ</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-card-padding bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A vibrant landscape of Ha Long Bay with limestone pillars rising from emerald waters under a bright blue sky, captured with a professional wide-angle lens, corporate modern travel aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6XhZAd2tIHYlbD80rvwabYgRX-YeYsRXuHBhiPIg3o_qX01WWw12P6vBbeTvX-DpwvI8Qk29Di5QwAVig7Ifnu8z48gkKFDRHx-enIySlYnhSppP8wtiUMXssoogju1nVhy4pRtaeYgnR2Xn-_0jV3yr7EikPo_exl1qPZDkFyUUoCaDSFGN1-vyLxWYkGKqHHLLnW-tJYKPC6j5uKqx4vb9iY5LSPYL5hOk4GjIqYhPxunawv9JYXtJwMjyrysGqQDqEVF1Olw0"/>
+</div>
+<div class="flex-1">
+<p class="font-title-sm text-title-sm text-on-surface">Khám phá Hạ Long</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ngày khởi hành: 12/11/2023</p>
+<div class="mt-2 flex justify-between items-end">
+<span class="px-2 py-0.5 bg-tertiary-container text-on-tertiary rounded-full font-label-bold text-label-bold">Đã xác nhận</span>
+<span class="font-headline-md text-headline-md text-primary">8.500.000đ</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- NOTIFICATION OVERLAYS LAYER -->
+<div class="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none p-container-margin gap-4">
+<!-- Toast 1: Đặt tour thành công -->
+<div class="animate-slide-up pointer-events-auto w-full max-w-sm bg-surface-container-lowest rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.12)] border-l-4 border-tertiary-container overflow-hidden">
+<div class="p-card-padding flex items-start gap-3">
+<div class="flex-shrink-0 w-10 h-10 bg-tertiary/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<h4 class="font-title-sm text-title-sm text-on-surface">Đặt tour thành công</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Yêu cầu của bạn đã được ghi nhận. Chúng tôi sẽ liên hệ trong ít phút.</p>
+<div class="mt-3 flex gap-4">
+<button class="font-label-bold text-label-bold text-primary active:scale-95 transition-transform">XEM CHI TIẾT</button>
+<button class="font-label-bold text-label-bold text-on-surface-variant active:scale-95 transition-transform" onclick="this.closest('.animate-slide-up').remove()">BỎ QUA</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Toast 2: Đổi mật khẩu thành công -->
+<div class="animate-slide-up pointer-events-auto w-full max-w-sm bg-surface-container-lowest rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.12)] border-l-4 border-tertiary overflow-hidden" style="animation-delay: 0.2s;">
+<div class="p-card-padding flex items-center gap-4">
+<div class="flex-shrink-0 w-10 h-10 bg-tertiary-container text-on-tertiary rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">key</span>
+</div>
+<div class="flex-1">
+<p class="font-title-sm text-title-sm text-on-surface leading-tight">Đổi mật khẩu thành công</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tài khoản của bạn hiện đã được bảo mật.</p>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant/40 hover:text-on-surface" onclick="this.closest('.animate-slide-up').remove()">close</button>
+</div>
+</div>
+<!-- Toast 3: Compact Snackbar variant -->
+<div class="animate-slide-up pointer-events-auto flex items-center bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-lg shadow-lg gap-4" style="animation-delay: 0.4s;">
+<span class="font-body-md text-body-md">Đã cập nhật thông báo mới nhất</span>
+<button class="font-label-bold text-label-bold text-inverse-primary hover:underline transition-all">HOÀN TÁC</button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-bold text-label-bold mt-1">Tổng quan</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-bold text-label-bold mt-1">Du lịch</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-bold text-label-bold mt-1">Lịch sử</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-label-bold text-label-bold mt-1">Thông báo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-bold text-label-bold mt-1">Tài khoản</span>
+</a>
+</nav>
+<!-- Overlay logic for interactive feel -->
+<div class="fixed inset-0 bg-background/20 backdrop-blur-[2px] pointer-events-none z-[15]"></div>
+<script>
+        // Simple micro-interaction for notification closing
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.animate-slide-up');
+            
+            // Auto-hide the snackbar after 5 seconds
+            setTimeout(() => {
+                const snackbar = toasts[2];
+                if(snackbar) {
+                    snackbar.style.opacity = '0';
+                    snackbar.style.transform = 'translateY(20px)';
+                    snackbar.style.transition = 'all 0.3s ease';
+                    setTimeout(() => snackbar.remove(), 300);
+                }
+            }, 5000);
+        });
+    </script>
+</body></html>

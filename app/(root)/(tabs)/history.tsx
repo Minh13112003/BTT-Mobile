@@ -107,6 +107,9 @@ export default function HistoryScreen() {
   const [selectedStatus, setSelectedStatus] = useState<string>("Tất cả");
   const [chromeH, setChromeH] = useState(0);
 
+  const flatListRef = useRef<FlatList<OrderItem>>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
   // Collapsing header
   const headerOffset = useRef(new Animated.Value(0)).current;
   const lastY = useRef(0);
@@ -119,6 +122,7 @@ export default function HistoryScreen() {
         const y = e.nativeEvent.contentOffset.y;
         const dy = y - lastY.current;
         lastY.current = y;
+        setShowBackToTop(y > 300);
         if (y <= 8) {
           setHidden(false);
           Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
@@ -226,6 +230,7 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <FlatList
+            ref={flatListRef}
             data={filteredOrders}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
@@ -534,6 +539,35 @@ export default function HistoryScreen() {
           </ScrollView>
         </View>
       </Animated.View>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

@@ -51,6 +51,9 @@ export const URL_PostFeedback = `${API_BASE_URL}/api/v1/feedbacks`;
 //Push notification
 export const URL_RegisterFcmToken = `${API_BASE_URL}/api/v1/users/me/fcm-token`;
 
+//Avatar
+export const URL_UpdateAvatar = `${API_BASE_URL}/api/v1/users/me/avatar`;
+
 //News APIs
 export const URL_GetNews = `${API_BASE_URL}/api/v1/news`;
 export const URL_GetNewsById = `${API_BASE_URL}/api/v1/news/`;

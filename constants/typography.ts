@@ -6,15 +6,15 @@
  * one place.
  */
 export const FONT_SIZE = {
-  card: 14, // chỉ dùng trong card membership
-  xs: 16, // nhỏ nhất cho text thường
-  sm: 17,
-  md: 18,
-  lg: 20,
-  xl: 22,
-  xxl: 26,
-  title: 30,
-  hero: 34,
+  card: 16,
+  xs: 18,
+  sm: 19,
+  md: 20,
+  lg: 22,
+  xl: 24,
+  xxl: 28,
+  title: 32,
+  hero: 36,
 } as const;
 
 export type FontSizeKey = keyof typeof FONT_SIZE;

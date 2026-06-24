@@ -37,7 +37,7 @@ import {
 
 const SW = Dimensions.get("window").width;
 const CARD_SCALE = (SW - 48) / 600;
-const CARD_H = Math.round(240 * CARD_SCALE);
+const CARD_H = Math.round(440 * CARD_SCALE);
 
 const DISPLAY_NAMES = ["Đồng", "Bạc", "Vàng", "Bạch Kim", "Kim Cương", "Ruby"] as const;
 type TierName = (typeof DISPLAY_NAMES)[number];
@@ -110,6 +110,9 @@ export default function MembershipScreen() {
   const points = parseInt(earnedPoints ?? "0") || 0;
   const currentTier = getTier(points);
 
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
   const tiersInOrder: Tier[] = DISPLAY_NAMES.map(
     (name) => TIERS.find((t) => t.name === name)!,
   );
@@ -155,6 +158,12 @@ export default function MembershipScreen() {
       </LinearGradient>
 
       <ScrollView
+        ref={scrollViewRef}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          setShowBackToTop(offsetY > 300);
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 48 }}
       >
@@ -302,6 +311,35 @@ export default function MembershipScreen() {
           ))}
         </View>
       </ScrollView>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+          style={{
+            position: "absolute",
+            bottom: 30,
+            right: 20,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            backgroundColor: "#D0021B",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 6,
+            zIndex: 99,
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -459,7 +497,6 @@ const compact = (n: number) => {
 
 export function RedesignedMembershipBanner({
   earnedPoints,
-  rewardPoints = 0,
   name = "Nguyễn Nhật Minh",
   tierOverride,
 }: {
@@ -488,7 +525,7 @@ export function RedesignedMembershipBanner({
 
   const cardWidth = SW - 48;
   const scale = cardWidth / 600;
-  const CARD_H_Local = 240 * scale;
+  const CARD_H_Local = 440 * scale;
 
   let minX = 0;
   let minY = 0;
@@ -550,11 +587,11 @@ export function RedesignedMembershipBanner({
 
   return (
     <View style={{ width: cardWidth, height: CARD_H_Local, position: "relative", overflow: "visible" }}>
-      {/* SVG Background Layer */}
+      {/* SVG Background Layer — stretched to fill taller card with preserveAspectRatio="none" */}
       <View
         style={{
           width: viewBoxW * scale,
-          height: viewBoxH * scale,
+          height: CARD_H_Local,
           position: "absolute",
           left: minX * scale,
           top: minY * scale,
@@ -563,8 +600,9 @@ export function RedesignedMembershipBanner({
       >
         <Svg
           width={viewBoxW * scale}
-          height={viewBoxH * scale}
+          height={CARD_H_Local}
           viewBox={`${minX} ${minY} ${viewBoxW} ${viewBoxH}`}
+          preserveAspectRatio="none"
           style={{ overflow: "visible" }}
         >
           {svgBody}
@@ -579,78 +617,65 @@ export function RedesignedMembershipBanner({
           top: 0,
           width: cardWidth,
           height: CARD_H_Local,
-          paddingLeft: 135 * scale,
-          paddingRight: Math.max(12, 16 * scale),
-          paddingTop: Math.max(14, 18 * scale),
-          paddingBottom: Math.max(10, 14 * scale),
-          justifyContent: "flex-end",
-          gap: 6,
+          paddingLeft: 140 * scale,
+          paddingRight: 18,
+          paddingTop: 20,
+          paddingBottom: 18,
+          justifyContent: "space-between",
         }}
       >
         {/* Top greeting and name + Badge on top right */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
-          <View style={{ gap: 1, flex: 1, paddingRight: 6 }}>
-            <Text style={{ fontSize: Math.max(12, 13 * scale), color: "rgba(255,255,255,0.75)", fontWeight: "500" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <View style={{ gap: 4, flex: 1, paddingRight: 8 }}>
+            <Text style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: "500" }}>
               Xin chào,
             </Text>
-            <Text style={{ fontSize: Math.max(16, 18 * scale), color: "#fff", fontWeight: "800" }} numberOfLines={1}>
+            <Text style={{ fontSize: 20, color: "#fff", fontWeight: "800" }} numberOfLines={1}>
               {greetName}
             </Text>
           </View>
-          
+
           <View style={{
-            backgroundColor: "rgba(255,255,255,0.16)",
+            backgroundColor: "rgba(255,255,255,0.18)",
             borderRadius: 15,
-            paddingHorizontal: Math.max(8, 9 * scale),
-            paddingVertical: Math.max(3, 4 * scale),
+            paddingHorizontal: 12,
+            paddingVertical: 5,
             borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.22)",
-            marginBottom: 2,
+            borderColor: "rgba(255,255,255,0.28)",
           }}>
-            <Text style={{ fontSize: Math.max(10, 10 * scale), color: "#fff", fontWeight: "700" }}>
+            <Text style={{ fontSize: 14, color: "#fff", fontWeight: "700" }}>
               {tier.icon} {tier.name}
             </Text>
           </View>
         </View>
 
         {/* Bottom points, reward points, progress bar and label */}
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: 6 }}>
           {/* Divider */}
           <View style={{
             height: 1,
-            backgroundColor: "rgba(255,255,255,0.15)",
+            backgroundColor: "rgba(255,255,255,0.2)",
             width: "100%",
-            marginBottom: 2 * scale,
+            marginBottom: 3,
           }} />
 
           {/* Points values */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <View>
-              <Text style={{ fontSize: Math.max(8, 8 * scale), color: "rgba(255,255,255,0.55)", fontWeight: "600", letterSpacing: 0.5 }}>
-                ĐIỂM TÍCH LŨY
-              </Text>
-              <Text style={{ fontSize: Math.max(18, 20 * scale), color: "#fff", fontWeight: "800", marginTop: 1 }}>
-                {pointsStr} <Text style={{ fontSize: Math.max(10, 11 * scale), fontWeight: "500", color: "rgba(255,255,255,0.65)" }}>pts</Text>
-              </Text>
-            </View>
-
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ fontSize: Math.max(8, 8 * scale), color: "rgba(255,255,255,0.55)", fontWeight: "600", letterSpacing: 0.5 }}>
-                ĐIỂM THƯỞNG
-              </Text>
-              <Text style={{ fontSize: Math.max(13, 15 * scale), color: "#fff", fontWeight: "800", marginTop: 1 }}>
-                {rewardPoints.toLocaleString("vi-VN")} <Text style={{ fontSize: Math.max(9, 10 * scale), fontWeight: "500", color: "rgba(255,255,255,0.65)" }}>pts</Text>
-              </Text>
-            </View>
+          <View>
+            <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: "700", letterSpacing: 0.5 }}>
+              ĐIỂM TÍCH LŨY
+            </Text>
+            <Text style={{ fontSize: 20, color: "#fff", fontWeight: "800", marginTop: 2 }}>
+              {pointsStr} <Text style={{ fontSize: 14, fontWeight: "500", color: "rgba(255,255,255,0.65)" }}>pts</Text>
+            </Text>
           </View>
 
           {/* Progress Bar */}
           <View style={{
-            height: Math.max(4, 5 * scale),
+            height: 7,
             backgroundColor: "rgba(255,255,255,0.2)",
-            borderRadius: 2.5,
+            borderRadius: 3.5,
             overflow: "hidden",
-            marginTop: 2 * scale,
+            marginTop: 2,
           }}>
             <LinearGradient
               colors={PROGRESS_COLORS[tier.name] || ["#FFD080", "#F0A030"]}
@@ -660,7 +685,7 @@ export function RedesignedMembershipBanner({
             />
           </View>
 
-          <Text style={{ fontSize: Math.max(9.5, 9.5 * scale), color: "rgba(255,255,255,0.7)", fontWeight: "500", marginTop: 1 * scale }}>
+          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.85)", fontWeight: "600" }} numberOfLines={2}>
             {progressText}
           </Text>
         </View>
