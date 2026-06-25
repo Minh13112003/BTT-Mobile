@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { TourSchedule } from "@/services/tour";
 import React from "react";
@@ -33,7 +34,8 @@ export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
             {/* Content */}
             <View className={`flex-1 ${last ? "" : "pb-4"}`}>
               <Text
-                className={`text-base font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                className={`font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 {it.dayNumber}
                 {it.title ? ` · ${it.title}` : ""}
@@ -43,7 +45,8 @@ export function ItineraryTimeline({ items }: { items: TourSchedule[] }) {
                   className={`self-start mt-1.5 px-2 py-1 rounded-lg ${isDark ? "bg-green-500/10" : "bg-green-50"}`}
                 >
                   <Text
-                    className={`text-base font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}
+                    className={`font-bold ${isDark ? "text-[#7FE08A]" : "text-green-700"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     🍽 {it.meals}
                   </Text>

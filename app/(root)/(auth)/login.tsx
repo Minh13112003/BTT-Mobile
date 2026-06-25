@@ -1,4 +1,5 @@
 import { Footer } from "@/components/Footer";
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { login } from "@/services/auth";
@@ -150,7 +151,7 @@ export default function LoginScreen() {
               }}
             >
               <Image
-                source={require("../../../assets/images/Logo_BTT-2018.png")}
+                source={require("../../../assets/images/Logo_BTT-2024.png")}
                 style={{ width: 72, height: 72 }}
                 resizeMode="contain"
               />
@@ -170,7 +171,7 @@ export default function LoginScreen() {
 
             <Text
               style={{
-                fontSize: 15,
+                fontSize: FONT_SIZE.xs,
                 color: "rgba(255,255,255,0.85)",
                 marginTop: 6,
                 fontStyle: "italic",
@@ -201,7 +202,7 @@ export default function LoginScreen() {
             {/* Email */}
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "700",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
@@ -235,7 +236,7 @@ export default function LoginScreen() {
                   flex: 1,
                   height: "100%",
                   marginLeft: 10,
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
@@ -253,7 +254,7 @@ export default function LoginScreen() {
             {/* Mật khẩu */}
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "700",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
@@ -286,7 +287,7 @@ export default function LoginScreen() {
                   flex: 1,
                   height: "100%",
                   marginLeft: 10,
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
@@ -318,7 +319,7 @@ export default function LoginScreen() {
             >
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "700",
                   color: isDark ? "#60A5FA" : "#005AC1",
                 }}
@@ -344,7 +345,7 @@ export default function LoginScreen() {
                 <Ionicons name="alert-circle" size={18} color="#EF4444" />
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: FONT_SIZE.xs,
                     fontWeight: "500",
                     color: "#EF4444",
                     marginLeft: 8,
@@ -381,7 +382,7 @@ export default function LoginScreen() {
               ) : (
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: FONT_SIZE.xs,
                     fontWeight: "700",
                     color: "#FFFFFF",
                     letterSpacing: 0.3,

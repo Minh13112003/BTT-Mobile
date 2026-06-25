@@ -31,6 +31,7 @@ export interface User {
   age?: number;
   earnedPoints?: number;
   rewardPoints?: number;
+  avatarUrl?: string | null;
 }
 
 interface AuthContextType {
@@ -64,6 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const me = res?.data?.data ?? res?.data;
       setEarnedPoints(typeof me?.earnedPoints === "number" ? me.earnedPoints : 0);
       setRewardPoints(typeof me?.rewardPoints === "number" ? me.rewardPoints : 0);
+      if ("avatarUrl" in (me ?? {})) {
+        setUser((prev) => prev ? { ...prev, avatarUrl: me.avatarUrl ?? null } : prev);
+      }
     } catch {
       // giữ nguyên giá trị cũ nếu lỗi
     }

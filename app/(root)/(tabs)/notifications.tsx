@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
@@ -295,7 +296,7 @@ export default function NotificationsScreen() {
               <Text
                 className="font-bold flex-1 mr-2"
                 style={{
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   color: isDark
                     ? item.isRead
                       ? "#94A3B8"
@@ -325,8 +326,8 @@ export default function NotificationsScreen() {
             <View style={{ height: 0, overflow: "hidden" }}>
               <Text
                 style={{
-                  fontSize: 14,
-                  lineHeight: 20,
+                  fontSize: FONT_SIZE.xs,
+                  lineHeight: 26,
                 }}
                 onTextLayout={(e) => {
                   if (!isLong && e.nativeEvent.lines.length > MAX_LINES) {
@@ -339,10 +340,9 @@ export default function NotificationsScreen() {
             </View>
             {/* Text hiển thị thật */}
             <Text
-              className="leading-5"
               style={{
-                fontSize: 14,
-                lineHeight: 20,
+                fontSize: FONT_SIZE.xs,
+                lineHeight: 26,
                 color: isDark ? "#94A3B8" : "#5e3f3a"
               }}
               numberOfLines={expanded ? undefined : MAX_LINES}
@@ -359,7 +359,7 @@ export default function NotificationsScreen() {
               >
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: FONT_SIZE.card,
                     fontWeight: "700",
                     color: isDark ? "#FFA2A2" : "#a00000"
                   }}
@@ -373,7 +373,7 @@ export default function NotificationsScreen() {
             <View className="flex-row items-center justify-between mt-3">
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: FONT_SIZE.card,
                   color: isDark ? "#64748B" : "#94A3B8"
                 }}
               >
@@ -394,7 +394,7 @@ export default function NotificationsScreen() {
                     <>
                       <Text
                         style={{
-                          fontSize: 13,
+                          fontSize: FONT_SIZE.card,
                           fontWeight: "800",
                           color: isDark ? "#FFA2A2" : "#a00000",
                           marginRight: 2,
@@ -405,7 +405,7 @@ export default function NotificationsScreen() {
                       </Text>
                       <Ionicons
                         name="chevron-forward"
-                        size={13}
+                        size={FONT_SIZE.card}
                         color={isDark ? "#FFA2A2" : "#a00000"}
                       />
                     </>
@@ -442,7 +442,7 @@ export default function NotificationsScreen() {
           </Text>
           <Text
             className={`mt-2 text-center ${isDark ? "text-slate-500" : "text-slate-400"}`}
-            style={{ fontSize: 15 }}
+            style={{ fontSize: FONT_SIZE.card }}
           >
             Đăng nhập để xem thông báo của bạn.
           </Text>
@@ -465,7 +465,7 @@ export default function NotificationsScreen() {
         >
           <Text
             className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
-            style={{ fontSize: 14 }}
+            style={{ fontSize: FONT_SIZE.card }}
           >
             {unreadCount > 0
               ? `${unreadCount} chưa đọc`
@@ -484,13 +484,13 @@ export default function NotificationsScreen() {
                 <>
                   <Ionicons
                     name="checkmark-done-outline"
-                    size={16}
+                    size={FONT_SIZE.card}
                     color="#D0021B"
                     style={{ marginRight: 4 }}
                   />
                   <Text
                     className="font-bold text-[#D0021B]"
-                    style={{ fontSize: 14 }}
+                    style={{ fontSize: FONT_SIZE.card }}
                   >
                     Đánh dấu tất cả đã đọc
                   </Text>
@@ -505,7 +505,7 @@ export default function NotificationsScreen() {
             <ActivityIndicator size="large" color={palette.spinner} />
             <Text
               className={`mt-2 font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}
-              style={{ fontSize: 15 }}
+              style={{ fontSize: FONT_SIZE.card }}
             >
               Đang tải thông báo...
             </Text>
@@ -541,7 +541,7 @@ export default function NotificationsScreen() {
                   </View>
                 ) : !hasNext && items.length > 0 ? (
                   <View className="py-3 items-center">
-                    <Text className="font-semibold text-slate-400" style={{ fontSize: 15 }}>
+                    <Text className="font-semibold text-slate-400" style={{ fontSize: FONT_SIZE.card }}>
                       ✓ Đã hiển thị tất cả thông báo
                     </Text>
                   </View>
@@ -566,13 +566,13 @@ export default function NotificationsScreen() {
                   className={`font-bold mt-4 text-center ${
                     isDark ? "text-slate-300" : "text-slate-600"
                   }`}
-                  style={{ fontSize: 17 }}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Chưa có thông báo
                 </Text>
                 <Text
                   className="text-slate-400 text-center mt-1.5"
-                  style={{ fontSize: 14 }}
+                  style={{ fontSize: FONT_SIZE.card }}
                 >
                   Thông báo về đơn hàng và khuyến mãi sẽ xuất hiện ở đây.
                 </Text>

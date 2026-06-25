@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { TourSchedule } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,7 +44,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
         className={`ml-3 flex-1 leading-6 ${
           isDark ? "text-slate-300" : "text-slate-700"
         }`}
-        style={{ fontSize: 16 }}
+        style={{ fontSize: FONT_SIZE.xs }}
       >
         {text}
       </Text>
@@ -68,7 +69,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
             className={`ml-2 font-black ${
               isDark ? "text-slate-100" : "text-slate-800"
             }`}
-            style={{ fontSize: 16 }}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             Lịch trình chuyến đi
           </Text>
@@ -103,7 +104,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
               >
                 <View className="flex-row items-center">
                   <View className="w-8 h-8 rounded-full bg-red-500 items-center justify-center">
-                    <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                    <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
                       {schedule.dayNumber}
                     </Text>
                   </View>
@@ -112,7 +113,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                     className={`ml-3 font-bold ${
                       isDark ? "text-slate-100" : "text-slate-800"
                     }`}
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     Ngày {schedule.dayNumber}
                   </Text>
@@ -132,7 +133,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                     className={`font-bold leading-6 ${
                       isDark ? "text-slate-200" : "text-slate-800"
                     }`}
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     {schedule.title}
                   </Text>
@@ -186,7 +187,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                           className={`ml-2 font-semibold ${
                             isDark ? "text-slate-200" : "text-slate-700"
                           }`}
-                          style={{ fontSize: 16 }}
+                          style={{ fontSize: FONT_SIZE.xs }}
                         >
                           Bữa ăn bao gồm
                         </Text>
@@ -212,7 +213,7 @@ export function TourScheduleAccordion({ schedules }: Props) {
                               className={`ml-1 font-semibold ${
                                 isDark ? "text-red-300" : "text-red-600"
                               }`}
-                              style={{ fontSize: 16 }}
+                              style={{ fontSize: FONT_SIZE.xs }}
                             >
                               {meal}
                             </Text>

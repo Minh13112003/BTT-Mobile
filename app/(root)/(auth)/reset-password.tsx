@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -155,7 +156,7 @@ export default function ResetPasswordScreen() {
             {!!phone && (
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: FONT_SIZE.xs,
                   color: "rgba(255,255,255,0.85)",
                   marginTop: 6,
                   fontStyle: "italic",
@@ -187,7 +188,7 @@ export default function ResetPasswordScreen() {
             {/* New password */}
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "700",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
@@ -221,7 +222,7 @@ export default function ResetPasswordScreen() {
                   flex: 1,
                   height: "100%",
                   marginLeft: 10,
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
@@ -245,7 +246,7 @@ export default function ResetPasswordScreen() {
             {/* Confirm password */}
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "700",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
@@ -279,7 +280,7 @@ export default function ResetPasswordScreen() {
                   flex: 1,
                   height: "100%",
                   marginLeft: 10,
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
@@ -311,7 +312,7 @@ export default function ResetPasswordScreen() {
                 <Text
                   style={{
                     marginLeft: 6,
-                    fontSize: 13,
+                    fontSize: FONT_SIZE.xs,
                     fontWeight: "600",
                     color: newPassword === confirmPassword ? "#22C55E" : "#EF4444",
                   }}
@@ -336,7 +337,7 @@ export default function ResetPasswordScreen() {
                 }}
               >
                 <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                <Text style={{ fontSize: 14, color: "#EF4444", marginLeft: 8, flex: 1 }}>
+                <Text style={{ fontSize: FONT_SIZE.xs, color: "#EF4444", marginLeft: 8, flex: 1 }}>
                   {error}
                 </Text>
               </View>
@@ -365,7 +366,7 @@ export default function ResetPasswordScreen() {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
+                <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
                   Đặt lại mật khẩu
                 </Text>
               )}

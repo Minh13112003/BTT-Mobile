@@ -1,29 +1,29 @@
-import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import Header from "@/components/Header";
+import { FONT_SIZE } from "@/constants/typography";
 import { SearchBar } from "@/components/SearchBar";
 import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
+import { getPalette } from "@/constants/theme";
 import {
   MODE_CHIP_LABELS,
   SECTION_ORDER,
   SearchMode,
   regionsForMode,
 } from "@/constants/tourFilters";
-import { getPalette } from "@/constants/theme";
 import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { useTourSearch } from "@/hooks/useTourSearch";
 import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
   RefreshControl,
@@ -62,7 +62,7 @@ function Chip({
         className={`font-bold ${
           active ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
         }`}
-        style={{ fontSize: 16 }}
+        style={{ fontSize: FONT_SIZE.xs }}
       >
         {label}
       </Text>
@@ -86,10 +86,9 @@ export default function SearchScreen() {
     specificDate?: string;
     startDate?: string;
     endDate?: string;
+    referrer?: string;
   }>();
-  const initialMode = (
-    SECTION_ORDER as string[]
-  ).includes(params.mode ?? "")
+  const initialMode = (SECTION_ORDER as string[]).includes(params.mode ?? "")
     ? (params.mode as SearchMode)
     : "newest";
 
@@ -145,13 +144,25 @@ export default function SearchScreen() {
         setShowBackToTop(y > 300);
         if (y <= 8) {
           setHidden(false);
-          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+          Animated.timing(headerOffset, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+          }).start();
         } else if (dy > 8) {
           setHidden(true);
-          Animated.timing(headerOffset, { toValue: -clamp, duration: 150, useNativeDriver: true }).start();
+          Animated.timing(headerOffset, {
+            toValue: -clamp,
+            duration: 150,
+            useNativeDriver: true,
+          }).start();
         } else if (dy < -8) {
           setHidden(false);
-          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+          Animated.timing(headerOffset, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+          }).start();
         }
       },
     },
@@ -195,9 +206,14 @@ export default function SearchScreen() {
           depDate.getDate() === target.getDate()
         );
       });
-    } else if (params.dateMode === "range" && (params.startDate || params.endDate)) {
+    } else if (
+      params.dateMode === "range" &&
+      (params.startDate || params.endDate)
+    ) {
       const start = params.startDate ? new Date(params.startDate) : new Date(0);
-      const end = params.endDate ? new Date(params.endDate) : new Date(8640000000000000);
+      const end = params.endDate
+        ? new Date(params.endDate)
+        : new Date(8640000000000000);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       matchingDeparture = tour.departures?.find((dep) => {
@@ -206,7 +222,8 @@ export default function SearchScreen() {
       });
     }
 
-    const nearest = matchingDeparture || getNearestDeparture(tour.departures ?? []);
+    const nearest =
+      matchingDeparture || getNearestDeparture(tour.departures ?? []);
     const displayPrice = nearest?.price ?? null;
 
     router.push({
@@ -230,7 +247,10 @@ export default function SearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
+      <StatusBar
+        style="light"
+        backgroundColor={isDark ? "#1E222B" : "#D0021B"}
+      />
 
       {/* Persistent safe-area backdrop so the status bar always has a brand backdrop */}
       <View
@@ -251,7 +271,7 @@ export default function SearchScreen() {
             <ActivityIndicator size="large" color={palette.spinner} />
             <Text
               className={`mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               Đang tải danh sách tour...
             </Text>
@@ -302,7 +322,10 @@ export default function SearchScreen() {
                   </View>
                 ) : !hasNext && results.length > 0 ? (
                   <View className="py-3 items-center">
-                    <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
+                    <Text
+                      className="font-semibold text-slate-400"
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
                       ✓ Đã hiển thị tất cả tour
                     </Text>
                   </View>
@@ -313,7 +336,9 @@ export default function SearchScreen() {
             ListEmptyComponent={
               <View
                 className={`rounded-3xl p-9 items-center border border-dashed mt-2 ${
-                  isDark ? "bg-[#1E222B]/40 border-slate-700" : "bg-white border-slate-200"
+                  isDark
+                    ? "bg-[#1E222B]/40 border-slate-700"
+                    : "bg-white border-slate-200"
                 }`}
               >
                 <Text style={{ fontSize: 40 }}>🔍</Text>
@@ -325,7 +350,10 @@ export default function SearchScreen() {
                 >
                   Không tìm thấy tour
                 </Text>
-                <Text className="text-slate-400 text-center mt-1.5 mb-5" style={{ fontSize: 16 }}>
+                <Text
+                  className="text-slate-400 text-center mt-1.5 mb-5"
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
                   Thử thay đổi từ khoá hoặc bộ lọc.
                 </Text>
                 <TouchableOpacity
@@ -344,7 +372,7 @@ export default function SearchScreen() {
                   }}
                   className="px-6 py-2.5 rounded-xl bg-[#D0021B]"
                 >
-                  <Text className="text-white font-bold text-base">
+                  <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
                     Quay lại ban đầu
                   </Text>
                 </TouchableOpacity>
@@ -393,7 +421,10 @@ export default function SearchScreen() {
         <View className="px-5 pt-4 pb-1">
           <View className="flex-row items-center justify-between mb-3">
             <SectionHeader title="Tìm kiếm tour" />
-            <Text className="font-semibold text-slate-400" style={{ fontSize: 16 }}>
+            <Text
+              className="font-semibold text-slate-400"
+              style={{ fontSize: FONT_SIZE.xs }}
+            >
               {meta?.total ?? results.length} kết quả
             </Text>
           </View>

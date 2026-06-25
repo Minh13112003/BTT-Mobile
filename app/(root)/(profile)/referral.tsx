@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -77,7 +78,8 @@ export default function ReferralScreen() {
         {loading ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#D0021B"} />
-            <Text className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <Text className={`font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              style={{ fontSize: FONT_SIZE.xs }}>
               Đang tải thông tin...
             </Text>
           </View>
@@ -104,9 +106,10 @@ export default function ReferralScreen() {
               }`}>
                 Chia Sẻ Mã Giới Thiệu
               </Text>
-              <Text className={`text-base text-center mt-1 leading-5 ${
+              <Text className={`text-center mt-1 leading-6 ${
                 isDark ? "text-slate-400" : "text-slate-400"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Chia sẻ mã giới thiệu của bạn cho bạn bè đăng ký tài khoản để cả hai cùng nhận được nhiều ưu đãi hấp dẫn.
               </Text>
 
@@ -116,9 +119,10 @@ export default function ReferralScreen() {
                   ? "bg-slate-900/60 border-slate-700"
                   : "bg-slate-50 border-slate-300"
               }`}>
-                <Text className={`text-base font-bold uppercase tracking-wide ${
+                <Text className={`font-bold uppercase tracking-wide ${
                   isDark ? "text-slate-500" : "text-slate-400"
-                }`}>
+                }`}
+                  style={{ fontSize: FONT_SIZE.card }}>
                   Mã giới thiệu của bạn
                 </Text>
                 <Text className={`text-2xl font-black mt-1.5 uppercase tracking-widest ${
@@ -137,7 +141,7 @@ export default function ReferralScreen() {
                     : "bg-[#D0021B] shadow-red-500/20"
                 }`}
               >
-                <Text className="text-white font-bold text-base tracking-wide">
+                <Text className="text-white font-bold tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
                   Sao chép mã chia sẻ
                 </Text>
               </TouchableOpacity>
@@ -149,9 +153,10 @@ export default function ReferralScreen() {
                 ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             }`}>
-              <Text className={`text-base font-black tracking-tight mb-4 ${
+              <Text className={`font-black tracking-tight mb-4 ${
                 isDark ? "text-slate-100" : "text-slate-800"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Thống kê của bạn
               </Text>
 
@@ -164,9 +169,10 @@ export default function ReferralScreen() {
                   }`}>
                     {successReferrals}
                   </Text>
-                  <Text className={`text-base font-bold uppercase mt-1 ${
+                  <Text className={`font-bold uppercase mt-1 ${
                     isDark ? "text-slate-500" : "text-slate-400"
-                  }`}>
+                  }`}
+                    style={{ fontSize: FONT_SIZE.xs }}>
                     Đã giới thiệu
                   </Text>
                 </View>
@@ -176,9 +182,10 @@ export default function ReferralScreen() {
                   }`}>
                     {earnedPoints.toLocaleString("vi-VN")}
                   </Text>
-                  <Text className={`text-base font-bold uppercase mt-1 ${
+                  <Text className={`font-bold uppercase mt-1 ${
                     isDark ? "text-slate-500" : "text-slate-400"
-                  }`}>
+                  }`}
+                    style={{ fontSize: FONT_SIZE.xs }}>
                     Điểm nhận được
                   </Text>
                 </View>
@@ -191,9 +198,10 @@ export default function ReferralScreen() {
                 ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             }`}>
-              <Text className={`text-base font-black tracking-tight mb-4 ${
+              <Text className={`font-black tracking-tight mb-4 ${
                 isDark ? "text-slate-100" : "text-slate-800"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Quy trình hoạt động
               </Text>
 
@@ -220,21 +228,24 @@ export default function ReferralScreen() {
                       ? "bg-slate-700 border-slate-600"
                       : "bg-red-50 border-red-100"
                   }`}>
-                    <Text className={`font-black text-base ${
+                    <Text className={`font-black ${
                       isDark ? "text-blue-400" : "text-[#D0021B]"
-                    }`}>
+                    }`}
+                      style={{ fontSize: FONT_SIZE.xs }}>
                       {item.step}
                     </Text>
                   </View>
                   <View className="flex-1">
-                    <Text className={`text-base font-bold ${
+                    <Text className={`font-bold ${
                       isDark ? "text-slate-200" : "text-slate-800"
-                    }`}>
+                    }`}
+                      style={{ fontSize: FONT_SIZE.xs }}>
                       {item.title}
                     </Text>
-                    <Text className={`text-base mt-1 leading-4 ${
+                    <Text className={`mt-1 leading-6 ${
                       isDark ? "text-slate-400" : "text-slate-400"
-                    }`}>
+                    }`}
+                      style={{ fontSize: FONT_SIZE.xs }}>
                       {item.desc}
                     </Text>
                   </View>

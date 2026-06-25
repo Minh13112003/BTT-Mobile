@@ -1,4 +1,5 @@
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { getTipById, TravelTip } from "@/services/tips";
 import { Ionicons } from "@expo/vector-icons";
@@ -277,11 +278,11 @@ export default function TipDetailScreen() {
                 >
                   <Text
                     style={{
-                      fontSize: 14,
+                      fontSize: 18,
                       fontWeight: "600",
                       fontStyle: "italic",
                       color: isDark ? "#FCD34D" : "#825500",
-                      lineHeight: 22,
+                      lineHeight: 28,
                     }}
                   >
                     {item.excerpt}
@@ -305,7 +306,7 @@ export default function TipDetailScreen() {
                     source={{ html: cleanTextForVietnamese(item.content || "") }}
                     baseStyle={{
                       color: isDark ? "#CBD5E1" : "#334155",
-                      fontSize: 15,
+                      fontSize: 18,
                     }}
                     defaultTextProps={{
                       textBreakStrategy: "simple",
@@ -321,9 +322,9 @@ export default function TipDetailScreen() {
                     renderers={renderers}
                     tagsStyles={{
                       p: {
-                        fontSize: 15,
+                        fontSize: 18,
                         color: isDark ? "#CBD5E1" : "#334155",
-                        lineHeight: 24,
+                        lineHeight: 28,
                         marginBottom: 14,
                         textAlign: "left",
                       },
@@ -342,26 +343,26 @@ export default function TipDetailScreen() {
                       },
                       figcaption: {
                         textAlign: "center",
-                        fontSize: 13,
+                        fontSize: 16,
                         fontStyle: "italic",
                         color: isDark ? "#94A3B8" : "#64748B",
                         marginTop: 6,
-                        lineHeight: 18,
+                        lineHeight: 22,
                       },
                       h1: {
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: "bold",
                         marginVertical: 10,
                         color: isDark ? "#F8FAFC" : "#0F172A",
                       },
                       h2: {
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: "bold",
                         marginVertical: 8,
                         color: isDark ? "#F8FAFC" : "#0F172A",
                       },
                       h3: {
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: "bold",
                         marginVertical: 6,
                         color: isDark ? "#F8FAFC" : "#0F172A",
@@ -369,9 +370,9 @@ export default function TipDetailScreen() {
                       ul: { marginVertical: 8, paddingLeft: 16 },
                       ol: { marginVertical: 8, paddingLeft: 16 },
                       li: {
-                        fontSize: 15,
+                        fontSize: 18,
                         color: isDark ? "#CBD5E1" : "#334155",
-                        lineHeight: 22,
+                        lineHeight: 28,
                         marginBottom: 6,
                         textAlign: "left",
                       },
@@ -403,7 +404,7 @@ export default function TipDetailScreen() {
                             style={{
                               color: "#825500",
                               marginRight: 8,
-                              fontSize: 16,
+                              fontSize: FONT_SIZE.xs,
                             }}
                           >
                             •
@@ -412,9 +413,9 @@ export default function TipDetailScreen() {
                             textBreakStrategy="simple"
                             style={{
                               flex: 1,
-                              fontSize: 15,
+                              fontSize: FONT_SIZE.xs,
                               color: isDark ? "#CBD5E1" : "#334155",
-                              lineHeight: 24,
+                              lineHeight: 28,
                               textAlign: "left",
                             }}
                           >
@@ -429,9 +430,9 @@ export default function TipDetailScreen() {
                         key={index}
                         textBreakStrategy="simple"
                         style={{
-                          fontSize: 15,
+                          fontSize: FONT_SIZE.xs,
                           color: isDark ? "#CBD5E1" : "#334155",
-                          lineHeight: 24,
+                          lineHeight: 28,
                           marginBottom: 14,
                           textAlign: "left",
                         }}

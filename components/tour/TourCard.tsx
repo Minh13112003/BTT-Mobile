@@ -96,9 +96,10 @@ export function TourCard({
         >
           <Ionicons name="star" size={12} color="#F59E0B" />
           <Text
-            className={`text-base font-black ml-1 ${
+            className={`font-black ml-1 ${
               isDark ? "text-slate-100" : "text-slate-800"
             }`}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             {tour.rating}
           </Text>
@@ -108,7 +109,7 @@ export function TourCard({
             isDark ? "bg-slate-700/95" : "bg-[#D0021B]/90"
           }`}
         >
-          <Text className="text-base text-white font-black uppercase">
+          <Text className="text-white font-black uppercase" style={{ fontSize: FONT_SIZE.xs }}>
             {tour.duration}
           </Text>
         </View>
@@ -117,8 +118,8 @@ export function TourCard({
       {/* Tour Details */}
       <View className="p-4">
         <Text
-          style={{ fontSize: FONT_SIZE.md }}
-          className={`font-black leading-6 ${
+          style={{ fontSize: FONT_SIZE.xl }}
+          className={`font-black leading-8 ${
             isDark ? "text-slate-100" : "text-slate-800"
           }`}
           numberOfLines={2}
@@ -179,7 +180,7 @@ export function TourCard({
                 : "bg-[#D0021B] active:bg-[#A80016]"
             }`}
           >
-            <Text className="text-white font-bold text-base">
+            <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
               Xem chi tiết
             </Text>
           </TouchableOpacity>

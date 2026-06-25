@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { getVouchers, VoucherItem } from "@/services/voucher";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,7 +83,8 @@ export default function VouchersScreen() {
               color={isDark ? "#94A3B8" : "#D0021B"}
             />
             <Text
-              className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              className={`font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               Đang tải danh sách voucher...
             </Text>
@@ -122,23 +124,26 @@ export default function VouchersScreen() {
                   </View>
                   <View className="ml-4 flex-1">
                     <Text
-                      className={`text-base font-black uppercase tracking-wider ${
+                      className={`font-black uppercase tracking-wider ${
                         isDark ? "text-blue-400" : "text-[#D0021B]"
                       }`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {item.subtitle}
                     </Text>
                     <Text
-                      className={`text-base font-black mt-0.5 ${
+                      className={`font-black mt-0.5 ${
                         isDark ? "text-slate-100" : "text-slate-800"
                       }`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {item.title}
                     </Text>
                     <Text
-                      className={`text-base font-semibold mt-1 ${
+                      className={`font-semibold mt-1 ${
                         isDark ? "text-slate-400" : "text-slate-400"
                       }`}
+                      style={{ fontSize: FONT_SIZE.card }}
                     >
                       {item.expiry}
                     </Text>
@@ -147,9 +152,10 @@ export default function VouchersScreen() {
 
                 {/* Description */}
                 <Text
-                  className={`text-base mt-4 leading-5 ${
+                  className={`mt-4 leading-6 ${
                     isDark ? "text-slate-300" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   {item.description}
                 </Text>
@@ -169,16 +175,18 @@ export default function VouchersScreen() {
                 >
                   <View>
                     <Text
-                      className={`text-base font-bold uppercase ${
+                      className={`font-bold uppercase ${
                         isDark ? "text-slate-500" : "text-slate-400"
                       }`}
+                      style={{ fontSize: FONT_SIZE.card }}
                     >
                       Mã ưu đãi
                     </Text>
                     <Text
-                      className={`text-base font-black mt-0.5 uppercase tracking-wider ${
+                      className={`font-black mt-0.5 uppercase tracking-wider ${
                         isDark ? "text-blue-400" : "text-[#1E3A8A]"
                       }`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {item.code}
                     </Text>
@@ -192,7 +200,7 @@ export default function VouchersScreen() {
                         : "bg-[#D0021B]"
                     }`}
                   >
-                    <Text className="text-white font-bold text-base">
+                    <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
                       Sao chép mã
                     </Text>
                   </TouchableOpacity>

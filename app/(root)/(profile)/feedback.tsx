@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -96,7 +97,8 @@ export default function FeedbackScreen() {
                 ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             } mb-5`}>
-              <Text className={`text-base font-bold leading-5 ${isDark ? "text-slate-200" : "text-slate-700"}`}>
+              <Text className={`font-bold leading-6 ${isDark ? "text-slate-200" : "text-slate-700"}`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 BenThanh Tourist luôn sẵn sàng lắng nghe ý kiến đóng góp của Quý khách để không ngừng cải tiến và đem lại dịch vụ tốt nhất.
               </Text>
             </View>
@@ -108,9 +110,10 @@ export default function FeedbackScreen() {
                 : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
             }`}>
               {/* Họ và Tên (Prefilled) */}
-              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Người gửi
               </Text>
               <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -119,7 +122,8 @@ export default function FeedbackScreen() {
                   : "bg-slate-100 border-slate-100"
               }`}>
                 <Ionicons name="person-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                <Text className={`ml-3 font-semibold text-base ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                <Text className={`ml-3 font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                   {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : "Khách hàng"}
@@ -128,9 +132,10 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Email (Prefilled) */}
-              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Địa chỉ Email
               </Text>
               <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -139,16 +144,18 @@ export default function FeedbackScreen() {
                   : "bg-slate-100 border-slate-100"
               }`}>
                 <Ionicons name="mail-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                <Text className={`ml-3 font-semibold text-base ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                <Text className={`ml-3 font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                   {user?.email || "Chưa cập nhật"}
                 </Text>
                 <Ionicons name="lock-closed" size={16} color={isDark ? "#6B7280" : "#94A3B8"} style={{ marginLeft: "auto" }} />
               </View>
 
               {/* Chủ đề góp ý */}
-              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Chủ đề góp ý
               </Text>
               <View
@@ -168,9 +175,10 @@ export default function FeedbackScreen() {
                   color={focusedField === "subject" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
                 />
                 <TextInput
-                  className={`flex-1 h-full ml-3 font-semibold text-base ${
+                  className={`flex-1 h-full ml-3 font-semibold ${
                     isDark ? "text-slate-100" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                   placeholder="Ví dụ: Đóng góp ý kiến dịch vụ Tour, App..."
                   placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                   value={subject}
@@ -181,9 +189,10 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Nội dung góp ý */}
-              <Text className={`text-base font-bold mb-2 uppercase tracking-wider pl-1 ${
+              <Text className={`font-bold mb-2 uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
-              }`}>
+              }`}
+                style={{ fontSize: FONT_SIZE.xs }}>
                 Nội dung góp ý chi tiết
               </Text>
               <View
@@ -198,15 +207,15 @@ export default function FeedbackScreen() {
                 }`}
               >
                 <TextInput
-                  className={`w-full font-semibold text-base ${
+                  className={`w-full font-semibold ${
                     isDark ? "text-slate-100" : "text-slate-800"
                   }`}
+                  style={{ minHeight: 120, fontSize: FONT_SIZE.xs }}
                   placeholder="Hãy chia sẻ ý kiến của bạn ở đây..."
                   placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                   multiline
                   numberOfLines={6}
                   textAlignVertical="top"
-                  style={{ minHeight: 120 }}
                   value={content}
                   onChangeText={setContent}
                   onFocus={() => setFocusedField("content")}
@@ -228,7 +237,7 @@ export default function FeedbackScreen() {
                 {sending ? (
                   <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
                 ) : (
-                  <Text className="text-white font-bold text-base tracking-wide">
+                  <Text className="text-white font-bold tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
                     Gửi góp ý ngay
                   </Text>
                 )}

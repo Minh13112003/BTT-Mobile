@@ -224,7 +224,8 @@ export default function HistoryScreen() {
         {loading && !refreshing ? (
           <View className="flex-1 justify-center items-center" style={{ paddingTop: chromeH }}>
             <ActivityIndicator size="large" color={palette.spinner} />
-            <Text className={`text-base font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <Text className={`font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+              style={{ fontSize: FONT_SIZE.xs }}>
               Đang tải lịch sử giao dịch...
             </Text>
           </View>
@@ -271,11 +272,12 @@ export default function HistoryScreen() {
               >
                 <Ionicons name="receipt-outline" size={48} color="#9CA3AF" />
                 <Text
-                  className={`font-bold text-base mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  className={`font-bold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Bạn chưa có giao dịch nào
                 </Text>
-                <Text className="text-slate-400 text-base text-center mt-1">
+                <Text className="text-slate-400 text-center mt-1" style={{ fontSize: FONT_SIZE.xs }}>
                   Mọi giao dịch đặt tour du lịch của bạn sẽ hiển thị tại đây.
                 </Text>
               </View>
@@ -350,41 +352,51 @@ export default function HistoryScreen() {
                     <View className="flex-row items-center mb-2">
                       <Ionicons
                         name="calendar-outline"
-                        size={15}
+                        size={FONT_SIZE.xs}
                         color={isDark ? "#94A3B8" : "#9CA3AF"}
                       />
                       <Text
                         style={{ fontSize: FONT_SIZE.xs }}
-                        className={`ml-2 font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                        className={`ml-2 font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
                       >
-                        Khởi hành: {formatDepartureDate(item.departure?.departureDate)} ·{" "}
-                        {item.tour.duration}
+                        Khởi hành: {formatDepartureDate(item.departure?.departureDate)} · {item.tour.duration}
                       </Text>
                     </View>
 
-                    {/* Guests + voucher / booking date */}
+                    {/* Guests row */}
                     <View className="flex-row items-center mb-2">
                       <Ionicons
                         name="person-outline"
-                        size={15}
+                        size={FONT_SIZE.xs}
                         color={isDark ? "#94A3B8" : "#9CA3AF"}
                       />
                       <Text
                         style={{ fontSize: FONT_SIZE.xs }}
-                        className={`ml-2 font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}
-                        numberOfLines={1}
+                        className={`ml-2 font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
                       >
-                        {item.quantity} khách ·{" "}
-                        {item.voucher
-                          ? `Voucher: ${item.voucher.code}`
-                          : `Ngày đặt: ${formatDateTime(item.createdAt)}`}
+                        {item.quantity} khách
+                      </Text>
+                    </View>
+
+                    {/* Booking date row */}
+                    <View className="flex-row items-center mb-2">
+                      <Ionicons
+                        name="time-outline"
+                        size={FONT_SIZE.xs}
+                        color={isDark ? "#94A3B8" : "#9CA3AF"}
+                      />
+                      <Text
+                        style={{ fontSize: FONT_SIZE.xs }}
+                        className={`ml-2 font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      >
+                        Ngày đặt: {formatDateTime(item.createdAt)}
                       </Text>
                     </View>
 
                     {/* Price row */}
                     <View className="flex-row items-center flex-wrap">
-                      <Ionicons name="cash-outline" size={15} color="#D0021B" />
-                      <Text className="ml-2 text-[#D0021B] font-black" style={{ fontSize: 16 }}>
+                      <Ionicons name="cash-outline" size={FONT_SIZE.xs} color="#D0021B" />
+                      <Text className="ml-2 text-[#D0021B] font-black" style={{ fontSize: FONT_SIZE.xs }}>
                         {formatCurrency(item.price)}
                       </Text>
                       {hasDiscount && (
@@ -522,7 +534,7 @@ export default function HistoryScreen() {
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: 20 }}
                     className={`font-bold ${
                       isActive
                         ? "text-white"

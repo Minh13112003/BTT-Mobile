@@ -1,7 +1,13 @@
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import {
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 /** Tỉ lệ gốc của logo (cao / rộng) để co giãn mà không méo. */
@@ -59,15 +65,48 @@ export default function Header({
             </TouchableOpacity>
           )}
           {title === "BENTHANH TOURIST" ? (
-            <Image
-              source={
-                isDark
-                  ? require("../assets/images/Logo_BTT-2018-02.png")
-                  : require("../assets/images/Logo_BTT-2018.png")
-              }
-              style={{ width: logoWidth, height: logoHeight, flexShrink: 1 }}
-              resizeMode="contain"
-            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ marginRight: 8, alignItems: "flex-end" }}>
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontWeight: "bold",
+                    fontSize: 20,
+                    lineHeight: 20,
+                    textAlign: "right",
+                  }}
+                >
+                  BenThanh
+                </Text>
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontWeight: "bold",
+                    fontSize: 20,
+                    lineHeight: 20,
+                    textAlign: "right",
+                  }}
+                >
+                  Tourist
+                </Text>
+                <Text
+                  style={{
+                    color: "rgba(255, 255, 255, 0.85)",
+                    fontSize: 8,
+                    fontStyle: "italic",
+                    marginTop: 2,
+                    textAlign: "right",
+                  }}
+                >
+                  journey to your heart
+                </Text>
+              </View>
+              <Image
+                source={require("../assets/images/Logo_BTT-2024.png")}
+                style={{ width: 72, height: 72 }}
+                resizeMode="contain"
+              />
+            </View>
           ) : (
             <Text
               numberOfLines={1}
@@ -79,9 +118,8 @@ export default function Header({
         </View>
 
         {showActions && (
-          /* Group Header Actions */
           <View className="flex-row items-center flex-shrink-0 pl-3">
-            {/* Nút chuyển đổi Giao diện */}
+            {/* Nút chuyển đổi giao diện */}
             <TouchableOpacity
               onPress={toggleTheme}
               activeOpacity={0.7}
@@ -93,7 +131,6 @@ export default function Header({
                 color="#FFFFFF"
               />
             </TouchableOpacity>
-
           </View>
         )}
       </View>

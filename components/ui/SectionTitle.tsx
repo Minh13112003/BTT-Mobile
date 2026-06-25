@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import React from "react";
 import { Text, View } from "react-native";
@@ -8,11 +9,12 @@ export function SectionTitle({ title }: { title: string }) {
   const isDark = theme === "dark";
   return (
     <View className="flex-row items-center mb-3">
-      <View className="w-1 h-3.5 rounded-sm bg-[#D0021B] mr-2" />
+      <View className="w-1 h-5 rounded-sm bg-[#D0021B] mr-2" />
       <Text
-        className={`text-base font-black uppercase tracking-wider ${
+        className={`font-black uppercase tracking-wider ${
           isDark ? "text-slate-100" : "text-slate-800"
         }`}
+        style={{ fontSize: FONT_SIZE.xl }}
       >
         {title}
       </Text>

@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getBookingById } from "@/services/booking";
@@ -246,9 +247,10 @@ export default function DetailTourScreen() {
               color={isDark ? "#94A3B8" : "#D0021B"}
             />
             <Text
-              className={`text-base font-semibold mt-3 ${
+              className={`font-semibold mt-3 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               Đang tải thông tin chi tiết...
             </Text>
@@ -261,9 +263,10 @@ export default function DetailTourScreen() {
               color={isDark ? "#EF4444" : "#DC2626"}
             />
             <Text
-              className={`text-base font-bold mt-4 text-center ${
+              className={`font-bold mt-4 text-center ${
                 isDark ? "text-slate-200" : "text-slate-800"
               }`}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               {error || "Đã xảy ra lỗi khi tải dữ liệu"}
             </Text>
@@ -273,7 +276,7 @@ export default function DetailTourScreen() {
                 isDark ? "bg-slate-700" : "bg-[#D0021B]"
               }`}
             >
-              <Text className="text-white font-bold text-base">Thử lại</Text>
+              <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Thử lại</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -320,20 +323,21 @@ export default function DetailTourScreen() {
                 >
                   <Ionicons name="star" size={14} color="#F59E0B" />
                   <Text
-                    className={`text-base font-black ml-1 ${
+                    className={`font-black ml-1 ${
                       isDark ? "text-slate-100" : "text-slate-800"
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     {booking.tour.rating}
                   </Text>
-                  <Text className="text-base text-slate-400 ml-0.5">
+                  <Text className="text-slate-400 ml-0.5" style={{ fontSize: FONT_SIZE.xs }}>
                     ({booking.tour.reviewsCount})
                   </Text>
                 </View>
 
                 {/* Duration Badge */}
                 <View className="absolute bottom-4 left-4 bg-[#D0021B] px-3.5 py-1.5 rounded-2xl shadow-md">
-                  <Text className="text-base text-white font-black uppercase tracking-wider">
+                  <Text className="text-white font-black uppercase tracking-wider" style={{ fontSize: FONT_SIZE.xs }}>
                     {booking.tour.duration}
                   </Text>
                 </View>
@@ -342,16 +346,17 @@ export default function DetailTourScreen() {
               {/* Title & Info */}
               <View className="p-5">
                 <Text
-                  className={`text-base font-black leading-6 ${
+                  className={`font-black leading-8 ${
                     isDark ? "text-slate-100" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xl }}
                 >
                   {booking.tour.name}
                 </Text>
 
                 <View className="flex-row items-start justify-between mt-4 pt-4 border-t border-slate-100/50">
                   <View className="flex-1 mr-3">
-                    <Text className="text-base font-bold text-slate-400 uppercase tracking-wide">
+                    <Text className="font-bold text-slate-400 uppercase tracking-wide" style={{ fontSize: FONT_SIZE.card }}>
                       Đơn giá trọn gói
                     </Text>
 
@@ -372,9 +377,10 @@ export default function DetailTourScreen() {
                     }`}
                   >
                     <Text
-                      className={`text-base font-black ${
+                      className={`font-black ${
                         isDark ? "text-slate-300" : "text-red-500"
                       }`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {booking.tour.hasVat ? "Đã bao gồm VAT" : "Chưa gồm VAT"}
                     </Text>
@@ -386,19 +392,21 @@ export default function DetailTourScreen() {
             {/* 2. ORDER DETAILS CARD */}
             <View className={sectionCardClass}>
               <Text
-                className={`text-base font-black mb-4 uppercase tracking-wider ${
+                className={`font-black mb-4 uppercase tracking-wider ${
                   isDark ? "text-slate-300" : "text-slate-700"
                 }`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 Thông tin giao dịch
               </Text>
 
               {/* Status Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Trạng thái đơn hàng
                 </Text>
@@ -435,9 +443,10 @@ export default function DetailTourScreen() {
                     }
                   />
                   <Text
-                    className={`text-base font-black ml-1 uppercase tracking-wide ${
+                    className={`font-black ml-1 uppercase tracking-wide ${
                       getStatusBadgeConfig(booking.status).text
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     {MAP_STATUS_VN[booking.status] || booking.status}
                   </Text>
@@ -452,11 +461,12 @@ export default function DetailTourScreen() {
               />
 
               {/* Tour Code Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Mã Tour
                 </Text>
@@ -466,9 +476,10 @@ export default function DetailTourScreen() {
                   className="flex-row items-center"
                 >
                   <Text
-                    className={`text-base font-black mr-1 ${
+                    className={`font-black mr-1 ${
                       isDark ? "text-slate-200" : "text-slate-700"
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     {booking?.departure?.tourCode ?? booking.tour.code ?? "-"}
                   </Text>
@@ -488,18 +499,20 @@ export default function DetailTourScreen() {
               />
 
               {/* Departure Date Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Ngày khởi hành
                 </Text>
                 <Text
-                  className={`text-base font-black ${
+                  className={`font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   {booking?.departure?.departureDate
                     ? formatDepartureDate(booking.departure.departureDate)
@@ -510,12 +523,13 @@ export default function DetailTourScreen() {
               {/* Reminder Row */}
               <View className="pb-2">
                 <Text
-                  className={`text-sm italic ${
+                  className={`italic ${
                     isDark ? "text-amber-400" : "text-amber-600"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   * Thời gian chi tiết xin hãy xem ở phần{" "}
-                  <Text className="font-extrabold not-italic uppercase">
+                  <Text className="font-extrabold not-italic uppercase" style={{ fontSize: FONT_SIZE.xs }}>
                     LỊCH TRÌNH CHI TIẾT
                   </Text>
                 </Text>
@@ -529,19 +543,21 @@ export default function DetailTourScreen() {
               />
 
               {/* Quantity Row */}
-              <View className="py-2.5">
-                <View className="flex-row justify-between items-center">
+              <View className="py-3.5">
+                <View className="flex-col items-start gap-2">
                   <Text
-                    className={`text-base font-semibold ${
+                    className={`font-semibold ${
                       isDark ? "text-slate-400" : "text-slate-500"
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     Số lượng đặt
                   </Text>
                   <Text
-                    className={`text-base font-black ${
+                    className={`font-black ${
                       isDark ? "text-slate-200" : "text-slate-800"
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
                     {booking.quantity} khách
                   </Text>
@@ -561,11 +577,12 @@ export default function DetailTourScreen() {
                           color={isDark ? "#94A3B8" : "#64748B"}
                         />
                         <Text
-                          className={`ml-1 text-sm font-semibold ${
+                          className={`ml-1 font-semibold ${
                             isDark ? "text-slate-300" : "text-slate-600"
                           }`}
+                          style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Người lớn: <Text className="font-black">{booking.passengers.adults}</Text>
+                          Người lớn: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.adults}</Text>
                         </Text>
                       </View>
                     )}
@@ -577,11 +594,12 @@ export default function DetailTourScreen() {
                           color={isDark ? "#94A3B8" : "#64748B"}
                         />
                         <Text
-                          className={`ml-1 text-sm font-semibold ${
+                          className={`ml-1 font-semibold ${
                             isDark ? "text-slate-300" : "text-slate-600"
                           }`}
+                          style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Trẻ em: <Text className="font-black">{booking.passengers.children}</Text>
+                          Trẻ em: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.children}</Text>
                         </Text>
                       </View>
                     )}
@@ -593,11 +611,12 @@ export default function DetailTourScreen() {
                           color={isDark ? "#94A3B8" : "#64748B"}
                         />
                         <Text
-                          className={`ml-1 text-sm font-semibold ${
+                          className={`ml-1 font-semibold ${
                             isDark ? "text-slate-300" : "text-slate-600"
                           }`}
+                          style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Em bé: <Text className="font-black">{booking.passengers.infants}</Text>
+                          Em bé: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.infants}</Text>
                         </Text>
                       </View>
                     )}
@@ -611,14 +630,16 @@ export default function DetailTourScreen() {
                   <View
                     className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                   />
-                  <View className="flex-row justify-between items-center py-2.5">
+                  <View className="flex-col items-start gap-2 py-3.5">
                     <Text
-                      className={`text-base font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       Tạm tính
                     </Text>
                     <Text
-                      className={`text-base font-black ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      className={`font-black ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {formatCurrency(booking.originalPrice)}
                     </Text>
@@ -633,11 +654,11 @@ export default function DetailTourScreen() {
                     <View
                       className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                     />
-                    <View className="flex-row justify-between items-center py-2.5">
-                      <Text className="text-base font-semibold text-green-500">
+                    <View className="flex-col items-start gap-2 py-3.5">
+                      <Text className="font-semibold text-green-500" style={{ fontSize: FONT_SIZE.xs }}>
                         Giảm giá voucher
                       </Text>
-                      <Text className="text-base font-black text-green-500">
+                      <Text className="font-black text-green-500" style={{ fontSize: FONT_SIZE.xs }}>
                         -{formatCurrency(booking.discountAmount)}
                       </Text>
                     </View>
@@ -650,9 +671,10 @@ export default function DetailTourScreen() {
                   <View
                     className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                   />
-                  <View className="flex-row justify-between items-center py-2.5 flex-wrap gap-y-1">
+                  <View className="flex-col items-start gap-2 py-3.5">
                     <Text
-                      className={`text-base font-semibold flex-shrink-0 mr-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`font-semibold flex-shrink-0 mr-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       Voucher đã áp dụng
                     </Text>
@@ -663,7 +685,8 @@ export default function DetailTourScreen() {
                         color={isDark ? "#93C5FD" : "#D0021B"}
                       />
                       <Text
-                        className="text-base font-extrabold text-blue-500 dark:text-blue-400 ml-1"
+                        className="font-extrabold text-blue-500 dark:text-blue-400 ml-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                         minimumFontScale={0.8}
@@ -681,14 +704,16 @@ export default function DetailTourScreen() {
                   <View
                     className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                   />
-                  <View className="flex-col py-2.5">
+                  <View className="flex-col py-3.5">
                     <Text
-                      className={`text-base font-semibold mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      className={`font-semibold mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       Ghi chú đặt tour
                     </Text>
                     <Text
-                      className={`text-base italic ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      className={`italic ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
                     >
                       {booking.notice}
                     </Text>
@@ -704,18 +729,20 @@ export default function DetailTourScreen() {
               />
 
               {/* Price Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Tổng thanh toán
                 </Text>
                 <Text
-                  className={`text-base font-black ${
+                  className={`font-black ${
                     isDark ? "text-slate-200" : "text-[#D0021B]"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   {formatCurrency(booking.price)}
                 </Text>
@@ -729,18 +756,20 @@ export default function DetailTourScreen() {
               />
 
               {/* Created At Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Thời gian đặt
                 </Text>
                 <Text
-                  className={`text-base font-black ${
+                  className={`font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   {formatDateTime(booking.createdAt)}
                 </Text>
@@ -754,18 +783,20 @@ export default function DetailTourScreen() {
               />
 
               {/* Updated At Row */}
-              <View className="flex-row justify-between items-center py-2.5">
+              <View className="flex-col items-start gap-2 py-3.5">
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`font-semibold ${
                     isDark ? "text-slate-400" : "text-slate-500"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   Cập nhật cuối
                 </Text>
                 <Text
-                  className={`text-base font-black ${
+                  className={`font-black ${
                     isDark ? "text-slate-200" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
                   {formatDateTime(booking.updatedAt)}
                 </Text>
@@ -779,23 +810,25 @@ export default function DetailTourScreen() {
                       isDark ? "bg-slate-700/40" : "bg-slate-100"
                     }`}
                   />
-                  <View className="py-2.5">
-                    <View className="flex-row justify-between items-center">
+                  <View className="py-3.5">
+                    <View className="flex-col items-start gap-2">
                       <Text
-                        className={`text-base font-semibold ${
+                        className={`font-semibold ${
                           isDark ? "text-slate-400" : "text-slate-500"
                         }`}
+                        style={{ fontSize: FONT_SIZE.xs }}
                       >
                         Phương thức thanh toán
                       </Text>
                       <View className="flex-row items-center">
-                        <Text className="mr-1 text-base">
+                        <Text className="mr-1 text-base" style={{ fontSize: FONT_SIZE.xs }}>
                           {booking.paymentMethod === "AT_OFFICE" ? "🏢" : "🏦"}
                         </Text>
                         <Text
-                          className={`text-base font-black ${
+                          className={`font-black ${
                             isDark ? "text-slate-200" : "text-slate-800"
                           }`}
+                          style={{ fontSize: FONT_SIZE.xs }}
                         >
                           {booking.paymentMethod === "AT_OFFICE"
                             ? "Tại Văn Phòng"
@@ -811,8 +844,8 @@ export default function DetailTourScreen() {
                         }`}
                       >
                         <Text
-                          style={{ lineHeight: 22 }}
-                          className={`text-base ${
+                          style={{ lineHeight: 22, fontSize: FONT_SIZE.xs }}
+                          className={`${
                             isDark ? "text-slate-300" : "text-slate-700"
                           }`}
                         >
@@ -848,7 +881,8 @@ export default function DetailTourScreen() {
                     style={{ marginTop: 1 }}
                   />
                   <Text
-                    className={`flex-1 ml-2 text-base italic leading-5 ${isDark ? "text-amber-300" : "text-amber-700"}`}
+                    className={`flex-1 ml-2 italic leading-5 ${isDark ? "text-amber-300" : "text-amber-700"}`}
+                    style={{ fontSize: FONT_SIZE.card }}
                   >
                     Lưu ý: Đây là lịch trình dự kiến cho chuyến đi, lịch trình
                     chi tiết chúng tôi sẽ cập nhật cho quý khách trước ngày khởi

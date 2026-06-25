@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
@@ -240,13 +241,13 @@ const styles = {
     paddingRight: 16, // space for close button
   } as ViewStyle,
   title: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
-    lineHeight: 22,
+    lineHeight: 24,
   } as TextStyle,
   message: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: FONT_SIZE.xs,
+    lineHeight: 24,
     marginTop: 4,
   } as TextStyle,
   buttonRow: {
@@ -258,7 +259,7 @@ const styles = {
     paddingVertical: 4,
   } as ViewStyle,
   actionText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
     letterSpacing: 0.5,
   } as TextStyle,
@@ -266,7 +267,7 @@ const styles = {
     paddingVertical: 4,
   } as ViewStyle,
   dismissText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
     letterSpacing: 0.5,
   } as TextStyle,

@@ -1,7 +1,8 @@
 import { Footer } from "@/components/Footer";
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
-import { getTipDestinations, getTips, TIPS_DESTINATIONS, TravelTip } from "@/services/tips";
+import { getTips, TravelTip } from "@/services/tips";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -19,43 +20,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function DestChip({
-  label,
-  active,
-  onPress,
-  isDark,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  isDark: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 99,
-        borderWidth: 1,
-        marginRight: 8,
-        backgroundColor: active ? "#D0021B" : isDark ? "#1E222B" : "#FFFFFF",
-        borderColor: active ? "#D0021B" : isDark ? "#374151" : "#E2E8F0",
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: "700",
-          color: active ? "#FFFFFF" : isDark ? "#CBD5E1" : "#475569",
-        }}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
 
 function TipCard({
   item,
@@ -109,13 +73,12 @@ function TipCard({
       <View style={{ padding: 14 }}>
         <Text
           textBreakStrategy="simple"
-
           allowFontScaling={false}
           style={{
-            fontSize: 16,
+            fontSize: 22,
             fontWeight: "700",
             color: isDark ? "#F1F5F9" : "#1E293B",
-            lineHeight: 23,
+            lineHeight: 30,
             marginBottom: 6,
           }}
           numberOfLines={2}
@@ -124,12 +87,11 @@ function TipCard({
         </Text>
         <Text
           textBreakStrategy="simple"
-
           allowFontScaling={false}
           style={{
-            fontSize: 14,
+            fontSize: 18,
             color: isDark ? "#94A3B8" : "#64748B",
-            lineHeight: 21,
+            lineHeight: 26,
             marginBottom: 12,
           }}
           numberOfLines={2}
@@ -137,35 +99,37 @@ function TipCard({
           {item.excerpt}
         </Text>
 
-        {/* Tags */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 12 }}
-          contentContainerStyle={{ gap: 6 }}
-        >
-          {item.tags.map((tag) => (
-            <View
-              key={tag}
-              style={{
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 6,
-                backgroundColor: isDark ? "#1F2937" : "#F1F5F9",
-              }}
-            >
-              <Text
+        {/* Tags — only render when non-empty to avoid blank space */}
+        {item.tags.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 12 }}
+            contentContainerStyle={{ gap: 6 }}
+          >
+            {item.tags.map((tag) => (
+              <View
+                key={tag}
                 style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: isDark ? "#94A3B8" : "#64748B",
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 6,
+                  backgroundColor: isDark ? "#1F2937" : "#F1F5F9",
                 }}
               >
-                #{tag}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "600",
+                    color: isDark ? "#94A3B8" : "#64748B",
+                  }}
+                >
+                  #{tag}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        )}
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           {/* See tours button */}
@@ -182,7 +146,7 @@ function TipCard({
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "#D0021B" }}>
+              <Text style={{ fontSize: FONT_SIZE.card, fontWeight: "700", color: "#D0021B" }}>
                 🗺️ Tour {item.destination}
               </Text>
             </TouchableOpacity>
@@ -200,7 +164,7 @@ function TipCard({
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
+            <Text style={{ fontSize: FONT_SIZE.card, fontWeight: "700", color: "#FFFFFF" }}>
               Đọc tiếp →
             </Text>
           </TouchableOpacity>
@@ -223,17 +187,11 @@ export default function TipsScreen() {
   const [tips, setTips] = useState<TravelTip[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [destination, setDestination] = useState("Tất cả");
-  const [destinations, setDestinations] = useState<string[]>(TIPS_DESTINATIONS);
 
-  useEffect(() => {
-    getTipDestinations().then(setDestinations).catch(() => {});
-  }, []);
-
-  const load = async (dest: string, silent = false) => {
+  const load = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await getTips(dest === "Tất cả" ? undefined : dest);
+      const res = await getTips();
       setTips(Array.isArray(res.data) ? res.data : []);
     } catch {}
     setLoading(false);
@@ -241,8 +199,8 @@ export default function TipsScreen() {
   };
 
   useEffect(() => {
-    load(destination);
-  }, [destination]);
+    load();
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
@@ -292,31 +250,6 @@ export default function TipsScreen() {
         </View>
       </View>
 
-      {/* Destination filter */}
-      <View
-        style={{
-          backgroundColor: isDark ? "#161B25" : "#FFFFFF",
-          borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#2D3748" : "#E5E8F3",
-          paddingVertical: 10,
-        }}
-      >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
-          {destinations.map((d) => (
-            <DestChip
-              key={d}
-              label={d}
-              active={destination === d}
-              onPress={() => setDestination(d)}
-              isDark={isDark}
-            />
-          ))}
-        </ScrollView>
-      </View>
 
       {/* List */}
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
@@ -326,7 +259,7 @@ export default function TipsScreen() {
             <Text
               style={{
                 marginTop: 10,
-                fontSize: 15,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "600",
                 color: isDark ? "#94A3B8" : "#64748B",
               }}
@@ -351,7 +284,7 @@ export default function TipsScreen() {
                 refreshing={refreshing}
                 onRefresh={() => {
                   setRefreshing(true);
-                  load(destination, true);
+                  load(true);
                 }}
                 tintColor={palette.spinner}
               />
@@ -380,7 +313,7 @@ export default function TipsScreen() {
                 <Text
                   style={{
                     marginTop: 12,
-                    fontSize: 16,
+                    fontSize: FONT_SIZE.xs,
                     fontWeight: "700",
                     color: isDark ? "#94A3B8" : "#64748B",
                   }}

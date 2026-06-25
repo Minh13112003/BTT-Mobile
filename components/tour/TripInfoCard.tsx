@@ -25,7 +25,7 @@ function InfoRow({
   if (!value) return null;
   return (
     <View
-      className={`flex-row items-start justify-between py-2.5 ${
+      className={`flex-row items-center justify-between py-2.5 ${
         top
           ? isDark
             ? "border-t border-[#232938]"
@@ -138,7 +138,7 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
           style={{ borderLeftWidth: 3, borderLeftColor: "#F59E0B" }}
         >
           <Text
-            style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }}
+            style={{ fontSize: FONT_SIZE.card, lineHeight: 22 }}
             className={`italic ${
               isDark ? "text-amber-200" : "text-amber-700"
             }`}

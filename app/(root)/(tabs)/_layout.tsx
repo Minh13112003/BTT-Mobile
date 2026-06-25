@@ -1,8 +1,8 @@
+import { useNotification } from "@/context/Notification_Context";
 import {
   ScrollVisibilityProvider,
   useScrollVisibility,
 } from "@/context/ScrollVisibility_Context";
-import { useNotification } from "@/context/Notification_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -72,8 +72,10 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           const label =
             typeof options.title === "string" ? options.title : route.name;
           const focused = state.index === index;
-          const icon =
-            ICONS[route.name] ?? { on: "ellipse", off: "ellipse-outline" };
+          const icon = ICONS[route.name] ?? {
+            on: "ellipse",
+            off: "ellipse-outline",
+          };
           const color = focused ? ACTIVE : inactive;
 
           const onPress = () => {
@@ -88,7 +90,12 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           };
 
           const isNotif = route.name === "notifications";
-          const badge = isNotif && unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : null;
+          const badge =
+            isNotif && unreadCount > 0
+              ? unreadCount > 99
+                ? "99+"
+                : String(unreadCount)
+              : null;
 
           return (
             <TouchableOpacity
@@ -97,7 +104,11 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityState={focused ? { selected: true } : {}}
               onPress={onPress}
               activeOpacity={0.7}
-              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <View style={{ position: "relative" }}>
                 <Ionicons
@@ -113,8 +124,8 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                       right: -8,
                       backgroundColor: "#D0021B",
                       borderRadius: 99,
-                      minWidth: 16,
-                      height: 16,
+                      minWidth: 18,
+                      height: 18,
                       paddingHorizontal: 3,
                       alignItems: "center",
                       justifyContent: "center",
@@ -123,9 +134,9 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                     <Text
                       style={{
                         color: "#FFFFFF",
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: "900",
-                        lineHeight: 14,
+                        lineHeight: 16,
                       }}
                     >
                       {badge}
@@ -135,7 +146,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               </View>
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: "700",
                   color,
                   marginTop: 3,

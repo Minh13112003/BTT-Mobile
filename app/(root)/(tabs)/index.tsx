@@ -1,5 +1,6 @@
 import { CollapsingHeader } from "@/components/CollapsingHeader";
 import { Footer } from "@/components/Footer";
+import { FONT_SIZE } from "@/constants/typography";
 import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
 import { SectionRow } from "@/components/tour/SectionHeader";
@@ -67,7 +68,7 @@ function QuickIcon({
       </View>
       <Text
         style={{
-          fontSize: 12,
+          fontSize: FONT_SIZE.card,
           fontWeight: "700",
           color: isDark ? "#94A3B8" : "#475569",
           textAlign: "center",
@@ -209,7 +210,7 @@ export default function HomeScreen() {
   const renderSection = (mode: SearchMode) => {
     const data = sections[mode];
     return (
-      <View key={mode}>
+      <View key={mode} className="mt-9">
         <SectionRow
           title={SECTION_LABELS[mode]}
           onSeeAll={() => openSearch({ mode })}
@@ -222,7 +223,7 @@ export default function HomeScreen() {
           ) : (
             <Text
               className={`font-semibold ${isDark ? "text-slate-500" : "text-slate-400"}`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               Chưa có tour trong mục này.
             </Text>
@@ -260,7 +261,7 @@ export default function HomeScreen() {
           {!!user && (
             <TouchableOpacity
               activeOpacity={0.85}
-              className="px-5 mt-4"
+              className="px-5 mt-6"
               style={{ overflow: "visible" }}
               onPress={() =>
                 router.push({
@@ -269,7 +270,7 @@ export default function HomeScreen() {
                 })
               }
             >
-              <View style={{ overflow: "visible", alignItems: "center", paddingVertical: 10 }}>
+              <View style={{ alignItems: "center", paddingVertical: 10 }}>
                 <RedesignedMembershipBanner
                   earnedPoints={earnedPoints}
                   rewardPoints={rewardPoints}
@@ -281,9 +282,10 @@ export default function HomeScreen() {
                 />
               </View>
               <Text
-                className={`text-base font-semibold text-right mt-1 pr-1 ${
+                className={`font-semibold text-right mt-1 pr-1 ${
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 Nhấn để xem quyền lợi thành viên →
               </Text>
@@ -291,62 +293,30 @@ export default function HomeScreen() {
           )}
 
           {/* SEARCH BAR & WELCOME GREETING */}
-          <View className="px-5 mt-4">
+          <View className="px-5 mt-7">
             <Text
-              className={`text-base font-semibold uppercase tracking-wider pl-1 ${
+              className={`font-semibold uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
               }`}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               Chào mừng bạn trở lại,
             </Text>
             <Text
-              className={`text-xl font-black tracking-tight pl-1 mb-3 ${
+              className={`font-black tracking-tight pl-1 ${
                 isDark ? "text-slate-100" : "text-slate-800"
               }`}
+              style={{ fontSize: FONT_SIZE.xl }}
             >
               {user?.firstName && user?.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : "Khách du lịch"}{" "}
               👋
             </Text>
-
-            <View
-              className={`flex-row items-center rounded-2xl border-2 px-4 h-14 shadow-sm ${
-                isDark
-                  ? "bg-slate-850 border-slate-700/60 bg-[#1E222B]"
-                  : "bg-white border-slate-100"
-              }`}
-            >
-              <Ionicons
-                name="search-outline"
-                size={20}
-                color={isDark ? "#6B7280" : "#94A3B8"}
-              />
-              <TextInput
-                className={`flex-1 h-full ml-3 font-semibold text-base ${
-                  isDark ? "text-slate-100" : "text-slate-800"
-                }`}
-                placeholder="Bạn muốn tìm tour du lịch nào?"
-                placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                returnKeyType="search"
-                onSubmitEditing={submitSearch}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery("")}>
-                  <Ionicons
-                    name="close-circle"
-                    size={18}
-                    color={isDark ? "#6B7280" : "#94A3B8"}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
           </View>
 
           {/* DATE PICKER WIDGET */}
-          <View className="px-5 mt-3">
+          <View className="px-5 mt-7">
             <View
               style={{
                 backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
@@ -361,9 +331,45 @@ export default function HomeScreen() {
                 elevation: 2,
               }}
             >
+              {/* Ô tìm kiếm tích hợp vào lịch */}
+              <View
+                className={`flex-row items-center rounded-2xl border px-4 h-12 shadow-sm mb-4 ${
+                  isDark
+                    ? "bg-[#111318] border-slate-700/60"
+                    : "bg-slate-50 border-slate-200"
+                }`}
+              >
+                <Ionicons
+                  name="search-outline"
+                  size={18}
+                  color={isDark ? "#6B7280" : "#94A3B8"}
+                />
+                <TextInput
+                  className={`flex-1 h-full ml-3 font-semibold ${
+                    isDark ? "text-slate-100" : "text-slate-800"
+                  }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
+                  placeholder="Bạn muốn tìm tour du lịch nào?"
+                  placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  returnKeyType="search"
+                  onSubmitEditing={submitSearch}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery("")}>
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color={isDark ? "#6B7280" : "#94A3B8"}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "700",
                   color: isDark ? "#F8FAFC" : "#0F172A",
                   marginBottom: 10,
@@ -373,23 +379,21 @@ export default function HomeScreen() {
               </Text>
 
               {/* Mode Tabs */}
-              <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <View style={{ flexDirection: "row", marginTop: 5 }}>
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                   onPress={() => setDateSearchMode("specific")}
                   style={{
                     flex: 1,
-                    paddingVertical: 8,
-                    borderRadius: 10,
-                    backgroundColor: dateSearchMode === "specific" ? (isDark ? "#D0021B" : "#FFF1F2") : "transparent",
-                    borderWidth: 1,
-                    borderColor: dateSearchMode === "specific" ? "#D0021B" : (isDark ? "#334155" : "#E2E8F0"),
+                    paddingVertical: 10,
                     alignItems: "center",
+                    borderBottomWidth: 2,
+                    borderBottomColor: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : "#D0021B") : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: 20,
                       fontWeight: "700",
                       color: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
                     }}
@@ -399,21 +403,19 @@ export default function HomeScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                   onPress={() => setDateSearchMode("range")}
                   style={{
                     flex: 1,
-                    paddingVertical: 8,
-                    borderRadius: 10,
-                    backgroundColor: dateSearchMode === "range" ? (isDark ? "#D0021B" : "#FFF1F2") : "transparent",
-                    borderWidth: 1,
-                    borderColor: dateSearchMode === "range" ? "#D0021B" : (isDark ? "#334155" : "#E2E8F0"),
+                    paddingVertical: 10,
                     alignItems: "center",
+                    borderBottomWidth: 2,
+                    borderBottomColor: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : "#D0021B") : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: 20,
                       fontWeight: "700",
                       color: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
                     }}
@@ -442,7 +444,7 @@ export default function HomeScreen() {
                   <Ionicons name="calendar-outline" size={18} color="#D0021B" style={{ marginRight: 8 }} />
                   <Text
                     style={{
-                      fontSize: 14,
+                      fontSize: FONT_SIZE.xs,
                       fontWeight: "600",
                       color: specificDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
                     }}
@@ -470,7 +472,7 @@ export default function HomeScreen() {
                     <Text
                       numberOfLines={1}
                       style={{
-                        fontSize: 13,
+                        fontSize: FONT_SIZE.xs,
                         fontWeight: "600",
                         color: startDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
                       }}
@@ -497,7 +499,7 @@ export default function HomeScreen() {
                     <Text
                       numberOfLines={1}
                       style={{
-                        fontSize: 13,
+                        fontSize: FONT_SIZE.xs,
                         fontWeight: "600",
                         color: endDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
                       }}
@@ -540,7 +542,7 @@ export default function HomeScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
+                  <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: FONT_SIZE.xs }}>
                     Tìm kiếm
                   </Text>
                 </TouchableOpacity>
@@ -550,7 +552,7 @@ export default function HomeScreen() {
 
           {/* QUICK ACCESS GRID — Shopee style */}
           <View
-            className="mx-5 mt-5 rounded-2xl"
+            className="mx-5 mt-8 rounded-2xl"
             style={{
               backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
               shadowColor: "#000",
@@ -608,16 +610,18 @@ export default function HomeScreen() {
           </View>
 
           {/* SECTION: TOUR HOT NHẤT — carousel tự động 5s */}
-          <SectionRow
-            title={SECTION_LABELS.hot}
-            onSeeAll={() => openSearch({ mode: "hot" })}
-          />
+          <View className="mt-8">
+            <SectionRow
+              title={SECTION_LABELS.hot}
+              onSeeAll={() => openSearch({ mode: "hot" })}
+            />
+          </View>
           {loading ? (
             <View className="py-10 items-center">
               <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#E51F27"} />
               <Text
                 className={`mt-2 font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                style={{ fontSize: 16 }}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 Đang tải dữ liệu...
               </Text>
@@ -631,17 +635,18 @@ export default function HomeScreen() {
 
           {/* TIN TỨC NỔI BẬT */}
           {news.length > 0 && (
-            <View className="mt-8">
+            <View className="mt-10">
               <View className="flex-row justify-between items-center px-5 mb-3">
                 <Text
-                  className={`text-lg font-black tracking-tight ${
+                  className={`font-black tracking-tight ${
                     isDark ? "text-slate-100" : "text-slate-800"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xl }}
                 >
                   Tin tức nổi bật
                 </Text>
                 <TouchableOpacity onPress={() => router.push("/(root)/news" as any)} activeOpacity={0.7}>
-                  <Text className="text-base font-black text-[#D0021B]">Xem tất cả →</Text>
+                  <Text className="font-black text-[#D0021B]" style={{ fontSize: FONT_SIZE.xs }}>Xem tất cả →</Text>
                 </TouchableOpacity>
               </View>
 
@@ -673,21 +678,23 @@ export default function HomeScreen() {
                     />
                     <View className="p-3">
                       <Text
-                        className={`text-base font-bold leading-4 ${
+                        className={`font-bold ${
                           isDark ? "text-slate-200" : "text-slate-800"
                         }`}
                         numberOfLines={2}
+                        style={{ fontSize: FONT_SIZE.xs, lineHeight: 26 }}
                       >
                         {item.title}
                       </Text>
                       <View className="flex-row items-center justify-between mt-3">
-                        <Text className="text-base text-slate-400 font-semibold">
+                        <Text className="text-slate-400 font-semibold" style={{ fontSize: FONT_SIZE.card }}>
                           {item.date}
                         </Text>
                         <Text
-                          className={`text-base font-black uppercase ${
+                          className={`font-black uppercase ${
                             isDark ? "color-[#CBD5E1]" : "text-blue-600"
                           }`}
+                          style={{ fontSize: FONT_SIZE.card }}
                         >
                           Xem chi tiết
                         </Text>
@@ -698,7 +705,9 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
           )}
-          <Footer />
+          <View className="mt-10">
+            <Footer />
+          </View>
         </ScrollView>
       </LinearGradient>
 

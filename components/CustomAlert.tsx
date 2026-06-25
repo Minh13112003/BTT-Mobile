@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import React from "react";
 import {
   Modal,
@@ -189,15 +190,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   } as ViewStyle,
   title: {
-    fontSize: 19,
+    fontSize: FONT_SIZE.xl,
     fontWeight: "800",
     textAlign: "center",
     marginBottom: 10,
     letterSpacing: 0.25,
   } as TextStyle,
   message: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: FONT_SIZE.xs,
+    lineHeight: 24,
     textAlign: "center",
     marginBottom: 24,
     fontWeight: "500",
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   cancelButton: {},
   buttonText: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
   } as TextStyle,
   confirmButtonText: {

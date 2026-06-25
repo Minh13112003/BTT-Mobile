@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { TourDetail } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,7 +78,7 @@ export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onB
 
       {/* Duration badge */}
       <View className="absolute left-4 bottom-4 bg-[#D0021B] px-3 py-1.5 rounded-xl">
-        <Text className="text-base text-white font-black uppercase tracking-wide">
+        <Text className="text-white font-black uppercase tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
           {tour.duration}
         </Text>
       </View>
@@ -88,10 +89,13 @@ export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onB
         style={{ backgroundColor: isDark ? "rgba(10,12,18,0.8)" : "rgba(255,255,255,0.92)" }}
       >
         <Ionicons name="star" size={13} color="#FBBF24" />
-        <Text className={`text-base font-black ml-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+        <Text
+          className={`font-black ml-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}
+          style={{ fontSize: FONT_SIZE.xs }}
+        >
           {tour.rating}
         </Text>
-        <Text className="text-base text-slate-400 ml-0.5">({tour.reviewsCount})</Text>
+        <Text className="text-slate-400 ml-0.5" style={{ fontSize: FONT_SIZE.xs }}>({tour.reviewsCount})</Text>
       </View>
     </View>
   );

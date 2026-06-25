@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { changePassword, getMe, updateAvatar, updateProfile } from "@/services/user";
@@ -385,7 +386,8 @@ export default function SelfProfileScreen() {
                   className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? "bg-slate-700 border border-slate-600" : "bg-blue-50"}`}
                 >
                   <Ionicons name="create-outline" size={16} color={isDark ? "#93C5FD" : "#3B82F6"} />
-                  <Text className={`font-bold text-base ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+                  <Text className={`font-bold ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                     Chỉnh sửa
                   </Text>
                 </TouchableOpacity>
@@ -398,7 +400,8 @@ export default function SelfProfileScreen() {
                 {/* Mục Họ và Tên (chia làm 2 ô) */}
                 <View className="flex-row mb-4">
                   <View className="flex-1 mr-2">
-                    <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                    <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                       Họ
                     </Text>
                     <View
@@ -413,7 +416,8 @@ export default function SelfProfileScreen() {
                       }`}
                     >
                       <TextInput
-                        className={`flex-1 h-full font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                        className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                        style={{ fontSize: FONT_SIZE.xs }}
                         placeholder="Họ"
                         placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                         value={editFirstName}
@@ -425,7 +429,8 @@ export default function SelfProfileScreen() {
                   </View>
 
                   <View className="flex-1 ml-2">
-                    <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                    <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                       Tên
                     </Text>
                     <View
@@ -440,7 +445,8 @@ export default function SelfProfileScreen() {
                       }`}
                     >
                       <TextInput
-                        className={`flex-1 h-full font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                        className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                        style={{ fontSize: FONT_SIZE.xs }}
                         placeholder="Tên"
                         placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                         value={editLastName}
@@ -453,7 +459,8 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Email */}
-                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Địa chỉ Email
                 </Text>
                 <View
@@ -473,7 +480,8 @@ export default function SelfProfileScreen() {
                     color={focusedField === "email" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
                   />
                   <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                     placeholder="Địa chỉ Email"
                     placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                     keyboardType="email-address"
@@ -486,7 +494,8 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Tuổi */}
-                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Tuổi
                 </Text>
                 <View
@@ -506,7 +515,8 @@ export default function SelfProfileScreen() {
                     color={focusedField === "age" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
                   />
                   <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                     placeholder="Nhập tuổi"
                     placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                     keyboardType="numeric"
@@ -523,7 +533,8 @@ export default function SelfProfileScreen() {
                     isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
                   }`}>
                     <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 text-base font-medium ml-2 flex-1">
+                    <Text className="text-red-600 font-medium ml-2 flex-1"
+                    style={{ fontSize: FONT_SIZE.xs }}>
                       {profileError}
                     </Text>
                   </View>
@@ -533,14 +544,16 @@ export default function SelfProfileScreen() {
               // CHẾ ĐỘ HIỂN THỊ
               <View>
                 {/* Mục Họ và tên */}
-                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Họ và tên
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
                   isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
                 }`}>
                   <Ionicons name="person-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                  <Text className={`ml-3 font-semibold text-base ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                     {displayUser?.firstName && displayUser?.lastName
                       ? `${displayUser.firstName} ${displayUser.lastName}`
                       : "Chưa cập nhật"}
@@ -548,20 +561,23 @@ export default function SelfProfileScreen() {
                 </View>
 
                 {/* Mục Email */}
-                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Địa chỉ Email
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
                   isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
                 }`}>
                   <Ionicons name="mail-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                  <Text className={`ml-3 font-semibold text-base ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                     {displayUser?.email || "Chưa cập nhật"}
                   </Text>
                 </View>
 
                 {/* Mục Tuổi */}
-                <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Tuổi
                 </Text>
                 <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
@@ -572,7 +588,8 @@ export default function SelfProfileScreen() {
                     size={20}
                     color={isDark ? "#6B7280" : "#94A3B8"}
                   />
-                  <Text className={`ml-3 font-semibold text-base ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                     {displayUser?.age
                       ? `${displayUser.age} tuổi`
                       : "Chưa cập nhật"}
@@ -583,7 +600,8 @@ export default function SelfProfileScreen() {
 
             {/* Các mục không cho phép sửa (hiển thị giống nhau ở cả 2 chế độ, nhưng thêm icon khóa ở chế độ chỉnh sửa) */}
             {/* Mục Chức vụ / Vai trò */}
-            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
               Quyền hạn hệ thống
             </Text>
             <View
@@ -595,11 +613,12 @@ export default function SelfProfileScreen() {
             >
               <Ionicons name="shield-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
               <Text
-                className={`ml-3 text-base ${
+                className={`ml-3 ${
                   isEditingProfile
                     ? "text-slate-500 font-semibold"
                     : isDark ? "text-blue-400 font-bold" : "text-blue-600 font-bold"
                 }`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 {displayUser?.role || "Thành viên"}
               </Text>
@@ -614,7 +633,8 @@ export default function SelfProfileScreen() {
             </View>
 
             {/* Mục Ngày tạo tài khoản */}
-            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
               Ngày tạo tài khoản
             </Text>
             <View
@@ -626,11 +646,12 @@ export default function SelfProfileScreen() {
             >
               <Ionicons name="calendar-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
               <Text
-                className={`ml-3 text-base ${
+                className={`ml-3 ${
                   isEditingProfile
                     ? "text-slate-500 font-semibold"
                     : isDark ? "text-slate-300 font-semibold" : "text-slate-700 font-semibold"
                 }`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 {formatDateTime(displayUser?.createdAt)}
               </Text>
@@ -645,7 +666,8 @@ export default function SelfProfileScreen() {
             </View>
 
             {/* Mục Cập nhật tài khoản gần nhất */}
-            <Text className="text-slate-400 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
               Cập nhật gần nhất
             </Text>
             <View
@@ -657,11 +679,12 @@ export default function SelfProfileScreen() {
             >
               <Ionicons name="refresh-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
               <Text
-                className={`ml-3 text-base ${
+                className={`ml-3 ${
                   isEditingProfile
                     ? "text-slate-500 font-semibold"
                     : isDark ? "text-slate-300 font-semibold" : "text-slate-700 font-semibold"
                 }`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 {formatDateTime(displayUser?.updatedAt)}
               </Text>
@@ -688,7 +711,8 @@ export default function SelfProfileScreen() {
                       : "bg-white border-slate-200"
                   }`}
                 >
-                  <Text className={`font-bold text-base ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                  <Text className={`font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}>
                     Hủy
                   </Text>
                 </TouchableOpacity>
@@ -705,7 +729,7 @@ export default function SelfProfileScreen() {
                   {updatingProfile ? (
                     <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
                   ) : (
-                    <Text className="text-white font-bold text-base">Lưu</Text>
+                    <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Lưu</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -733,7 +757,8 @@ export default function SelfProfileScreen() {
                 }`}>
                   <Ionicons name="key-outline" size={20} color={isDark ? "#93C5FD" : "#3B82F6"} />
                 </View>
-                <Text className={`font-bold text-base ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                <Text className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                  style={{ fontSize: FONT_SIZE.xs }}>
                   Đổi mật khẩu bảo mật
                 </Text>
               </View>
@@ -749,7 +774,8 @@ export default function SelfProfileScreen() {
                 <View className={`h-[1px] mb-5 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`} />
 
                 {/* Mật khẩu cũ */}
-                <Text className="text-slate-500 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Mật khẩu cũ
                 </Text>
                 <View
@@ -771,7 +797,8 @@ export default function SelfProfileScreen() {
                     }
                   />
                   <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                     placeholder="Nhập mật khẩu cũ"
                     placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                     secureTextEntry={!showOldPassword}
@@ -796,7 +823,8 @@ export default function SelfProfileScreen() {
                 <View className="h-4" />
 
                 {/* Mật khẩu mới */}
-                <Text className="text-slate-500 text-base font-bold mb-2 uppercase tracking-wider pl-1">
+                <Text className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}>
                   Mật khẩu mới
                 </Text>
                 <View
@@ -818,7 +846,8 @@ export default function SelfProfileScreen() {
                     }
                   />
                   <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold text-base ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                     placeholder="Nhập mật khẩu mới"
                     placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
                     secureTextEntry={!showNewPassword}
@@ -846,7 +875,8 @@ export default function SelfProfileScreen() {
                     isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
                   }`}>
                     <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 text-base font-medium ml-2 flex-1">
+                    <Text className="text-red-600 font-medium ml-2 flex-1"
+                    style={{ fontSize: FONT_SIZE.xs }}>
                       {errorMsg}
                     </Text>
                   </View>
@@ -862,7 +892,8 @@ export default function SelfProfileScreen() {
                       size={18}
                       color="#10B981"
                     />
-                    <Text className="text-green-600 text-base font-medium ml-2 flex-1">
+                    <Text className="text-green-600 font-medium ml-2 flex-1"
+                    style={{ fontSize: FONT_SIZE.xs }}>
                       {successMsg}
                     </Text>
                   </View>
@@ -882,7 +913,7 @@ export default function SelfProfileScreen() {
                   {updatingPassword ? (
                     <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
                   ) : (
-                    <Text className="text-white font-bold text-base tracking-wide">
+                    <Text className="text-white font-bold tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
                       Xác nhận đổi mật khẩu
                     </Text>
                   )}

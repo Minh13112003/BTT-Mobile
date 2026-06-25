@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { formatPrice } from "@/helper/format";
 import { TourItem } from "@/services/tour";
@@ -51,7 +52,7 @@ export function TourCardCompact({
           className="absolute bottom-2 left-2 rounded-lg px-2 py-1"
           style={{ backgroundColor: "rgba(229,31,39,0.92)" }}
         >
-          <Text className="text-white font-black" style={{ fontSize: 16 }}>
+          <Text className="text-white font-black" style={{ fontSize: FONT_SIZE.xs }}>
             {tour.duration}
           </Text>
         </View>
@@ -61,10 +62,10 @@ export function TourCardCompact({
             isDark ? "bg-slate-900/90" : "bg-white/90"
           }`}
         >
-          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Ionicons name="star" size={14} color="#F59E0B" />
           <Text
             className={`font-black ml-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}
-            style={{ fontSize: 16 }}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             {tour.rating}
           </Text>
@@ -75,7 +76,7 @@ export function TourCardCompact({
             className="absolute top-2 left-2 rounded-full px-2 py-0.5"
             style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
           >
-            <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+            <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
               🔥 {tour.bookingCount} đã đặt
             </Text>
           </View>
@@ -85,8 +86,8 @@ export function TourCardCompact({
       <View className="p-3">
         <Text
           numberOfLines={2}
-          style={{ fontSize: 16, minHeight: 42 }}
-          className={`font-black leading-5 ${
+          style={{ fontSize: FONT_SIZE.xl, minHeight: 60 }}
+          className={`font-black leading-7 ${
             isDark ? "text-slate-100" : "text-slate-800"
           }`}
         >
@@ -99,7 +100,7 @@ export function TourCardCompact({
             className={`ml-1 font-semibold ${
               isDark ? "text-slate-300" : "text-slate-500"
             }`}
-            style={{ fontSize: 16 }}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             {tour.rating} ({tour.reviewsCount})
           </Text>
@@ -117,7 +118,7 @@ export function TourCardCompact({
               className={`ml-1.5 font-medium ${
                 isDark ? "text-slate-300" : "text-slate-600"
               }`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               {tour.transport}
             </Text>
@@ -136,7 +137,7 @@ export function TourCardCompact({
               className={`ml-1 font-medium ${
                 isDark ? "text-slate-300" : "text-slate-600"
               }`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: FONT_SIZE.xs }}
             >
               {tour.departureFrom}
             </Text>
@@ -145,7 +146,7 @@ export function TourCardCompact({
 
         <Text
           className="mt-2 font-black"
-          style={{ fontSize: 17, color: isDark ? "#F5F6FA" : "#D0021B" }}
+          style={{ fontSize: FONT_SIZE.sm, color: isDark ? "#F5F6FA" : "#D0021B" }}
         >
           {price != null ? `Từ ${formatPrice(price)}` : "Liên hệ"}
         </Text>

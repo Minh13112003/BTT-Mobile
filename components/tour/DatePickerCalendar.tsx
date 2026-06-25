@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import React, { useState, useMemo } from "react";
 import {
   Modal,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   } as ViewStyle,
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: "800",
   } as TextStyle,
   closeBtn: {
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   } as ViewStyle,
   monthLabel: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
   } as TextStyle,
   weekdaysContainer: {
@@ -258,7 +259,7 @@ const styles = StyleSheet.create({
   weekdayText: {
     width: `${100 / 7}%`,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: FONT_SIZE.card,
     fontWeight: "600",
   } as TextStyle,
   daysGrid: {
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#D0021B", // Brand Red
   } as ViewStyle,
   dayText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.xs,
     fontWeight: "600",
   } as TextStyle,
   selectedDayText: {

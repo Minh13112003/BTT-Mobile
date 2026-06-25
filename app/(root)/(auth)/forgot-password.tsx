@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -214,7 +215,7 @@ export default function ForgotPasswordScreen() {
             </Text>
             <Text
               style={{
-                fontSize: 14,
+                fontSize: FONT_SIZE.xs,
                 color: "rgba(255,255,255,0.85)",
                 marginTop: 6,
                 fontStyle: "italic",
@@ -247,7 +248,7 @@ export default function ForgotPasswordScreen() {
             {/* Phone number input */}
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZE.card,
                 fontWeight: "700",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
@@ -281,7 +282,7 @@ export default function ForgotPasswordScreen() {
                   flex: 1,
                   height: "100%",
                   marginLeft: 10,
-                  fontSize: 16,
+                  fontSize: FONT_SIZE.xs,
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
@@ -330,7 +331,7 @@ export default function ForgotPasswordScreen() {
                 {sending ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
+                  <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
                     Gửi mã OTP
                   </Text>
                 )}
@@ -408,7 +409,7 @@ export default function ForgotPasswordScreen() {
                     }}
                   >
                     <Ionicons name="alert-circle" size={16} color="#EF4444" />
-                    <Text style={{ fontSize: 13, color: "#EF4444", marginLeft: 6, flex: 1 }}>
+                    <Text style={{ fontSize: FONT_SIZE.xs, color: "#EF4444", marginLeft: 6, flex: 1 }}>
                       {otpError}
                     </Text>
                   </View>
@@ -417,7 +418,7 @@ export default function ForgotPasswordScreen() {
                 {/* Resend / countdown */}
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
                   {countdown > 0 ? (
-                    <Text style={{ fontSize: 13, color: isDark ? "#6B7280" : "#9CA3AF" }}>
+                    <Text style={{ fontSize: FONT_SIZE.xs, color: isDark ? "#6B7280" : "#9CA3AF" }}>
                       Gửi lại mã sau{" "}
                       <Text style={{ fontWeight: "700", color: isDark ? "#60A5FA" : "#D0021B" }}>
                         {countdown}s
@@ -427,7 +428,7 @@ export default function ForgotPasswordScreen() {
                     <TouchableOpacity onPress={handleSendOtp} disabled={sending} activeOpacity={0.6}>
                       <Text
                         style={{
-                          fontSize: 14,
+                          fontSize: FONT_SIZE.xs,
                           fontWeight: "700",
                           color: isDark ? "#60A5FA" : "#D0021B",
                         }}
@@ -461,7 +462,7 @@ export default function ForgotPasswordScreen() {
                   {verifying ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
+                    <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
                       Xác nhận OTP
                     </Text>
                   )}
@@ -475,7 +476,7 @@ export default function ForgotPasswordScreen() {
               activeOpacity={0.6}
               style={{ alignItems: "center", marginTop: 24 }}
             >
-              <Text style={{ fontSize: 14, color: isDark ? "#6B7280" : "#9CA3AF" }}>
+              <Text style={{ fontSize: FONT_SIZE.xs, color: isDark ? "#6B7280" : "#9CA3AF" }}>
                 Quay lại{" "}
                 <Text style={{ fontWeight: "700", color: isDark ? "#60A5FA" : "#005AC1" }}>
                   Đăng nhập

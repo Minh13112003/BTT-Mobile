@@ -1,4 +1,5 @@
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { getNewsById, NewsItem } from "@/services/news";
 import { Ionicons } from "@expo/vector-icons";
@@ -251,11 +252,11 @@ export default function NewsDetailScreen() {
                 >
                   <Text
                     style={{
-                      fontSize: 14,
+                      fontSize: 18,
                       fontWeight: "600",
                       fontStyle: "italic",
                       color: isDark ? "#FDA4AF" : "#9F1239",
-                      lineHeight: 22,
+                      lineHeight: 28,
                     }}
                   >
                     {item.excerpt}
@@ -281,7 +282,7 @@ export default function NewsDetailScreen() {
                     }}
                     baseStyle={{
                       color: isDark ? "#CBD5E1" : "#334155",
-                      fontSize: 15,
+                      fontSize: 18,
                     }}
                     defaultTextProps={{
                       textBreakStrategy: "simple",
@@ -300,9 +301,9 @@ export default function NewsDetailScreen() {
                         margin: 0,
                         marginTop: 0,
                         marginBottom: 14,
-                        fontSize: 15,
+                        fontSize: 18,
                         color: isDark ? "#CBD5E1" : "#334155",
-                        lineHeight: 24,
+                        lineHeight: 28,
                         textAlign: "left",
                       },
                       strong: {
@@ -321,29 +322,29 @@ export default function NewsDetailScreen() {
                       },
                       figcaption: {
                         textAlign: "center",
-                        fontSize: 13,
+                        fontSize: 16,
                         fontStyle: "italic",
                         color: isDark ? "#94A3B8" : "#64748B",
                         marginTop: 6,
-                        lineHeight: 18,
+                        lineHeight: 22,
                       },
                       h1: {
                         margin: 0,
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: "bold",
                         marginVertical: 10,
                         color: isDark ? "#F8FAFC" : "#0F172A",
                       },
                       h2: {
                         margin: 0,
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: "bold",
                         marginVertical: 8,
                         color: isDark ? "#F8FAFC" : "#0F172A",
                       },
                       h3: {
                         margin: 0,
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: "bold",
                         marginVertical: 6,
                         color: isDark ? "#F8FAFC" : "#0F172A",
@@ -352,9 +353,9 @@ export default function NewsDetailScreen() {
                       ol: { margin: 0, marginVertical: 8, paddingLeft: 16 },
                       li: {
                         margin: 0,
-                        fontSize: 15,
+                        fontSize: FONT_SIZE.xs,
                         color: isDark ? "#CBD5E1" : "#334155",
-                        lineHeight: 22,
+                        lineHeight: 28,
                         marginBottom: 6,
                         textAlign: "left",
                       },
@@ -386,7 +387,7 @@ export default function NewsDetailScreen() {
                             style={{
                               color: "#D0021B",
                               marginRight: 8,
-                              fontSize: 16,
+                              fontSize: FONT_SIZE.xs,
                             }}
                           >
                             •
@@ -395,9 +396,9 @@ export default function NewsDetailScreen() {
                             textBreakStrategy="simple"
                             style={{
                               flex: 1,
-                              fontSize: 15,
+                              fontSize: FONT_SIZE.xs,
                               color: isDark ? "#CBD5E1" : "#334155",
-                              lineHeight: 24,
+                              lineHeight: 28,
                               textAlign: "left",
                             }}
                           >
@@ -412,9 +413,9 @@ export default function NewsDetailScreen() {
                         key={index}
                         textBreakStrategy="simple"
                         style={{
-                          fontSize: 15,
+                          fontSize: FONT_SIZE.xs,
                           color: isDark ? "#CBD5E1" : "#334155",
-                          lineHeight: 24,
+                          lineHeight: 28,
                           marginBottom: 14,
                           textAlign: "left",
                         }}

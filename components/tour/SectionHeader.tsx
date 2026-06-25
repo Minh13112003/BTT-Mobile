@@ -1,4 +1,5 @@
 import { BRAND } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -23,14 +24,14 @@ export function SectionHeader({
   return (
     <View className="flex-row items-center">
       <Text
-        style={{ fontSize: 19, letterSpacing: -0.3 }}
+        style={{ fontSize: FONT_SIZE.lg, letterSpacing: -0.3 }}
         className={`font-black ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
       >
         {title}
       </Text>
       {!!badge &&
         (isEmojiBadge ? (
-          <Text style={{ fontSize: 16, marginLeft: 6 }}>{badge}</Text>
+          <Text style={{ fontSize: FONT_SIZE.xs, marginLeft: 6 }}>{badge}</Text>
         ) : (
           <View
             style={{ backgroundColor: BRAND.red }}
@@ -38,7 +39,7 @@ export function SectionHeader({
           >
             <Text
               className="text-white font-extrabold"
-              style={{ fontSize: 13, letterSpacing: 0.4 }}
+              style={{ fontSize: FONT_SIZE.card, letterSpacing: 0.4 }}
             >
               {badge}
             </Text>
@@ -67,10 +68,10 @@ export function SectionRow({
           onPress={onSeeAll}
           className="flex-row items-center"
         >
-          <Text style={{ color: BRAND.red, fontSize: 16, fontWeight: "700" }}>
+          <Text style={{ color: BRAND.red, fontSize: FONT_SIZE.xs, fontWeight: "700" }}>
             Tất cả
           </Text>
-          <Ionicons name="chevron-forward" size={16} color={BRAND.red} />
+          <Ionicons name="chevron-forward" size={FONT_SIZE.xs} color={BRAND.red} />
         </TouchableOpacity>
       )}
     </View>

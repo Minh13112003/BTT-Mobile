@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { getNews, NewsItem } from "@/services/news";
 import { Ionicons } from "@expo/vector-icons";
@@ -55,7 +56,7 @@ function CategoryChip({
     >
       <Text
         style={{
-          fontSize: 14,
+          fontSize: FONT_SIZE.xs,
           fontWeight: "700",
           color: active ? "#FFFFFF" : isDark ? "#CBD5E1" : "#475569",
         }}
@@ -99,13 +100,12 @@ function NewsCard({
       <View style={{ padding: 14 }}>
         <Text
           textBreakStrategy="simple"
-
           allowFontScaling={false}
           style={{
-            fontSize: 16,
+            fontSize: 22,
             fontWeight: "700",
             color: isDark ? "#F1F5F9" : "#1E293B",
-            lineHeight: 23,
+            lineHeight: 30,
             marginBottom: 6,
           }}
           numberOfLines={2}
@@ -115,12 +115,11 @@ function NewsCard({
         {!!item.excerpt && (
           <Text
             textBreakStrategy="simple"
-  
             allowFontScaling={false}
             style={{
-              fontSize: 14,
+              fontSize: 18,
               color: isDark ? "#94A3B8" : "#64748B",
-              lineHeight: 21,
+              lineHeight: 26,
               marginBottom: 10,
             }}
             numberOfLines={2}
@@ -131,10 +130,10 @@ function NewsCard({
         <View
           style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
         >
-          <Text style={{ fontSize: 13, color: "#94A3B8", fontWeight: "600" }}>
+          <Text style={{ fontSize: FONT_SIZE.card, color: "#94A3B8", fontWeight: "600" }}>
             📅 {item.date}
           </Text>
-          <Text style={{ fontSize: 13, fontWeight: "800", color: "#D0021B" }}>
+          <Text style={{ fontSize: FONT_SIZE.card, fontWeight: "800", color: "#D0021B" }}>
             Xem chi tiết →
           </Text>
         </View>
@@ -254,7 +253,7 @@ export default function NewsScreen() {
             <Text
               style={{
                 marginTop: 10,
-                fontSize: 15,
+                fontSize: FONT_SIZE.xs,
                 fontWeight: "600",
                 color: isDark ? "#94A3B8" : "#64748B",
               }}
@@ -302,7 +301,7 @@ export default function NewsScreen() {
                 <Text
                   style={{
                     marginTop: 12,
-                    fontSize: 16,
+                    fontSize: FONT_SIZE.xs,
                     fontWeight: "700",
                     color: isDark ? "#94A3B8" : "#64748B",
                   }}

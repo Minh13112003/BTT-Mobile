@@ -7,6 +7,7 @@ import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { useTourDetail } from "@/hooks/useTourDetail";
 import { Departure } from "@/services/departure";
@@ -180,7 +181,8 @@ export default function TourDetailScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={palette.spinner} />
           <Text
-            className={`text-base font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+            className={`font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             Đang tải chi tiết tour...
           </Text>
@@ -203,7 +205,8 @@ export default function TourDetailScreen() {
             color={isDark ? "#EF4444" : "#DC2626"}
           />
           <Text
-            className={`text-base font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}
+            className={`font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}
+            style={{ fontSize: FONT_SIZE.xs }}
           >
             {error || "Không tìm thấy thông tin tour"}
           </Text>
@@ -215,7 +218,8 @@ export default function TourDetailScreen() {
               }`}
             >
               <Text
-                className={`font-bold text-base ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                className={`font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                style={{ fontSize: FONT_SIZE.xs }}
               >
                 Quay lại
               </Text>
@@ -224,7 +228,7 @@ export default function TourDetailScreen() {
               onPress={refetch}
               className="px-6 py-2.5 rounded-full bg-[#D0021B]"
             >
-              <Text className="text-white font-bold text-base">Thử lại</Text>
+              <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Thử lại</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -243,7 +247,7 @@ export default function TourDetailScreen() {
           setShowBackToTop(offsetY > 300);
         }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={{ paddingBottom: 160 }}
       >
         <TourHero
           tour={tour}
@@ -253,7 +257,8 @@ export default function TourDetailScreen() {
 
         <View className="px-4 -mt-2">
           <Text
-            className={`text-[17px] font-black leading-6 ${isDark ? "text-slate-50" : "text-slate-900"}`}
+            className={`font-black leading-8 ${isDark ? "text-slate-50" : "text-slate-900"}`}
+            style={{ fontSize: FONT_SIZE.xl }}
           >
             {tour.name}
           </Text>
@@ -261,13 +266,13 @@ export default function TourDetailScreen() {
           <View className="flex-row items-center mt-2">
             {tour.code ? (
               <>
-                <Text className="text-base text-slate-400">
+                <Text className="text-slate-400" style={{ fontSize: FONT_SIZE.xs }}>
                   Mã: {tour.code}
                 </Text>
                 <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
               </>
             ) : null}
-            <Text className="text-base text-slate-400">
+            <Text className="text-slate-400" style={{ fontSize: FONT_SIZE.xs }}>
               {tour.hasVat ? "Đã gồm VAT" : "Chưa gồm VAT"}
             </Text>
           </View>

@@ -1,3 +1,4 @@
+import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import React from "react";
 import { Text, View } from "react-native";
@@ -21,7 +22,7 @@ export function Footer() {
     >
       <Text
         style={{
-          fontSize: 10,
+          fontSize: FONT_SIZE.card,
           fontWeight: "700",
           letterSpacing: 1.5,
           color: isDark ? "#4B5563" : "#926E6A",
@@ -33,13 +34,13 @@ export function Footer() {
       </Text>
       <Text
         style={{
-          fontSize: 10,
+          fontSize: FONT_SIZE.card,
           fontWeight: "600",
           letterSpacing: 1,
           color: isDark ? "#374151" : "#B09490",
           textTransform: "uppercase",
           textAlign: "center",
-          marginTop: 2,
+          marginTop: 4,
         }}
       >
         Thiết kế bởi : Sola
