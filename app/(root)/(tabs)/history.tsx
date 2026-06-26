@@ -318,14 +318,13 @@ export default function HistoryScreen() {
                     imageStyle={{ opacity: isDark ? 0.3 : 0.22 }}
                   />
 
-                  <View className="p-4">
+                  <View className="px-4 pb-4 pt-5">
                     {/* Top: name + code | status pill */}
                     <View className="flex-row justify-between items-start">
                       <View className="flex-1 mr-3">
                         <Text
                           style={{ fontSize: FONT_SIZE.md }}
                           className={`font-black leading-6 ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
-                          numberOfLines={2}
                         >
                           {item.tour.name}
                         </Text>
@@ -483,7 +482,7 @@ export default function HistoryScreen() {
       >
         <Header title="BENTHANH TOURIST" showActions={true} safeArea={false} />
 
-        <View className="px-5 pt-3 pb-1">
+        <View className="px-5 pt-5 pb-1">
           <Text
             className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
             style={{ fontSize: 22 }}

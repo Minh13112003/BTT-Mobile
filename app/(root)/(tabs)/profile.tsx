@@ -1,14 +1,14 @@
-import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import Header from "@/components/Header";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { logout as apiLogout } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -20,10 +20,10 @@ import {
 
 export default function ProfileScreen() {
   // Lấy trạng thái đăng nhập và thông tin user (bao gồm cả role) từ Context
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout, refreshPoints } = useAuth();
   const router = useRouter();
 
-  const { theme, fontSizeMode, setFontSizeMode } = useTheme();
+  const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const handleLogout = async () => {
@@ -42,6 +42,14 @@ export default function ProfileScreen() {
       router.replace("/login");
     }
   }, [isLoggedIn]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoggedIn) {
+        refreshPoints();
+      }
+    }, [isLoggedIn, refreshPoints]),
+  );
 
   if (!isLoggedIn) {
     return (
@@ -70,23 +78,23 @@ export default function ProfileScreen() {
           {/* Header & Avatar */}
           <View className="items-center my-8 px-6">
             <View
-              className={`w-24 h-24 rounded-full items-center justify-center mb-4 shadow-xl border-4 ${
+              className={`items-center justify-center mb-4 shadow-xl border-[6px] ${
                 isDark
                   ? "bg-slate-700 border-slate-650 shadow-black/50"
                   : "bg-[#D0021B] border-white shadow-[#D0021B]/30"
               }`}
-              style={{ overflow: "hidden" }}
+              style={{ width: 200, height: 200, borderRadius: 100, overflow: "hidden" }}
             >
               {user?.avatarUrl ? (
                 <Image
                   source={{ uri: user.avatarUrl }}
-                  style={{ width: 96, height: 96 }}
+                  style={{ width: "100%", height: "100%" }}
                   resizeMode="cover"
                 />
               ) : (
                 <Ionicons
                   name="person"
-                  size={45}
+                  size={100}
                   color={isDark ? "#E5E7EB" : "#FFFFFF"}
                 />
               )}
@@ -145,7 +153,10 @@ export default function ProfileScreen() {
                 >
                   Thông tin cá nhân
                 </Text>
-                <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+                <Text
+                  className="text-slate-400 mt-0.5"
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
                   Xem chi tiết hồ sơ tài khoản
                 </Text>
               </View>
@@ -182,7 +193,10 @@ export default function ProfileScreen() {
                 >
                   Kho voucher của bạn
                 </Text>
-                <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+                <Text
+                  className="text-slate-400 mt-0.5"
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
                   Quản lý mã giảm giá, khuyến mãi
                 </Text>
               </View>
@@ -221,7 +235,10 @@ export default function ProfileScreen() {
                 >
                   Giới thiệu bạn bè
                 </Text>
-                <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+                <Text
+                  className="text-slate-400 mt-0.5"
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
                   Chia sẻ nhận điểm thưởng, quà tặng
                 </Text>
               </View>
@@ -236,8 +253,12 @@ export default function ProfileScreen() {
             <TouchableOpacity
               onPress={() => router.push("/(root)/(profile)/feedback")}
               activeOpacity={0.7}
-              className={`flex-row items-center p-4 border-b ${
-                isDark ? "border-slate-700/60" : "border-slate-100"
+              className={`flex-row items-center p-4 ${
+                user?.role === "ADMIN"
+                  ? isDark
+                    ? "border-b border-slate-700/60"
+                    : "border-b border-slate-100"
+                  : ""
               }`}
             >
               <View
@@ -260,7 +281,10 @@ export default function ProfileScreen() {
                 >
                   Gửi góp ý phản hồi
                 </Text>
-                <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+                <Text
+                  className="text-slate-400 mt-0.5"
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
                   Đóng góp ý kiến nâng cao dịch vụ
                 </Text>
               </View>
@@ -270,81 +294,6 @@ export default function ProfileScreen() {
                 color={isDark ? "#6B7280" : "#94A3B8"}
               />
             </TouchableOpacity>
-
-            {/* Chức năng mới: Cài đặt cỡ chữ */}
-            <View
-              className={`flex-row items-center p-4 ${
-                user?.role === "ADMIN"
-                  ? isDark
-                    ? "border-b border-slate-700/60"
-                    : "border-b border-slate-100"
-                  : ""
-              }`}
-            >
-              <View
-                className={`w-10 h-10 rounded-xl items-center justify-center mr-4 ${
-                  isDark ? "bg-slate-700 border border-slate-600" : "bg-teal-50"
-                }`}
-              >
-                <Ionicons
-                  name="text-outline"
-                  size={22}
-                  color={isDark ? "#99F6E4" : "#0D9488"}
-                />
-              </View>
-              <View className="flex-1 mr-2">
-                <Text
-                  className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}
-                >
-                  Cỡ chữ hiển thị
-                </Text>
-                <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
-                  {fontSizeMode === "compact" ? "Chế độ chữ Nhỏ gọn" : "Chế độ chữ Bình thường"}
-                </Text>
-              </View>
-              {/* Toggle switch for Text Size Selector */}
-              <View className="flex-row bg-slate-100 dark:bg-slate-700 rounded-full p-1 border border-slate-200/50 dark:border-slate-600">
-                <TouchableOpacity
-                  onPress={() => setFontSizeMode("normal")}
-                  activeOpacity={0.7}
-                  className={`px-3 py-1.5 rounded-full ${
-                    fontSizeMode === "normal"
-                      ? "bg-white dark:bg-slate-600 shadow-sm"
-                      : "bg-transparent"
-                  }`}
-                >
-                  <Text
-                    className={`font-bold text-xs ${
-                      fontSizeMode === "normal"
-                        ? "text-[#D0021B] dark:text-[#93C5FD]"
-                        : "text-slate-400 dark:text-slate-500"
-                    }`}
-                  >
-                    Thường
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setFontSizeMode("compact")}
-                  activeOpacity={0.7}
-                  className={`px-3 py-1.5 rounded-full ${
-                    fontSizeMode === "compact"
-                      ? "bg-white dark:bg-slate-600 shadow-sm"
-                      : "bg-transparent"
-                  }`}
-                >
-                  <Text
-                    className={`font-bold text-xs ${
-                      fontSizeMode === "compact"
-                        ? "text-[#D0021B] dark:text-[#93C5FD]"
-                        : "text-slate-400 dark:text-slate-500"
-                    }`}
-                  >
-                    Nhỏ gọn
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
 
             {/* Chức năng 2: CHỈ hiển thị nếu user là ADMIN */}
             {user?.role === "ADMIN" && (
@@ -375,7 +324,10 @@ export default function ProfileScreen() {
                   >
                     Đăng ký khách hàng
                   </Text>
-                  <Text className="text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+                  <Text
+                    className="text-slate-400 mt-0.5"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
                     Thêm mới thông tin khách hàng tiềm năng
                   </Text>
                 </View>
@@ -400,7 +352,10 @@ export default function ProfileScreen() {
               }`}
             >
               <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
-              <Text className="text-white font-bold tracking-wide ml-2" style={{ fontSize: FONT_SIZE.xs }}>
+              <Text
+                className="text-white font-bold tracking-wide ml-2"
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
                 Đăng xuất tài khoản
               </Text>
             </TouchableOpacity>

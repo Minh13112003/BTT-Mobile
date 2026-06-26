@@ -22,6 +22,7 @@ export interface TourItem {
   tourCountry?: string | null;
   tourRegion?: string | null;
   tourCity?: string | null;
+  tourType?: string | null;
   /** Chỉ có ở API /tours/popular; các API khác trả undefined */
   bookingCount?: number;
   schedules?: TourSchedule[];
@@ -86,6 +87,7 @@ export interface TourTypeQuery {
   country?: string;
   region?: string;
   city?: string;
+  tourType?: string;
   page?: number;
   limit?: number;
 }

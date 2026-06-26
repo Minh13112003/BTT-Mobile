@@ -29,6 +29,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePinchToZoom } from "@/hooks/usePinchToZoom";
+import CustomAlert from "@/components/CustomAlert";
 
 export default function TourDetailScreen() {
   const router = useRouter();
@@ -86,6 +87,11 @@ export default function TourDetailScreen() {
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
   const { scale: imageScale, setScale: setImageScale, panHandlers: imagePanHandlers } = usePinchToZoom(1, 1, 4.0);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "confirm">("warning");
+
   const handleCloseModal = () => {
     setZoomImageUrl(null);
     setImageScale(1);
@@ -138,7 +144,10 @@ export default function TourDetailScreen() {
   const goCheckout = () => {
     if (!tour) return;
     if (!selectedDeparture) {
-      Alert.alert("Thông báo", "Vui lòng chọn ngày khởi hành");
+      setAlertTitle("Thông báo");
+      setAlertMessage("Vui lòng chọn ngày khởi hành");
+      setAlertType("warning");
+      setAlertVisible(true);
       return;
     }
     router.push({
@@ -286,11 +295,11 @@ export default function TourDetailScreen() {
             onSelect={setSelectedDeparture}
           />
 
-          <TripInfoCard tour={tour} />
-
           {tour.schedules?.length ? (
             <TourScheduleAccordion schedules={tour.schedules} />
           ) : null}
+
+          <TripInfoCard tour={tour} />
 
           <View className="mt-5">
             <SectionTitle title="Điều khoản & Lưu ý chung" />
@@ -366,7 +375,7 @@ export default function TourDetailScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 80,
+            bottom: 130,
             right: 20,
             width: 46,
             height: 46,
@@ -385,6 +394,14 @@ export default function TourDetailScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <CustomAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

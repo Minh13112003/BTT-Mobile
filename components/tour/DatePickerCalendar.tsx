@@ -107,7 +107,7 @@ export default function DatePickerCalendar({
             <Text
               style={[
                 styles.title,
-                { color: isDark ? "#F8FAFC" : "#0F172A" },
+                { color: isDark ? "#F8FAFC" : "#0F172A", fontSize: FONT_SIZE.xl },
               ]}
             >
               {title}
@@ -134,7 +134,7 @@ export default function DatePickerCalendar({
             <Text
               style={[
                 styles.monthLabel,
-                { color: isDark ? "#F8FAFC" : "#0F172A" },
+                { color: isDark ? "#F8FAFC" : "#0F172A", fontSize: FONT_SIZE.xs },
               ]}
             >
               Tháng {month + 1} / {year}
@@ -156,7 +156,7 @@ export default function DatePickerCalendar({
                 key={i}
                 style={[
                   styles.weekdayText,
-                  { color: isDark ? "#64748B" : "#94A3B8" },
+                  { color: isDark ? "#64748B" : "#94A3B8", fontSize: FONT_SIZE.card },
                 ]}
               >
                 {day}
@@ -182,7 +182,7 @@ export default function DatePickerCalendar({
                     <Text
                       style={[
                         styles.dayText,
-                        { color: isDark ? "#CBD5E1" : "#334155" },
+                        { color: isDark ? "#CBD5E1" : "#334155", fontSize: FONT_SIZE.xs },
                         isSelected && styles.selectedDayText,
                       ]}
                     >
@@ -226,7 +226,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   } as ViewStyle,
   title: {
-    fontSize: FONT_SIZE.xl,
     fontWeight: "800",
   } as TextStyle,
   closeBtn: {
@@ -248,7 +247,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   } as ViewStyle,
   monthLabel: {
-    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
   } as TextStyle,
   weekdaysContainer: {
@@ -259,7 +257,6 @@ const styles = StyleSheet.create({
   weekdayText: {
     width: `${100 / 7}%`,
     textAlign: "center",
-    fontSize: FONT_SIZE.card,
     fontWeight: "600",
   } as TextStyle,
   daysGrid: {
@@ -278,7 +275,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#D0021B", // Brand Red
   } as ViewStyle,
   dayText: {
-    fontSize: FONT_SIZE.xs,
     fontWeight: "600",
   } as TextStyle,
   selectedDayText: {

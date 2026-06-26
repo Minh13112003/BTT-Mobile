@@ -9,7 +9,7 @@ import { SECTION_LABELS, SearchMode } from "@/constants/tourFilters";
 import { useAuth } from "@/context/Auth_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
-import { useHomeTours } from "@/hooks/useHomeTours";
+import { useHomeTours, HomeSections } from "@/hooks/useHomeTours";
 import { getNews, NewsItem } from "@/services/news";
 import { TourItem } from "@/services/tour";
 import { getMe } from "@/services/user";
@@ -32,7 +32,7 @@ import {
 import DatePickerCalendar from "@/components/tour/DatePickerCalendar";
 
 /** Vertical sections rendered below the hot-tour carousel, in order. */
-const HOME_SECTIONS: SearchMode[] = ["newest", "popular", "domestic", "foreign"];
+const HOME_SECTIONS: (keyof HomeSections)[] = ["newest", "popular", "domestic", "foreign"];
 
 function QuickIcon({
   label,
@@ -95,6 +95,7 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [news, setNews] = useState<NewsItem[]>([]);
   const [earnedPoints, setEarnedPoints] = useState<number>(0);
+  const [iconScrollProgress, setIconScrollProgress] = useState(0);
 
   // States for Date filter widget
   const [dateSearchMode, setDateSearchMode] = useState<"specific" | "range">("specific");
@@ -207,7 +208,7 @@ export default function HomeScreen() {
     : (["#E0F2FE", "#F1F5F9"] as const);
 
   /** A vertical section (Hot / Popular / Domestic / Foreign) using the full TourCard. */
-  const renderSection = (mode: SearchMode) => {
+  const renderSection = (mode: keyof HomeSections) => {
     const data = sections[mode];
     return (
       <View key={mode} className="mt-9">
@@ -261,7 +262,7 @@ export default function HomeScreen() {
           {!!user && (
             <TouchableOpacity
               activeOpacity={0.85}
-              className="px-5 mt-6"
+              className="px-5 mt-8"
               style={{ overflow: "visible" }}
               onPress={() =>
                 router.push({
@@ -282,7 +283,7 @@ export default function HomeScreen() {
                 />
               </View>
               <Text
-                className={`font-semibold text-right mt-1 pr-1 ${
+                className={`font-semibold text-right mt-3 pr-1 ${
                   isDark ? "text-slate-400" : "text-slate-500"
                 }`}
                 style={{ fontSize: FONT_SIZE.xs }}
@@ -293,7 +294,7 @@ export default function HomeScreen() {
           )}
 
           {/* SEARCH BAR & WELCOME GREETING */}
-          <View className="px-5 mt-7">
+          <View className="px-5 mt-9">
             <Text
               className={`font-semibold uppercase tracking-wider pl-1 ${
                 isDark ? "text-slate-400" : "text-slate-500"
@@ -316,7 +317,7 @@ export default function HomeScreen() {
           </View>
 
           {/* DATE PICKER WIDGET */}
-          <View className="px-5 mt-7">
+          <View className="px-5 mt-9">
             <View
               style={{
                 backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
@@ -550,9 +551,110 @@ export default function HomeScreen() {
             </View>
           </View>
 
+          {/* 5 TOUR TYPE ICONS */}
+          <View className="mt-6">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingVertical: 4 }}
+              onScroll={(event) => {
+                const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+                const maxScroll = contentSize.width - layoutMeasurement.width;
+                if (maxScroll > 0) {
+                  setIconScrollProgress(contentOffset.x / maxScroll);
+                }
+              }}
+              scrollEventThrottle={16}
+            >
+              {[
+                {
+                  mode: "tour_of_the_year_2026",
+                  label: "TOUR OF THE\nYEAR 2026",
+                  image: require("@/assets/images/tour_year_2026.png"),
+                },
+                {
+                  mode: "tour_cao_cap",
+                  label: "TOUR\nCAO CẤP",
+                  image: require("@/assets/images/tour_cao_cap.png"),
+                },
+                {
+                  mode: "tour_mice",
+                  label: "TOUR\nMICE",
+                  image: require("@/assets/images/tour_mice.png"),
+                },
+                {
+                  mode: "tour_he",
+                  label: "TOUR\nHÈ",
+                  image: require("@/assets/images/tour_he.png"),
+                },
+                {
+                  mode: "tour_du_lich_xanh",
+                  label: "DU LỊCH\nXANH",
+                  image: require("@/assets/images/tour_du_lich_xanh.png"),
+                },
+              ].map((item) => (
+                 <TouchableOpacity
+                  key={item.mode}
+                  activeOpacity={0.8}
+                  onPress={() => openSearch({ mode: item.mode })}
+                  style={{ alignItems: "center", width: 100 }}
+                >
+                  <View
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 40,
+                      borderWidth: 2,
+                      borderColor: "#D0021B",
+                      overflow: "hidden",
+                      backgroundColor: "#FFFFFF",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                  >
+                    <Image
+                      source={item.image}
+                      style={{ width: 74, height: 74 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "800",
+                      color: isDark ? "#CBD5E1" : "#1E293B",
+                      textAlign: "center",
+                      marginTop: 6,
+                      lineHeight: 16,
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            {/* Custom horizontal scroll indicator (Shopee/Lazada style) */}
+            <View style={{ alignItems: "center", marginTop: 8 }}>
+              <View style={{ width: 36, height: 3, borderRadius: 1.5, backgroundColor: isDark ? "#334155" : "#CBD5E1", overflow: "hidden", flexDirection: "row" }}>
+                <View style={{
+                  width: 12,
+                  height: 3,
+                  borderRadius: 1.5,
+                  backgroundColor: "#D0021B",
+                  marginLeft: iconScrollProgress * 24
+                }} />
+              </View>
+            </View>
+          </View>
+
           {/* QUICK ACCESS GRID — Shopee style */}
           <View
-            className="mx-5 mt-8 rounded-2xl"
+            className="mx-5 mt-9 rounded-2xl"
             style={{
               backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
               shadowColor: "#000",
@@ -565,15 +667,6 @@ export default function HomeScreen() {
             }}
           >
             <View style={{ flexDirection: "row" }}>
-              <QuickIcon
-                label="Du lịch"
-                icon="map-outline"
-                bgLight="#EFF6FF"
-                bgDark="#1A2640"
-                color="#3B82F6"
-                isDark={isDark}
-                onPress={() => router.push("/(root)/(tabs)/search" as any)}
-              />
               <QuickIcon
                 label="Tin tức"
                 icon="newspaper-outline"
@@ -610,7 +703,7 @@ export default function HomeScreen() {
           </View>
 
           {/* SECTION: TOUR HOT NHẤT — carousel tự động 5s */}
-          <View className="mt-8">
+          <View className="mt-9">
             <SectionRow
               title={SECTION_LABELS.hot}
               onSeeAll={() => openSearch({ mode: "hot" })}
@@ -635,7 +728,7 @@ export default function HomeScreen() {
 
           {/* TIN TỨC NỔI BẬT */}
           {news.length > 0 && (
-            <View className="mt-10">
+            <View className="mt-9">
               <View className="flex-row justify-between items-center px-5 mb-3">
                 <Text
                   className={`font-black tracking-tight ${
@@ -705,7 +798,7 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
           )}
-          <View className="mt-10">
+          <View className="mt-9">
             <Footer />
           </View>
         </ScrollView>

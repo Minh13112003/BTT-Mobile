@@ -90,7 +90,7 @@ export default function CustomAlert({
           <Text
             style={[
               styles.title,
-              { color: isDark ? "#F8FAFC" : "#0F172A" },
+              { color: isDark ? "#F8FAFC" : "#0F172A", fontSize: FONT_SIZE.xl },
             ]}
           >
             {title}
@@ -100,7 +100,7 @@ export default function CustomAlert({
           <Text
             style={[
               styles.message,
-              { color: isDark ? "#94A3B8" : "#475569" },
+              { color: isDark ? "#94A3B8" : "#475569", fontSize: FONT_SIZE.xs },
             ]}
           >
             {message}
@@ -122,7 +122,7 @@ export default function CustomAlert({
                   <Text
                     style={[
                       styles.buttonText,
-                      { color: isDark ? "#CBD5E1" : "#475569" },
+                      { color: isDark ? "#CBD5E1" : "#475569", fontSize: FONT_SIZE.xs },
                     ]}
                   >
                     {cancelText}
@@ -137,7 +137,7 @@ export default function CustomAlert({
                   }}
                   style={[styles.button, styles.confirmButton]}
                 >
-                  <Text style={[styles.buttonText, styles.confirmButtonText]}>
+                  <Text style={[styles.buttonText, styles.confirmButtonText, { fontSize: FONT_SIZE.xs }]}>
                     {confirmText}
                   </Text>
                 </TouchableOpacity>
@@ -148,7 +148,7 @@ export default function CustomAlert({
                 onPress={onClose}
                 style={[styles.button, styles.singleButton]}
               >
-                <Text style={[styles.buttonText, styles.confirmButtonText]}>
+                <Text style={[styles.buttonText, styles.confirmButtonText, { fontSize: FONT_SIZE.xs }]}>
                   {confirmText}
                 </Text>
               </TouchableOpacity>
@@ -190,14 +190,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   } as ViewStyle,
   title: {
-    fontSize: FONT_SIZE.xl,
     fontWeight: "800",
     textAlign: "center",
     marginBottom: 10,
     letterSpacing: 0.25,
   } as TextStyle,
   message: {
-    fontSize: FONT_SIZE.xs,
     lineHeight: 24,
     textAlign: "center",
     marginBottom: 24,
@@ -223,7 +221,6 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   cancelButton: {},
   buttonText: {
-    fontSize: FONT_SIZE.xs,
     fontWeight: "700",
   } as TextStyle,
   confirmButtonText: {

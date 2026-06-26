@@ -592,32 +592,23 @@ export default function CheckoutScreen() {
                 </View>
 
                 {/* Row 2: Price details */}
-                <View className="flex-row items-center justify-between mt-2.5">
-                  <Text
-                    className="text-slate-400 font-medium"
-                    style={{ fontSize: FONT_SIZE.card }}
-                  >
+                <View className="mt-2.5">
+                  <Text className="text-slate-400 font-medium" style={{ fontSize: 16 }}>
                     Đơn giá:{" "}
-                    <Text className={`font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                    <Text className={`font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`} style={{ fontSize: 16 }}>
                       {formatCurrency(row.unitPrice)}
                     </Text>
                   </Text>
-
                   <Text
-                    className={`font-medium ${
-                      isDark ? "text-slate-400" : "text-slate-500"
-                    }`}
-                    style={{ fontSize: FONT_SIZE.card }}
+                    className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                    style={{ fontSize: 16 }}
                   >
                     Thành tiền:{" "}
                     <Text
-                      className={`font-black ${
-                        isDark ? "text-slate-200" : "text-[#D0021B]"
-                      }`}
+                      className={`font-black ${isDark ? "text-slate-200" : "text-[#D0021B]"}`}
+                      style={{ fontSize: 16 }}
                     >
-                      {row.value > 0
-                        ? formatCurrency(row.value * row.unitPrice)
-                        : "0 đ"}
+                      {row.value > 0 ? formatCurrency(row.value * row.unitPrice) : "0 đ"}
                     </Text>
                   </Text>
                 </View>
@@ -1027,7 +1018,7 @@ export default function CheckoutScreen() {
           }`}
           style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
         >
-          <View className="flex-1 mr-3">
+          <View className="flex-1 mr-3" style={{ minWidth: 0 }}>
             <Text className="font-bold text-slate-400 uppercase" style={{ fontSize: FONT_SIZE.card }}>
               Tổng số tiền
             </Text>
@@ -1035,7 +1026,9 @@ export default function CheckoutScreen() {
               className={`font-black ${
                 isDark ? "text-slate-200" : "text-[#D0021B]"
               }`}
-              style={{ fontSize: FONT_SIZE.lg }}
+              style={{ fontSize: FONT_SIZE.xs }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
               {formatCurrency(finalPrice)}
             </Text>

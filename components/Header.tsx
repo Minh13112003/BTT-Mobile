@@ -1,12 +1,16 @@
+import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
+import { logout as apiLogout } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   Image,
   Text,
   TouchableOpacity,
   View,
   useWindowDimensions,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -33,6 +37,9 @@ export default function Header({
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+  const { isLoggedIn, user, logout } = useAuth();
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
 
   // Logo co giãn theo bề ngang màn hình (≈48%), chặn trên ở LOGO_MAX_WIDTH,
@@ -65,7 +72,11 @@ export default function Header({
             </TouchableOpacity>
           )}
           {title === "BENTHANH TOURIST" ? (
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.replace("/(root)/(tabs)" as any)}
+              style={{ flexDirection: "row", alignItems: "center" }}
+            >
               <View style={{ marginRight: 8, alignItems: "flex-end" }}>
                 <Text
                   style={{
@@ -106,7 +117,7 @@ export default function Header({
                 style={{ width: 72, height: 72 }}
                 resizeMode="contain"
               />
-            </View>
+            </TouchableOpacity>
           ) : (
             <Text
               numberOfLines={1}
@@ -123,7 +134,7 @@ export default function Header({
             <TouchableOpacity
               onPress={toggleTheme}
               activeOpacity={0.7}
-              className="w-8 h-8 rounded-full bg-white/10 items-center justify-center mr-2.5"
+              className="w-8 h-8 rounded-full bg-white/10 items-center justify-center"
             >
               <Ionicons
                 name={isDark ? "sunny-outline" : "moon-outline"}
@@ -131,9 +142,253 @@ export default function Header({
                 color="#FFFFFF"
               />
             </TouchableOpacity>
+
+            {/* Avatar của người sử dụng (kiểu Google) */}
+            {isLoggedIn && user && (
+              <TouchableOpacity
+                onPress={() => setShowProfileCard(true)}
+                activeOpacity={0.8}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  borderWidth: 1.5,
+                  borderColor: "#FFFFFF",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginLeft: 8,
+                }}
+              >
+                {user.avatarUrl ? (
+                  <Image
+                    source={{ uri: user.avatarUrl }}
+                    style={{ width: 32, height: 32 }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      backgroundColor: isDark ? "#4B5563" : "#FFFFFF",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="person"
+                      size={16}
+                      color={isDark ? "#FFFFFF" : "#D0021B"}
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
+
+      {/* Google Profile Card Modal */}
+      {isLoggedIn && user && (
+        <Modal
+          visible={showProfileCard}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowProfileCard(false)}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 24,
+            }}
+            activeOpacity={1}
+            onPress={() => setShowProfileCard(false)}
+          >
+            <TouchableOpacity
+              style={{
+                width: "100%",
+                maxWidth: 320,
+                backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: isDark ? "#334155" : "#E2E8F0",
+                padding: 24,
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 12 },
+                shadowOpacity: 0.2,
+                shadowRadius: 16,
+                elevation: 10,
+              }}
+              activeOpacity={1}
+            >
+              {/* Close Button */}
+              <TouchableOpacity
+                onPress={() => setShowProfileCard(false)}
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  padding: 4,
+                  borderRadius: 12,
+                  backgroundColor: isDark ? "#2D3748" : "#F1F5F9",
+                }}
+              >
+                <Ionicons name="close" size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+              </TouchableOpacity>
+
+              {/* Email Header */}
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: isDark ? "#64748B" : "#94A3B8",
+                  marginBottom: 16,
+                  marginTop: 8,
+                }}
+              >
+                TÀI KHOẢN BENTHANH TOURIST
+              </Text>
+
+              {/* Big Avatar */}
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  overflow: "hidden",
+                  borderWidth: 3,
+                  borderColor: isDark ? "#93C5FD" : "#D0021B",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  backgroundColor: isDark ? "#2D3748" : "#F8FAFC",
+                }}
+              >
+                {user.avatarUrl ? (
+                  <Image
+                    source={{ uri: user.avatarUrl }}
+                    style={{ width: 80, height: 80 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons
+                    name="person"
+                    size={36}
+                    color={isDark ? "#93C5FD" : "#D0021B"}
+                  />
+                )}
+              </View>
+
+              {/* User Info */}
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "800",
+                  color: isDark ? "#F8FAFC" : "#0F172A",
+                  textAlign: "center",
+                }}
+              >
+                {user.firstName && user.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : "Người dùng"}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: isDark ? "#94A3B8" : "#64748B",
+                  textAlign: "center",
+                  marginTop: 2,
+                }}
+              >
+                {user.email}
+              </Text>
+
+              {/* Phone row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  backgroundColor: isDark ? "#2D3748" : "#F8FAFC",
+                  width: "100%",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="call-outline" size={16} color={isDark ? "#93C5FD" : "#D0021B"} />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: isDark ? "#CBD5E1" : "#475569",
+                    marginLeft: 8,
+                  }}
+                >
+                  {user.phonenumber || "091234567"}
+                </Text>
+              </View>
+
+              {/* Divider */}
+              <View
+                style={{
+                  width: "100%",
+                  height: 1,
+                  backgroundColor: isDark ? "#334155" : "#E2E8F0",
+                  marginVertical: 20,
+                }}
+              />
+
+              {/* Logout Button */}
+              <TouchableOpacity
+                onPress={async () => {
+                  setShowProfileCard(false);
+                  try {
+                    await apiLogout();
+                  } catch (error) {
+                    console.log("Header logout error, forcing redirect:", error);
+                  } finally {
+                    await logout();
+                    router.replace("/login" as any);
+                  }
+                }}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? "#991B1B" : "#EF4444",
+                  borderRadius: 16,
+                  height: 48,
+                  width: "100%",
+                  shadowColor: "#EF4444",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontWeight: "700",
+                    fontSize: 15,
+                    marginLeft: 8,
+                  }}
+                >
+                  Đăng xuất tài khoản
+                </Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      )}
     </Wrapper>
   );
 }

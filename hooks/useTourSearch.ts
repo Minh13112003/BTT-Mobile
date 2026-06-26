@@ -1,4 +1,4 @@
-import { MODE_COUNTRY, SearchMode } from "@/constants/tourFilters";
+import { MODE_COUNTRY, SearchMode, MODE_TOUR_TYPE } from "@/constants/tourFilters";
 import {
   getHotTours,
   getNewestTours,
@@ -112,7 +112,23 @@ export function useTourSearch(init?: UseTourSearchInit) {
           );
         }
 
-        // 2. Date filter
+        // 2. Filter by search mode / type
+        if (MODE_TOUR_TYPE[mode]) {
+          filtered = filtered.filter(
+            (item) => item.tourType === MODE_TOUR_TYPE[mode]
+          );
+        } else if (MODE_COUNTRY[mode]) {
+          filtered = filtered.filter(
+            (item) => item.tourCountry === MODE_COUNTRY[mode]
+          );
+          if (region) {
+            filtered = filtered.filter(
+              (item) => item.tourRegion === region
+            );
+          }
+        }
+
+        // 3. Date filter
         let filteredByDate: TourItem[] = [];
         if (dateMode === "specific" && specificDate) {
           const target = new Date(specificDate);
@@ -158,6 +174,12 @@ export function useTourSearch(init?: UseTourSearchInit) {
           res = await getHotTours(pageNum, LIMIT);
         } else if (mode === "popular") {
           res = await getPopularTours(pageNum, LIMIT);
+        } else if (MODE_TOUR_TYPE[mode]) {
+          res = await getToursByType({
+            tourType: MODE_TOUR_TYPE[mode],
+            page: pageNum,
+            limit: LIMIT,
+          });
         } else {
           res = await getToursByType({
             country: MODE_COUNTRY[mode],

@@ -5,6 +5,7 @@ import {
   TIERS,
 } from "@/components/MembershipBanner";
 import { useAuth } from "@/context/Auth_Context";
+import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -20,6 +21,7 @@ import {
   View,
   ViewToken,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import {
   Circle,
@@ -114,9 +116,12 @@ const BENEFITS: Record<TierName, string[]> = {
 export default function MembershipScreen() {
   const router = useRouter();
   const { user, rewardPoints } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const { earnedPoints } = useLocalSearchParams<{ earnedPoints: string }>();
   const points = parseInt(earnedPoints ?? "0") || 0;
   const currentTier = getTier(points);
+  const insets = useSafeAreaInsets();
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -148,11 +153,11 @@ export default function MembershipScreen() {
   const isMyTier = viewedIdx === userTierIdx;
 
   return (
-    <View style={s.root}>
+    <View style={[s.root, { backgroundColor: isDark ? "#111318" : "#F1F5F9" }]}>
       <StatusBar style="light" backgroundColor="#E51F27" />
 
       {/* Header */}
-      <LinearGradient colors={["#E51F27", "#A0141A"]} style={s.header}>
+      <LinearGradient colors={["#E51F27", "#A0141A"]} style={[s.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={s.backBtn}
@@ -161,7 +166,17 @@ export default function MembershipScreen() {
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Hạng thành viên</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={s.themeBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={isDark ? "sunny-outline" : "moon-outline"}
+            size={22}
+            color="#fff"
+          />
+        </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView
@@ -225,56 +240,13 @@ export default function MembershipScreen() {
               );
             }}
           />
+        </View>
 
-          {/* Left Arrow Button */}
-          <TouchableOpacity
-            onPress={() => goTo(viewedIdx - 1)}
-            disabled={viewedIdx === 0}
-            style={[
-              s.navBtn,
-              viewedIdx === 0 && s.navOff,
-              {
-                position: "absolute",
-                left: 10,
-                zIndex: 10,
-                top: "50%",
-                marginTop: -20,
-              },
-            ]}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={22}
-              color={viewedIdx === 0 ? "#ccc" : "#E51F27"}
-            />
-          </TouchableOpacity>
-
-          {/* Right Arrow Button */}
-          <TouchableOpacity
-            onPress={() => goTo(viewedIdx + 1)}
-            disabled={viewedIdx === DISPLAY_NAMES.length - 1}
-            style={[
-              s.navBtn,
-              viewedIdx === DISPLAY_NAMES.length - 1 && s.navOff,
-              {
-                position: "absolute",
-                right: 10,
-                zIndex: 10,
-                top: "50%",
-                marginTop: -20,
-              },
-            ]}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={22}
-              color={
-                viewedIdx === DISPLAY_NAMES.length - 1 ? "#ccc" : "#E51F27"
-              }
-            />
-          </TouchableOpacity>
+        {/* Hướng dẫn lướt sang trái, phải */}
+        <View style={{ alignItems: "center", marginTop: 8 }}>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: "#64748B" }}>
+            ← Vuốt sang trái / phải để xem hạng thẻ khác →
+          </Text>
         </View>
 
         {/* ── Navigation: dots ── */}
@@ -299,7 +271,7 @@ export default function MembershipScreen() {
         </View>
 
         {/* ── Tier label ── */}
-        <Text style={s.tierLabel}>
+        <Text style={[s.tierLabel, { color: isDark ? "#E2E8F0" : "#475569" }]}>
           {viewedTier.icon} Hạng {viewedTier.name}
           {isMyTier ? "  ✦ Hạng của bạn" : ""}
         </Text>
@@ -308,7 +280,7 @@ export default function MembershipScreen() {
         {!isMyTier && (
           <TouchableOpacity
             onPress={() => goTo(userTierIdx)}
-            style={s.myTierBtn}
+            style={[s.myTierBtn, isDark && { backgroundColor: "rgba(229,31,39,0.15)" }]}
             activeOpacity={0.8}
           >
             <Ionicons name="person-circle-outline" size={17} color="#E51F27" />
@@ -319,8 +291,8 @@ export default function MembershipScreen() {
         )}
 
         {/* ── Benefits for currently viewed tier ── */}
-        <View style={[s.benefitsCard, !isMyTier && { marginTop: 12 }]}>
-          <Text style={s.benefitsTitle}>Đặc quyền hạng {viewedTier.name}</Text>
+        <View style={[s.benefitsCard, { backgroundColor: isDark ? "#1E222B" : "#fff", borderColor: isDark ? "#334155" : "transparent", borderWidth: isDark ? 1 : 0 }, !isMyTier && { marginTop: 12 }]}>
+          <Text style={[s.benefitsTitle, { color: isDark ? "#F8FAFC" : "#1e293b" }]}>Đặc quyền hạng {viewedTier.name}</Text>
           {BENEFITS[viewedTier.name as TierName].map((b, i) => (
             <View key={i} style={s.benefitRow}>
               <Ionicons
@@ -329,7 +301,7 @@ export default function MembershipScreen() {
                 color="#22C55E"
                 style={{ marginTop: 4 }}
               />
-              <Text style={s.benefitTxt}>{b}</Text>
+              <Text style={[s.benefitTxt, { color: isDark ? "#CBD5E1" : "#374151" }]}>{b}</Text>
             </View>
           ))}
         </View>
@@ -369,13 +341,19 @@ export default function MembershipScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#F1F5F9" },
-
+  themeBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 52,
     paddingBottom: 16,
   },
   backBtn: { width: 40, height: 40, justifyContent: "center" },

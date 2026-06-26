@@ -8,7 +8,10 @@ import {
 } from "@/services/tour";
 import { useCallback, useEffect, useState } from "react";
 
-export type HomeSections = Record<SearchMode, TourItem[]>;
+export type HomeSections = Record<
+  "newest" | "hot" | "popular" | "domestic" | "foreign",
+  TourItem[]
+>;
 
 const EMPTY: HomeSections = {
   newest: [],

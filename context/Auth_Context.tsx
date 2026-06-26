@@ -32,6 +32,7 @@ export interface User {
   earnedPoints?: number;
   rewardPoints?: number;
   avatarUrl?: string | null;
+  phonenumber?: string;
 }
 
 interface AuthContextType {
@@ -62,14 +63,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshPoints = useCallback(async () => {
     try {
       const res = await getMe();
-      const me = res?.data?.data ?? res?.data;
-      setEarnedPoints(typeof me?.earnedPoints === "number" ? me.earnedPoints : 0);
-      setRewardPoints(typeof me?.rewardPoints === "number" ? me.rewardPoints : 0);
-      if ("avatarUrl" in (me ?? {})) {
-        setUser((prev) => prev ? { ...prev, avatarUrl: me.avatarUrl ?? null } : prev);
+      const me = res?.data?.data ?? res?.data?.user ?? res?.data;
+      if (me) {
+        setEarnedPoints(typeof me.earnedPoints === "number" ? me.earnedPoints : 0);
+        setRewardPoints(typeof me.rewardPoints === "number" ? me.rewardPoints : 0);
+        
+        setUser((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            ...me,
+          };
+        });
+        
+        await storage.set("user", JSON.stringify(me));
       }
-    } catch {
-      // giữ nguyên giá trị cũ nếu lỗi
+    } catch (error) {
+      console.error("Lỗi khi đồng bộ thông tin user:", error);
     }
   }, []);
 

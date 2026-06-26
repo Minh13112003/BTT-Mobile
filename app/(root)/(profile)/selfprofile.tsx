@@ -1,10 +1,17 @@
+import CustomToast from "@/components/CustomToast";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
+import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
-import { changePassword, getMe, updateAvatar, updateProfile } from "@/services/user";
+import {
+  changePassword,
+  getMe,
+  updateAvatar,
+  updateProfile,
+} from "@/services/user";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
@@ -22,11 +29,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import CustomToast from "@/components/CustomToast";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 LogBox.ignoreLogs(["AxiosError"]);
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/context/Theme_Context";
 
 export default function SelfProfileScreen() {
   const router = useRouter();
@@ -197,11 +202,13 @@ export default function SelfProfileScreen() {
         newPassword,
       });
 
-      setSuccessMsg("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...");
+      setSuccessMsg(
+        "Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...",
+      );
       setOldPassword("");
       setNewPassword("");
       setToastMessage(
-        "Kính gửi Quý khách, mật khẩu tài khoản của Quý khách đã được cập nhật thành công. Nhằm bảo mật thông tin, nếu Quý khách không thực hiện thao tác này, vui lòng liên hệ ngay với bộ phận CSKH để được hỗ trợ kịp thời. Trân trọng!"
+        "Kính gửi Quý khách, mật khẩu tài khoản của Quý khách đã được cập nhật thành công. Nhằm bảo mật thông tin, nếu Quý khách không thực hiện thao tác này, vui lòng liên hệ ngay với bộ phận CSKH để được hỗ trợ kịp thời. Trân trọng!",
       );
       setShowToast(true);
     } catch (err: any) {
@@ -211,9 +218,12 @@ export default function SelfProfileScreen() {
 
       let displayMsg = "Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.";
       if (status === 400 || status === 401) {
-        displayMsg = "Sai mật khẩu cũ, xin vui lòng nhập đúng mật khẩu cũ của bạn.";
+        displayMsg =
+          "Sai mật khẩu cũ, xin vui lòng nhập đúng mật khẩu cũ của bạn.";
       } else if (rawMsg) {
-        displayMsg = Array.isArray(rawMsg) ? rawMsg.join(", ") : rawMsg.toString();
+        displayMsg = Array.isArray(rawMsg)
+          ? rawMsg.join(", ")
+          : rawMsg.toString();
       }
 
       setErrorMsg(displayMsg);
@@ -226,7 +236,10 @@ export default function SelfProfileScreen() {
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Quyền truy cập", "Cần cho phép truy cập thư viện ảnh để đổi ảnh đại diện.");
+      Alert.alert(
+        "Quyền truy cập",
+        "Cần cho phép truy cập thư viện ảnh để đổi ảnh đại diện.",
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -245,7 +258,10 @@ export default function SelfProfileScreen() {
       const res = await updateAvatar(asset.uri, fileName, mimeType);
       const updatedUser = res.data?.user ?? res.data;
       if (updatedUser) {
-        await SecureStore.setItemAsync("user_profile", JSON.stringify(updatedUser));
+        await SecureStore.setItemAsync(
+          "user_profile",
+          JSON.stringify(updatedUser),
+        );
         setProfile(updatedUser);
       }
       Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật!");
@@ -270,13 +286,23 @@ export default function SelfProfileScreen() {
             onPress={() => router.back()}
             className={`p-2 rounded-full ${isDark ? "bg-slate-800" : "bg-white/60"}`}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#93C5FD" : "#1E3A8A"} />
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={isDark ? "#93C5FD" : "#1E3A8A"}
+            />
           </TouchableOpacity>
-          <Text className={`text-xl font-black ml-4 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+          <Text
+            className={`text-xl font-black ml-4 ${isDark ? "text-slate-100" : "text-slate-800"}`}
+          >
             Hồ sơ cá nhân
           </Text>
           {loadingProfile && (
-            <ActivityIndicator size="small" color={isDark ? "#93C5FD" : "#3B82F6"} className="ml-3" />
+            <ActivityIndicator
+              size="small"
+              color={isDark ? "#93C5FD" : "#3B82F6"}
+              className="ml-3"
+            />
           )}
         </View>
 
@@ -285,643 +311,804 @@ export default function SelfProfileScreen() {
           style={{ flex: 1 }}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            paddingHorizontal: 24,
-            paddingTop: 20,
-            paddingBottom: 40,
-          }}
-        >
-          {/* Card thông tin cá nhân */}
-          <View className={`rounded-[24px] p-5 border ${
-            isDark
-              ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
-              : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
-          }`}>
-
-            {/* Avatar */}
-            <View style={{ alignItems: "center", marginBottom: 20 }}>
-              <TouchableOpacity
-                onPress={handlePickAvatar}
-                activeOpacity={0.8}
-                disabled={uploadingAvatar}
-                style={{ position: "relative" }}
-              >
-                {localAvatarUri || displayUser?.avatarUrl ? (
-                  <Image
-                    source={{ uri: localAvatarUri ?? displayUser?.avatarUrl }}
-                    style={{
-                      width: 90,
-                      height: 90,
-                      borderRadius: 45,
-                      borderWidth: 3,
-                      borderColor: isDark ? "#3B82F6" : "#D0021B",
-                    }}
-                    resizeMode="cover"
-                  />
-                ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 20,
+              paddingBottom: 40,
+            }}
+          >
+            {/* Card thông tin cá nhân */}
+            <View
+              className={`rounded-[24px] p-5 border ${
+                isDark
+                  ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
+                  : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
+              }`}
+            >
+              {/* Avatar */}
+              <View style={{ alignItems: "center", marginBottom: 20 }}>
+                <TouchableOpacity
+                  onPress={handlePickAvatar}
+                  activeOpacity={0.8}
+                  disabled={uploadingAvatar}
+                  style={{ position: "relative" }}
+                >
+                  {localAvatarUri || displayUser?.avatarUrl ? (
+                    <Image
+                      source={{ uri: localAvatarUri ?? displayUser?.avatarUrl }}
+                      style={{
+                        width: 200,
+                        height: 200,
+                        borderRadius: 100,
+                        borderWidth: 3,
+                        borderColor: isDark ? "#3B82F6" : "#D0021B",
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 200,
+                        height: 200,
+                        borderRadius: 100,
+                        borderWidth: 3,
+                        borderColor: isDark ? "#3B82F6" : "#D0021B",
+                        backgroundColor: isDark ? "#1E293B" : "#FFF1F2",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Image
+                        source={require("../../../assets/images/Logo_BTT-2018.png")}
+                        style={{ width: 130, height: 130 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
                   <View
                     style={{
-                      width: 90,
-                      height: 90,
-                      borderRadius: 45,
-                      borderWidth: 3,
-                      borderColor: isDark ? "#3B82F6" : "#D0021B",
-                      backgroundColor: isDark ? "#1E293B" : "#FFF1F2",
+                      position: "absolute",
+                      bottom: 4,
+                      right: 8,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: isDark ? "#3B82F6" : "#D0021B",
                       alignItems: "center",
                       justifyContent: "center",
-                      overflow: "hidden",
+                      borderWidth: 2,
+                      borderColor: isDark ? "#1E293B" : "#FFFFFF",
                     }}
                   >
-                    <Image
-                      source={require("../../../assets/images/Logo_BTT-2018.png")}
-                      style={{ width: 60, height: 60 }}
-                      resizeMode="contain"
-                    />
+                    {uploadingAvatar ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Ionicons name="camera" size={20} color="#FFFFFF" />
+                    )}
                   </View>
-                )}
-                <View
+                </TouchableOpacity>
+                <Text
                   style={{
-                    position: "absolute",
-                    bottom: 0,
-                    right: 0,
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: isDark ? "#3B82F6" : "#D0021B",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 2,
-                    borderColor: isDark ? "#1E293B" : "#FFFFFF",
+                    marginTop: 8,
+                    fontSize: 12,
+                    color: isDark ? "#6B7280" : "#9CA3AF",
+                    fontStyle: "italic",
                   }}
                 >
-                  {uploadingAvatar ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Ionicons name="camera" size={14} color="#FFFFFF" />
-                  )}
-                </View>
-              </TouchableOpacity>
-              <Text
-                style={{
-                  marginTop: 8,
-                  fontSize: 12,
-                  color: isDark ? "#6B7280" : "#9CA3AF",
-                  fontStyle: "italic",
-                }}
-              >
-                Nhấn để thay đổi ảnh đại diện
-              </Text>
-            </View>
-
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className={`font-bold text-lg ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-                Thông tin tài khoản
-              </Text>
-              {!isEditingProfile && (
-                <TouchableOpacity
-                  onPress={startEditing}
-                  className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? "bg-slate-700 border border-slate-600" : "bg-blue-50"}`}
-                >
-                  <Ionicons name="create-outline" size={16} color={isDark ? "#93C5FD" : "#3B82F6"} />
-                  <Text className={`font-bold ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}>
-                    Chỉnh sửa
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {isEditingProfile ? (
-              // CHẾ ĐỘ CHỈNH SỬA
-              <View>
-                {/* Mục Họ và Tên (chia làm 2 ô) */}
-                <View className="flex-row mb-4">
-                  <View className="flex-1 mr-2">
-                    <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                      Họ
-                    </Text>
-                    <View
-                      className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                        isDark
-                          ? focusedField === "firstName"
-                            ? "border-blue-500 bg-slate-900/60"
-                            : "border-slate-700/60 bg-slate-900/30"
-                          : focusedField === "firstName"
-                            ? "border-blue-500 bg-white"
-                            : "border-slate-100 bg-slate-50/50"
-                      }`}
-                    >
-                      <TextInput
-                        className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
-                        style={{ fontSize: FONT_SIZE.xs }}
-                        placeholder="Họ"
-                        placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                        value={editFirstName}
-                        onChangeText={setEditFirstName}
-                        onFocus={() => setFocusedField("firstName")}
-                        onBlur={() => setFocusedField("")}
-                      />
-                    </View>
-                  </View>
-
-                  <View className="flex-1 ml-2">
-                    <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                      Tên
-                    </Text>
-                    <View
-                      className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                        isDark
-                          ? focusedField === "lastName"
-                            ? "border-blue-500 bg-slate-900/60"
-                            : "border-slate-700/60 bg-slate-900/30"
-                          : focusedField === "lastName"
-                            ? "border-blue-500 bg-white"
-                            : "border-slate-100 bg-slate-50/50"
-                      }`}
-                    >
-                      <TextInput
-                        className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
-                        style={{ fontSize: FONT_SIZE.xs }}
-                        placeholder="Tên"
-                        placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                        value={editLastName}
-                        onChangeText={setEditLastName}
-                        onFocus={() => setFocusedField("lastName")}
-                        onBlur={() => setFocusedField("")}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Mục Email */}
-                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Địa chỉ Email
+                  Nhấn để thay đổi ảnh đại diện
                 </Text>
-                <View
-                  className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                    isDark
-                      ? focusedField === "email"
-                        ? "border-blue-500 bg-slate-900/60"
-                        : "border-slate-700/60 bg-slate-900/30"
-                      : focusedField === "email"
-                        ? "border-blue-500 bg-white"
-                        : "border-slate-100 bg-slate-50/50"
-                  }`}
-                >
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={focusedField === "email" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
-                  />
-                  <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                    placeholder="Địa chỉ Email"
-                    placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={editEmail}
-                    onChangeText={setEditEmail}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField("")}
-                  />
-                </View>
-
-                {/* Mục Tuổi */}
-                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Tuổi
-                </Text>
-                <View
-                  className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                    isDark
-                      ? focusedField === "age"
-                        ? "border-blue-500 bg-slate-900/60"
-                        : "border-slate-700/60 bg-slate-900/30"
-                      : focusedField === "age"
-                        ? "border-blue-500 bg-white"
-                        : "border-slate-100 bg-slate-50/50"
-                  }`}
-                >
-                  <Ionicons
-                    name="calendar-number-outline"
-                    size={20}
-                    color={focusedField === "age" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
-                  />
-                  <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                    placeholder="Nhập tuổi"
-                    placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                    keyboardType="numeric"
-                    value={editAge}
-                    onChangeText={setEditAge}
-                    onFocus={() => setFocusedField("age")}
-                    onBlur={() => setFocusedField("")}
-                  />
-                </View>
-
-                {/* Thông báo lỗi khi cập nhật thông tin */}
-                {profileError ? (
-                  <View className={`flex-row items-center border rounded-xl mb-4 p-3 ${
-                    isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
-                  }`}>
-                    <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 font-medium ml-2 flex-1"
-                    style={{ fontSize: FONT_SIZE.xs }}>
-                      {profileError}
-                    </Text>
-                  </View>
-                ) : null}
               </View>
-            ) : (
-              // CHẾ ĐỘ HIỂN THỊ
-              <View>
-                {/* Mục Họ và tên */}
-                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Họ và tên
-                </Text>
-                <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                  isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-                }`}>
-                  <Ionicons name="person-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}>
-                    {displayUser?.firstName && displayUser?.lastName
-                      ? `${displayUser.firstName} ${displayUser.lastName}`
-                      : "Chưa cập nhật"}
-                  </Text>
-                </View>
 
-                {/* Mục Email */}
-                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Địa chỉ Email
+              <View className="flex-row justify-between items-center mb-6">
+                <Text
+                  className={`font-bold text-lg ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                >
+                  Thông tin tài khoản
                 </Text>
-                <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                  isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-                }`}>
-                  <Ionicons name="mail-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}>
-                    {displayUser?.email || "Chưa cập nhật"}
-                  </Text>
-                </View>
+                {!isEditingProfile && (
+                  <TouchableOpacity
+                    onPress={startEditing}
+                    className={`flex-row items-center px-3 py-1.5 rounded-full ${isDark ? "bg-slate-700 border border-slate-600" : "bg-blue-50"}`}
+                  >
+                    <Ionicons
+                      name="create-outline"
+                      size={16}
+                      color={isDark ? "#93C5FD" : "#3B82F6"}
+                    />
+                    <Text
+                      className={`font-bold ml-1 ${isDark ? "text-blue-400" : "text-blue-600"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      Chỉnh sửa
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
-                {/* Mục Tuổi */}
-                <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Tuổi
+              {isEditingProfile ? (
+                // CHẾ ĐỘ CHỈNH SỬA
+                <View>
+                  {/* Mục Họ và Tên (chia làm 2 ô) */}
+                  <View className="flex-row mb-4">
+                    <View className="flex-1 mr-2">
+                      <Text
+                        className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        Họ
+                      </Text>
+                      <View
+                        className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
+                          isDark
+                            ? focusedField === "firstName"
+                              ? "border-blue-500 bg-slate-900/60"
+                              : "border-slate-700/60 bg-slate-900/30"
+                            : focusedField === "firstName"
+                              ? "border-blue-500 bg-white"
+                              : "border-slate-100 bg-slate-50/50"
+                        }`}
+                      >
+                        <TextInput
+                          className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                          style={{ fontSize: FONT_SIZE.xs }}
+                          placeholder="Họ"
+                          placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                          value={editFirstName}
+                          onChangeText={setEditFirstName}
+                          onFocus={() => setFocusedField("firstName")}
+                          onBlur={() => setFocusedField("")}
+                        />
+                      </View>
+                    </View>
+
+                    <View className="flex-1 ml-2">
+                      <Text
+                        className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        Tên
+                      </Text>
+                      <View
+                        className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
+                          isDark
+                            ? focusedField === "lastName"
+                              ? "border-blue-500 bg-slate-900/60"
+                              : "border-slate-700/60 bg-slate-900/30"
+                            : focusedField === "lastName"
+                              ? "border-blue-500 bg-white"
+                              : "border-slate-100 bg-slate-50/50"
+                        }`}
+                      >
+                        <TextInput
+                          className={`flex-1 h-full font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                          style={{ fontSize: FONT_SIZE.xs }}
+                          placeholder="Tên"
+                          placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                          value={editLastName}
+                          onChangeText={setEditLastName}
+                          onFocus={() => setFocusedField("lastName")}
+                          onBlur={() => setFocusedField("")}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Mục Email */}
+                  <Text
+                    className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Địa chỉ Email
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                      isDark
+                        ? focusedField === "email"
+                          ? "border-blue-500 bg-slate-900/60"
+                          : "border-slate-700/60 bg-slate-900/30"
+                        : focusedField === "email"
+                          ? "border-blue-500 bg-white"
+                          : "border-slate-100 bg-slate-50/50"
+                    }`}
+                  >
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={
+                        focusedField === "email"
+                          ? isDark
+                            ? "#60A5FA"
+                            : "#3B82F6"
+                          : "#94A3B8"
+                      }
+                    />
+                    <TextInput
+                      className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      placeholder="Địa chỉ Email"
+                      placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      value={editEmail}
+                      onChangeText={setEditEmail}
+                      onFocus={() => setFocusedField("email")}
+                      onBlur={() => setFocusedField("")}
+                    />
+                  </View>
+
+                  {/* Mục Tuổi */}
+                  <Text
+                    className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Tuổi
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                      isDark
+                        ? focusedField === "age"
+                          ? "border-blue-500 bg-slate-900/60"
+                          : "border-slate-700/60 bg-slate-900/30"
+                        : focusedField === "age"
+                          ? "border-blue-500 bg-white"
+                          : "border-slate-100 bg-slate-50/50"
+                    }`}
+                  >
+                    <Ionicons
+                      name="calendar-number-outline"
+                      size={20}
+                      color={
+                        focusedField === "age"
+                          ? isDark
+                            ? "#60A5FA"
+                            : "#3B82F6"
+                          : "#94A3B8"
+                      }
+                    />
+                    <TextInput
+                      className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      placeholder="Nhập tuổi"
+                      placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                      keyboardType="numeric"
+                      value={editAge}
+                      onChangeText={setEditAge}
+                      onFocus={() => setFocusedField("age")}
+                      onBlur={() => setFocusedField("")}
+                    />
+                  </View>
+
+                  {/* Thông báo lỗi khi cập nhật thông tin */}
+                  {profileError ? (
+                    <View
+                      className={`flex-row items-center border rounded-xl mb-4 p-3 ${
+                        isDark
+                          ? "bg-red-950/30 border-red-900/50"
+                          : "bg-red-50 border-red-100"
+                      }`}
+                    >
+                      <Ionicons name="alert-circle" size={18} color="#EF4444" />
+                      <Text
+                        className="text-red-600 font-medium ml-2 flex-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        {profileError}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : (
+                // CHẾ ĐỘ HIỂN THỊ
+                <View>
+                  {/* Mục Họ và tên */}
+                  <Text
+                    className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Họ và tên
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                      isDark
+                        ? "bg-slate-900/40 border-slate-700/50"
+                        : "bg-slate-50/50 border-slate-100"
+                    }`}
+                  >
+                    <Ionicons
+                      name="person-outline"
+                      size={20}
+                      color={isDark ? "#6B7280" : "#94A3B8"}
+                    />
+                    <Text
+                      className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      {displayUser?.firstName && displayUser?.lastName
+                        ? `${displayUser.firstName} ${displayUser.lastName}`
+                        : "Chưa cập nhật"}
+                    </Text>
+                  </View>
+
+                  {/* Mục Email */}
+                  <Text
+                    className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Địa chỉ Email
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                      isDark
+                        ? "bg-slate-900/40 border-slate-700/50"
+                        : "bg-slate-50/50 border-slate-100"
+                    }`}
+                  >
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={isDark ? "#6B7280" : "#94A3B8"}
+                    />
+                    <Text
+                      className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      {displayUser?.email || "Chưa cập nhật"}
+                    </Text>
+                  </View>
+
+                  {/* Mục Tuổi */}
+                  <Text
+                    className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Tuổi
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                      isDark
+                        ? "bg-slate-900/40 border-slate-700/50"
+                        : "bg-slate-50/50 border-slate-100"
+                    }`}
+                  >
+                    <Ionicons
+                      name="calendar-number-outline"
+                      size={20}
+                      color={isDark ? "#6B7280" : "#94A3B8"}
+                    />
+                    <Text
+                      className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      {displayUser?.age
+                        ? `${displayUser.age} tuổi`
+                        : "Chưa cập nhật"}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Các mục không cho phép sửa (hiển thị giống nhau ở cả 2 chế độ, nhưng thêm icon khóa ở chế độ chỉnh sửa) */}
+              {/* Mục Chức vụ / Vai trò */}
+              <Text
+                className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
+                Quyền hạn hệ thống
+              </Text>
+              <View
+                className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
+                  isEditingProfile
+                    ? isDark
+                      ? "bg-slate-900/60 border-slate-700/50"
+                      : "bg-slate-100 border-slate-100"
+                    : isDark
+                      ? "bg-slate-900/40 border-slate-700/50"
+                      : "bg-slate-50/50 border-slate-100"
+                }`}
+              >
+                <Ionicons
+                  name="shield-outline"
+                  size={20}
+                  color={isDark ? "#6B7280" : "#94A3B8"}
+                />
+                <Text
+                  className={`ml-3 ${
+                    isEditingProfile
+                      ? "text-slate-500 font-semibold"
+                      : isDark
+                        ? "text-blue-400 font-bold"
+                        : "text-blue-600 font-bold"
+                  }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
+                  {displayUser?.role || "Thành viên"}
                 </Text>
-                <View className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                  isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-                }`}>
+                {isEditingProfile && (
                   <Ionicons
-                    name="calendar-number-outline"
-                    size={20}
+                    name="lock-closed"
+                    size={16}
                     color={isDark ? "#6B7280" : "#94A3B8"}
+                    style={{ marginLeft: "auto" }}
                   />
-                  <Text className={`ml-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}>
-                    {displayUser?.age
-                      ? `${displayUser.age} tuổi`
-                      : "Chưa cập nhật"}
-                  </Text>
-                </View>
+                )}
               </View>
-            )}
 
-            {/* Các mục không cho phép sửa (hiển thị giống nhau ở cả 2 chế độ, nhưng thêm icon khóa ở chế độ chỉnh sửa) */}
-            {/* Mục Chức vụ / Vai trò */}
-            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-              Quyền hạn hệ thống
-            </Text>
-            <View
-              className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                isEditingProfile
-                  ? isDark ? "bg-slate-900/60 border-slate-700/50" : "bg-slate-100 border-slate-100"
-                  : isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-              }`}
-            >
-              <Ionicons name="shield-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
+              {/* Mục Ngày tạo tài khoản */}
               <Text
-                className={`ml-3 ${
-                  isEditingProfile
-                    ? "text-slate-500 font-semibold"
-                    : isDark ? "text-blue-400 font-bold" : "text-blue-600 font-bold"
-                }`}
+                className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
                 style={{ fontSize: FONT_SIZE.xs }}
               >
-                {displayUser?.role || "Thành viên"}
+                Ngày tạo tài khoản
               </Text>
-              {isEditingProfile && (
-                <Ionicons
-                  name="lock-closed"
-                  size={16}
-                  color={isDark ? "#6B7280" : "#94A3B8"}
-                  style={{ marginLeft: "auto" }}
-                />
-              )}
-            </View>
-
-            {/* Mục Ngày tạo tài khoản */}
-            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-              Ngày tạo tài khoản
-            </Text>
-            <View
-              className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
-                isEditingProfile
-                  ? isDark ? "bg-slate-900/60 border-slate-700/50" : "bg-slate-100 border-slate-100"
-                  : isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-              }`}
-            >
-              <Ionicons name="calendar-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-              <Text
-                className={`ml-3 ${
+              <View
+                className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
                   isEditingProfile
-                    ? "text-slate-500 font-semibold"
-                    : isDark ? "text-slate-300 font-semibold" : "text-slate-700 font-semibold"
+                    ? isDark
+                      ? "bg-slate-900/60 border-slate-700/50"
+                      : "bg-slate-100 border-slate-100"
+                    : isDark
+                      ? "bg-slate-900/40 border-slate-700/50"
+                      : "bg-slate-50/50 border-slate-100"
                 }`}
-                style={{ fontSize: FONT_SIZE.xs }}
               >
-                {formatDateTime(displayUser?.createdAt)}
-              </Text>
-              {isEditingProfile && (
                 <Ionicons
-                  name="lock-closed"
-                  size={16}
+                  name="calendar-outline"
+                  size={20}
                   color={isDark ? "#6B7280" : "#94A3B8"}
-                  style={{ marginLeft: "auto" }}
                 />
-              )}
-            </View>
-
-            {/* Mục Cập nhật tài khoản gần nhất */}
-            <Text className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-              Cập nhật gần nhất
-            </Text>
-            <View
-              className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                isEditingProfile
-                  ? isDark ? "bg-slate-900/60 border-slate-700/50" : "bg-slate-100 border-slate-100"
-                  : isDark ? "bg-slate-900/40 border-slate-700/50" : "bg-slate-50/50 border-slate-100"
-              }`}
-            >
-              <Ionicons name="refresh-outline" size={20} color={isDark ? "#6B7280" : "#94A3B8"} />
-              <Text
-                className={`ml-3 ${
-                  isEditingProfile
-                    ? "text-slate-500 font-semibold"
-                    : isDark ? "text-slate-300 font-semibold" : "text-slate-700 font-semibold"
-                }`}
-                style={{ fontSize: FONT_SIZE.xs }}
-              >
-                {formatDateTime(displayUser?.updatedAt)}
-              </Text>
-              {isEditingProfile && (
-                <Ionicons
-                  name="lock-closed"
-                  size={16}
-                  color={isDark ? "#6B7280" : "#94A3B8"}
-                  style={{ marginLeft: "auto" }}
-                />
-              )}
-            </View>
-
-            {/* Nút bấm Lưu / Hủy trong chế độ chỉnh sửa */}
-            {isEditingProfile && (
-              <View className="flex-row mt-6">
-                <TouchableOpacity
-                  onPress={() => setIsEditingProfile(false)}
-                  disabled={updatingProfile}
-                  activeOpacity={0.7}
-                  className={`flex-1 mr-2 border-2 rounded-2xl h-14 items-center justify-center ${
-                    isDark
-                      ? "bg-slate-800 border-slate-700 active:bg-slate-750"
-                      : "bg-white border-slate-200"
+                <Text
+                  className={`ml-3 ${
+                    isEditingProfile
+                      ? "text-slate-500 font-semibold"
+                      : isDark
+                        ? "text-slate-300 font-semibold"
+                        : "text-slate-700 font-semibold"
                   }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
                 >
-                  <Text className={`font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
-                    style={{ fontSize: FONT_SIZE.xs }}>
-                    Hủy
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleUpdateProfile}
-                  disabled={updatingProfile}
-                  activeOpacity={0.8}
-                  className={`flex-1 ml-2 rounded-2xl h-14 items-center justify-center ${
-                    isDark
-                      ? "bg-slate-700 active:bg-slate-600 border border-slate-600 shadow-black/20"
-                      : "bg-blue-500 active:bg-blue-600"
-                  } ${updatingProfile ? "opacity-70" : ""}`}
-                >
-                  {updatingProfile ? (
-                    <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
-                  ) : (
-                    <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Lưu</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {/* Card Đổi Mật Khẩu */}
-          <View className={`rounded-[24px] p-5 mt-6 border ${
-            isDark
-              ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
-              : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
-          }`}>
-            <TouchableOpacity
-              onPress={() => {
-                setShowChangePassword(!showChangePassword);
-                setErrorMsg("");
-                setSuccessMsg("");
-              }}
-              activeOpacity={0.7}
-              className="flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center">
-                <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${
-                  isDark ? "bg-slate-700 border border-slate-600" : "bg-blue-50"
-                }`}>
-                  <Ionicons name="key-outline" size={20} color={isDark ? "#93C5FD" : "#3B82F6"} />
-                </View>
-                <Text className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}
-                  style={{ fontSize: FONT_SIZE.xs }}>
-                  Đổi mật khẩu bảo mật
+                  {formatDateTime(displayUser?.createdAt)}
                 </Text>
-              </View>
-              <Ionicons
-                name={showChangePassword ? "chevron-up" : "chevron-down"}
-                size={20}
-                color={isDark ? "#94A3B8" : "#64748B"}
-              />
-            </TouchableOpacity>
-
-            {showChangePassword && (
-              <View className="mt-5">
-                <View className={`h-[1px] mb-5 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`} />
-
-                {/* Mật khẩu cũ */}
-                <Text className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Mật khẩu cũ
-                </Text>
-                <View
-                  className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                    isDark
-                      ? focusedField === "oldPassword"
-                        ? "border-blue-500 bg-slate-900/60"
-                        : "border-slate-700/60 bg-slate-900/30"
-                      : focusedField === "oldPassword"
-                        ? "border-blue-500 bg-white"
-                        : "border-slate-100 bg-slate-50/50"
-                  }`}
-                >
+                {isEditingProfile && (
                   <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={
-                      focusedField === "oldPassword" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"
-                    }
+                    name="lock-closed"
+                    size={16}
+                    color={isDark ? "#6B7280" : "#94A3B8"}
+                    style={{ marginLeft: "auto" }}
                   />
-                  <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                    placeholder="Nhập mật khẩu cũ"
-                    placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                    secureTextEntry={!showOldPassword}
-                    value={oldPassword}
-                    onChangeText={setOldPassword}
-                    onFocus={() => setFocusedField("oldPassword")}
-                    onBlur={() => setFocusedField("")}
+                )}
+              </View>
+
+              {/* Mục Cập nhật tài khoản gần nhất */}
+              <Text
+                className="text-slate-400 font-bold mb-2 uppercase tracking-wider pl-1"
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
+                Cập nhật gần nhất
+              </Text>
+              <View
+                className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
+                  isEditingProfile
+                    ? isDark
+                      ? "bg-slate-900/60 border-slate-700/50"
+                      : "bg-slate-100 border-slate-100"
+                    : isDark
+                      ? "bg-slate-900/40 border-slate-700/50"
+                      : "bg-slate-50/50 border-slate-100"
+                }`}
+              >
+                <Ionicons
+                  name="refresh-outline"
+                  size={20}
+                  color={isDark ? "#6B7280" : "#94A3B8"}
+                />
+                <Text
+                  className={`ml-3 ${
+                    isEditingProfile
+                      ? "text-slate-500 font-semibold"
+                      : isDark
+                        ? "text-slate-300 font-semibold"
+                        : "text-slate-700 font-semibold"
+                  }`}
+                  style={{ fontSize: FONT_SIZE.xs }}
+                >
+                  {formatDateTime(displayUser?.updatedAt)}
+                </Text>
+                {isEditingProfile && (
+                  <Ionicons
+                    name="lock-closed"
+                    size={16}
+                    color={isDark ? "#6B7280" : "#94A3B8"}
+                    style={{ marginLeft: "auto" }}
                   />
+                )}
+              </View>
+
+              {/* Nút bấm Lưu / Hủy trong chế độ chỉnh sửa */}
+              {isEditingProfile && (
+                <View className="flex-row mt-6">
                   <TouchableOpacity
-                    onPress={() => setShowOldPassword(!showOldPassword)}
-                    activeOpacity={0.5}
-                    className="p-1"
+                    onPress={() => setIsEditingProfile(false)}
+                    disabled={updatingProfile}
+                    activeOpacity={0.7}
+                    className={`flex-1 mr-2 border-2 rounded-2xl h-14 items-center justify-center ${
+                      isDark
+                        ? "bg-slate-800 border-slate-700 active:bg-slate-750"
+                        : "bg-white border-slate-200"
+                    }`}
                   >
-                    <Ionicons
-                      name={showOldPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
-                      color={isDark ? "#6B7280" : "#94A3B8"}
-                    />
+                    <Text
+                      className={`font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      Hủy
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleUpdateProfile}
+                    disabled={updatingProfile}
+                    activeOpacity={0.8}
+                    className={`flex-1 ml-2 rounded-2xl h-14 items-center justify-center ${
+                      isDark
+                        ? "bg-slate-700 active:bg-slate-600 border border-slate-600 shadow-black/20"
+                        : "bg-blue-500 active:bg-blue-600"
+                    } ${updatingProfile ? "opacity-70" : ""}`}
+                  >
+                    {updatingProfile ? (
+                      <ActivityIndicator
+                        color={isDark ? "#93C5FD" : "#FFFFFF"}
+                        size="small"
+                      />
+                    ) : (
+                      <Text
+                        className="text-white font-bold"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        Lưu
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
+              )}
+            </View>
 
-                <View className="h-4" />
-
-                {/* Mật khẩu mới */}
-                <Text className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
-                style={{ fontSize: FONT_SIZE.xs }}>
-                  Mật khẩu mới
-                </Text>
-                <View
-                  className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
-                    isDark
-                      ? focusedField === "newPassword"
-                        ? "border-blue-500 bg-slate-900/60"
-                        : "border-slate-700/60 bg-slate-900/30"
-                      : focusedField === "newPassword"
-                        ? "border-blue-500 bg-white"
-                        : "border-slate-100 bg-slate-50/50"
-                  }`}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={
-                      focusedField === "newPassword" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"
-                    }
-                  />
-                  <TextInput
-                    className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                    placeholder="Nhập mật khẩu mới"
-                    placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
-                    secureTextEntry={!showNewPassword}
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    onFocus={() => setFocusedField("newPassword")}
-                    onBlur={() => setFocusedField("")}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowNewPassword(!showNewPassword)}
-                    activeOpacity={0.5}
-                    className="p-1"
+            {/* Card Đổi Mật Khẩu */}
+            <View
+              className={`rounded-[24px] p-5 mt-6 border ${
+                isDark
+                  ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
+                  : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
+              }`}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setShowChangePassword(!showChangePassword);
+                  setErrorMsg("");
+                  setSuccessMsg("");
+                }}
+                activeOpacity={0.7}
+                className="flex-row items-center justify-between"
+              >
+                <View className="flex-row items-center">
+                  <View
+                    className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${
+                      isDark
+                        ? "bg-slate-700 border border-slate-600"
+                        : "bg-blue-50"
+                    }`}
                   >
                     <Ionicons
-                      name={showNewPassword ? "eye-outline" : "eye-off-outline"}
+                      name="key-outline"
                       size={20}
-                      color={isDark ? "#6B7280" : "#94A3B8"}
+                      color={isDark ? "#93C5FD" : "#3B82F6"}
                     />
+                  </View>
+                  <Text
+                    className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Đổi mật khẩu bảo mật
+                  </Text>
+                </View>
+                <Ionicons
+                  name={showChangePassword ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color={isDark ? "#94A3B8" : "#64748B"}
+                />
+              </TouchableOpacity>
+
+              {showChangePassword && (
+                <View className="mt-5">
+                  <View
+                    className={`h-[1px] mb-5 ${isDark ? "bg-slate-700/60" : "bg-slate-100"}`}
+                  />
+
+                  {/* Mật khẩu cũ */}
+                  <Text
+                    className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Mật khẩu cũ
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
+                      isDark
+                        ? focusedField === "oldPassword"
+                          ? "border-blue-500 bg-slate-900/60"
+                          : "border-slate-700/60 bg-slate-900/30"
+                        : focusedField === "oldPassword"
+                          ? "border-blue-500 bg-white"
+                          : "border-slate-100 bg-slate-50/50"
+                    }`}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={
+                        focusedField === "oldPassword"
+                          ? isDark
+                            ? "#60A5FA"
+                            : "#3B82F6"
+                          : "#94A3B8"
+                      }
+                    />
+                    <TextInput
+                      className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      placeholder="Nhập mật khẩu cũ"
+                      placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                      secureTextEntry={!showOldPassword}
+                      value={oldPassword}
+                      onChangeText={setOldPassword}
+                      onFocus={() => setFocusedField("oldPassword")}
+                      onBlur={() => setFocusedField("")}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowOldPassword(!showOldPassword)}
+                      activeOpacity={0.5}
+                      className="p-1"
+                    >
+                      <Ionicons
+                        name={
+                          showOldPassword ? "eye-outline" : "eye-off-outline"
+                        }
+                        size={20}
+                        color={isDark ? "#6B7280" : "#94A3B8"}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View className="h-4" />
+
+                  {/* Mật khẩu mới */}
+                  <Text
+                    className="text-slate-500 font-bold mb-2 uppercase tracking-wider pl-1"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Mật khẩu mới
+                  </Text>
+                  <View
+                    className={`flex-row items-center rounded-2xl border-2 px-4 h-14 ${
+                      isDark
+                        ? focusedField === "newPassword"
+                          ? "border-blue-500 bg-slate-900/60"
+                          : "border-slate-700/60 bg-slate-900/30"
+                        : focusedField === "newPassword"
+                          ? "border-blue-500 bg-white"
+                          : "border-slate-100 bg-slate-50/50"
+                    }`}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={
+                        focusedField === "newPassword"
+                          ? isDark
+                            ? "#60A5FA"
+                            : "#3B82F6"
+                          : "#94A3B8"
+                      }
+                    />
+                    <TextInput
+                      className={`flex-1 h-full ml-3 font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                      placeholder="Nhập mật khẩu mới"
+                      placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                      secureTextEntry={!showNewPassword}
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      onFocus={() => setFocusedField("newPassword")}
+                      onBlur={() => setFocusedField("")}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowNewPassword(!showNewPassword)}
+                      activeOpacity={0.5}
+                      className="p-1"
+                    >
+                      <Ionicons
+                        name={
+                          showNewPassword ? "eye-outline" : "eye-off-outline"
+                        }
+                        size={20}
+                        color={isDark ? "#6B7280" : "#94A3B8"}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Thông báo lỗi */}
+                  {errorMsg ? (
+                    <View
+                      className={`flex-row items-center border rounded-xl mt-4 p-3 ${
+                        isDark
+                          ? "bg-red-950/30 border-red-900/50"
+                          : "bg-red-50 border-red-100"
+                      }`}
+                    >
+                      <Ionicons name="alert-circle" size={18} color="#EF4444" />
+                      <Text
+                        className="text-red-600 font-medium ml-2 flex-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        {errorMsg}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  {/* Thông báo thành công */}
+                  {successMsg ? (
+                    <View
+                      className={`flex-row items-center border rounded-xl mt-4 p-3 ${
+                        isDark
+                          ? "bg-emerald-950/30 border-emerald-900/50"
+                          : "bg-green-50 border-green-100"
+                      }`}
+                    >
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={18}
+                        color="#10B981"
+                      />
+                      <Text
+                        className="text-green-600 font-medium ml-2 flex-1"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        {successMsg}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  {/* Nút bấm Submit */}
+                  <TouchableOpacity
+                    onPress={handleChangePassword}
+                    disabled={updatingPassword}
+                    activeOpacity={0.8}
+                    className={`rounded-2xl h-14 items-center justify-center mt-5 shadow-md ${
+                      isDark
+                        ? "bg-slate-700 active:bg-slate-600 border border-slate-600 shadow-black/20"
+                        : "bg-blue-500 active:bg-blue-600 shadow-blue-500/20"
+                    } ${updatingPassword ? "opacity-70" : ""}`}
+                  >
+                    {updatingPassword ? (
+                      <ActivityIndicator
+                        color={isDark ? "#93C5FD" : "#FFFFFF"}
+                        size="small"
+                      />
+                    ) : (
+                      <Text
+                        className="text-white font-bold tracking-wide"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
+                        Xác nhận đổi mật khẩu
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
-
-                {/* Thông báo lỗi */}
-                {errorMsg ? (
-                  <View className={`flex-row items-center border rounded-xl mt-4 p-3 ${
-                    isDark ? "bg-red-950/30 border-red-900/50" : "bg-red-50 border-red-100"
-                  }`}>
-                    <Ionicons name="alert-circle" size={18} color="#EF4444" />
-                    <Text className="text-red-600 font-medium ml-2 flex-1"
-                    style={{ fontSize: FONT_SIZE.xs }}>
-                      {errorMsg}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* Thông báo thành công */}
-                {successMsg ? (
-                  <View className={`flex-row items-center border rounded-xl mt-4 p-3 ${
-                    isDark ? "bg-emerald-950/30 border-emerald-900/50" : "bg-green-50 border-green-100"
-                  }`}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={18}
-                      color="#10B981"
-                    />
-                    <Text className="text-green-600 font-medium ml-2 flex-1"
-                    style={{ fontSize: FONT_SIZE.xs }}>
-                      {successMsg}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* Nút bấm Submit */}
-                <TouchableOpacity
-                  onPress={handleChangePassword}
-                  disabled={updatingPassword}
-                  activeOpacity={0.8}
-                  className={`rounded-2xl h-14 items-center justify-center mt-5 shadow-md ${
-                    isDark
-                      ? "bg-slate-700 active:bg-slate-600 border border-slate-600 shadow-black/20"
-                      : "bg-blue-500 active:bg-blue-600 shadow-blue-500/20"
-                  } ${updatingPassword ? "opacity-70" : ""}`}
-                >
-                  {updatingPassword ? (
-                    <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
-                  ) : (
-                    <Text className="text-white font-bold tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
-                      Xác nhận đổi mật khẩu
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </ScrollView>
+              )}
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
       {showToast && (

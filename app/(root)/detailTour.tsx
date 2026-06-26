@@ -860,10 +860,9 @@ export default function DetailTourScreen() {
               )}
             </View>
 
-            {/*  HIGHLIGHTS + PRICE CARD (vertical stack) */}
+            {/*  HIGHLIGHTS */}
             <View className={sectionCardClass}>
               <HighlightChips items={booking.tour.highlights} />
-              <TripInfoCard tour={booking.tour} />
             </View>
 
             {/* Lịch trình */}
@@ -892,7 +891,10 @@ export default function DetailTourScreen() {
               </View>
             ) : null}
 
-            {/* Lưu ý riêng  */}
+            {/* Thông tin chuyến đi */}
+            <View className={sectionCardClass}>
+              <TripInfoCard tour={booking.tour} />
+            </View>
 
             {/* Điều khoản và Lưu ý chung */}
             <View className={sectionCardClass}>

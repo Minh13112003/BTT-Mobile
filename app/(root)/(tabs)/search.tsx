@@ -40,23 +40,26 @@ function Chip({
   active,
   onPress,
   isDark,
+  style,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
   isDark: boolean;
+  style?: any;
 }) {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
-      className={`px-4 py-2 rounded-full border mr-2 ${
+      className={`px-4 py-2 rounded-full border ${
         active
           ? "bg-[#D0021B] border-[#D0021B]"
           : isDark
             ? "bg-[#1E222B] border-slate-700/60"
             : "bg-white border-slate-200"
       }`}
+      style={[{ marginRight: 6, marginBottom: 8 }, style]}
     >
       <Text
         className={`font-bold ${
@@ -431,23 +434,45 @@ export default function SearchScreen() {
 
           <SearchBar value={query} onChangeText={setQuery} />
 
-          {/* Mode chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-3"
-            contentContainerStyle={{ paddingRight: 12 }}
-          >
-            {SECTION_ORDER.map((m) => (
-              <Chip
-                key={m}
-                label={MODE_CHIP_LABELS[m]}
-                active={mode === m && !query.trim()}
-                onPress={() => setMode(m)}
-                isDark={isDark}
-              />
-            ))}
-          </ScrollView>
+          {/* Mode chips - 2 hàng cuộn ngang, mỗi hàng 5 tabs */}
+          <View style={{ marginTop: 12 }}>
+            {/* Hàng 1: 5 tab đầu */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: 20 }}
+            >
+              {SECTION_ORDER.slice(0, 5).map((m) => (
+                <Chip
+                  key={m}
+                  label={MODE_CHIP_LABELS[m]}
+                  active={mode === m && !query.trim()}
+                  onPress={() => setMode(m)}
+                  isDark={isDark}
+                  style={{ marginBottom: 0 }}
+                />
+              ))}
+            </ScrollView>
+
+            {/* Hàng 2: 5 tab tiếp theo */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 8 }}
+              contentContainerStyle={{ paddingRight: 20 }}
+            >
+              {SECTION_ORDER.slice(5, 10).map((m) => (
+                <Chip
+                  key={m}
+                  label={MODE_CHIP_LABELS[m]}
+                  active={mode === m && !query.trim()}
+                  onPress={() => setMode(m)}
+                  isDark={isDark}
+                  style={{ marginBottom: 0 }}
+                />
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Region sub-filter (slides down for domestic / foreign) */}
           <Animated.View style={{ height: subHeight, overflow: "hidden" }}>

@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import CustomAlert from "@/components/CustomAlert";
 
 const formatChipDate = (iso: string) => {
   const d = new Date(iso);
@@ -56,6 +57,11 @@ export function DeparturePicker({
   // Inline "hết chỗ" message for the last sold-out chip the user tapped.
   const [soldOutDate, setSoldOutDate] = useState<string | null>(null);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "confirm">("warning");
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -79,13 +85,10 @@ export function DeparturePicker({
   const handlePress = (dep: Departure) => {
     if (dep.availableSeats <= 0) {
       setSoldOutDate(dep.departureDate);
-      Alert.alert(
-        "Hết chỗ",
-        `Tour "${tourName}" vào ngày ${formatFullDate(
-          dep.departureDate,
-        )} đã hết chỗ. Xin vui lòng chọn ngày khác.`,
-        [{ text: "Đồng ý", style: "cancel" }],
-      );
+      setAlertTitle("Hết chỗ");
+      setAlertMessage(`Tour "${tourName}" vào ngày ${formatFullDate(dep.departureDate)} đã hết chỗ. Xin vui lòng chọn ngày khác.`);
+      setAlertType("error");
+      setAlertVisible(true);
       return;
     }
     setSoldOutDate(null);
@@ -219,6 +222,13 @@ export function DeparturePicker({
           )}
         </>
       )}
+      <CustomAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

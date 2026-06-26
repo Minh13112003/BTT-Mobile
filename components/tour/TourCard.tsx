@@ -154,7 +154,7 @@ export function TourCard({
             </Text>
           </View>
           <View className="flex-row items-center mt-1">
-            <Text style={{ fontSize: FONT_SIZE.xs }}>✈️</Text>
+            <Text style={{ fontSize: FONT_SIZE.xs }}>🕒</Text>
             <Text
               style={{ fontSize: FONT_SIZE.xs }}
               className={`ml-1.5 font-semibold ${

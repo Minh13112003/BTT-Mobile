@@ -241,10 +241,10 @@ export default function NotificationsScreen() {
         className={isDark
           ? item.isRead
             ? "bg-[#1E222B]"
-            : "bg-[#252A36]"
+            : "bg-[#2C3347]"
           : item.isRead
           ? "bg-white"
-          : "bg-[#FAF8F8]"
+          : "bg-[#FFF0EE]"
         }
         style={{
           marginHorizontal: 16,
@@ -370,10 +370,10 @@ export default function NotificationsScreen() {
             )}
 
             {/* Footer: timestamp + chi tiết */}
-            <View className="flex-row items-center justify-between mt-3">
+            <View className="mt-3">
               <Text
                 style={{
-                  fontSize: FONT_SIZE.card,
+                  fontSize: 16,
                   color: isDark ? "#64748B" : "#94A3B8"
                 }}
               >
@@ -385,7 +385,7 @@ export default function NotificationsScreen() {
                   onPress={() => handleViewDetail(item)}
                   activeOpacity={0.7}
                   disabled={navigating === item.id}
-                  className="flex-row items-center"
+                  className="flex-row items-center mt-1.5 self-start"
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   {navigating === item.id ? (
@@ -394,7 +394,7 @@ export default function NotificationsScreen() {
                     <>
                       <Text
                         style={{
-                          fontSize: FONT_SIZE.card,
+                          fontSize: 16,
                           fontWeight: "800",
                           color: isDark ? "#FFA2A2" : "#a00000",
                           marginRight: 2,
@@ -405,7 +405,7 @@ export default function NotificationsScreen() {
                       </Text>
                       <Ionicons
                         name="chevron-forward"
-                        size={FONT_SIZE.card}
+                        size={16}
                         color={isDark ? "#FFA2A2" : "#a00000"}
                       />
                     </>
