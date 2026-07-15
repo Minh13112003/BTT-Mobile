@@ -32,6 +32,13 @@ export const URL_GetHotTours = `${API_BASE_URL}/api/v1/tours/hot`;
 export const URL_GetPopularTours = `${API_BASE_URL}/api/v1/tours/popular`;
 export const URL_GetToursByType = `${API_BASE_URL}/api/v1/tours/by-type`;
 
+//Tour APIs (Laravel — xem .claude/rules/laravel-migration.md)
+const LARAVEL_API_BASE_URL =
+  process.env.EXPO_PUBLIC_BASE_BTT_URL || "https://benthanhtourist.com";
+export const URL_GetTourCategories = `${LARAVEL_API_BASE_URL}/api/tour/categories`;
+export const URL_GetToursByCategory = `${LARAVEL_API_BASE_URL}/api/tour/category`;
+export const URL_GetTourItem = `${LARAVEL_API_BASE_URL}/api/tour/item`;
+
 //Departure APIs
 export const URL_GetDeparturesByTour = `${API_BASE_URL}/api/v1/departures/tour/`;
 export const URL_GetDepartureById = `${API_BASE_URL}/api/v1/departures/`;
@@ -62,3 +69,9 @@ export const URL_GetNewsById = `${API_BASE_URL}/api/v1/news/`;
 export const URL_GetTravelTips = `${API_BASE_URL}/api/v1/travel-tips`;
 export const URL_GetTravelTipById = `${API_BASE_URL}/api/v1/travel-tips/`;
 export const URL_GetTravelTipDestinations = `${API_BASE_URL}/api/v1/travel-tips/destinations`;
+
+//PIN APIs
+export const URL_PinStatus = `${API_BASE_URL}/api/v1/users/me/pin-status`;
+export const URL_SetPin = `${API_BASE_URL}/api/v1/users/me/pin`;
+export const URL_VerifyPin = `${API_BASE_URL}/api/v1/users/me/pin/verify`;
+export const URL_ChangePin = `${API_BASE_URL}/api/v1/users/me/pin`;

@@ -1,6 +1,7 @@
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
+import { usePinchToZoom } from "@/hooks/usePinchToZoom";
 import { getBookingById } from "@/services/booking";
 import { TourDetail } from "@/services/tour";
 import { formatDepartureDate } from "@/utils/tour";
@@ -8,21 +9,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Clipboard,
   Image,
+  Modal,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
-  Modal,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePinchToZoom } from "@/hooks/usePinchToZoom";
+import { TourHero } from "@/components/tour/TourHero";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
+import CustomAlert from "@/components/CustomAlert";
 import { HighlightChips } from "@/components/tour/HighlightChips";
 import { TermsAccordion } from "@/components/tour/TermsAccordion";
 import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
@@ -93,7 +98,11 @@ export default function DetailTourScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
-  const { scale: imageScale, setScale: setImageScale, panHandlers: imagePanHandlers } = usePinchToZoom(1, 1, 4.0);
+  const {
+    scale: imageScale,
+    setScale: setImageScale,
+    panHandlers: imagePanHandlers,
+  } = usePinchToZoom(1, 1, 4.0);
 
   const handleCloseModal = () => {
     setZoomImageUrl(null);
@@ -103,6 +112,11 @@ export default function DetailTourScreen() {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [error, setError] = useState("");
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning">("success");
 
   const sectionCardClass = `
         rounded-[24px]
@@ -147,18 +161,26 @@ export default function DetailTourScreen() {
     }).format(value);
   };
 
+  const showAlert = (title: string, message: string, type: "success" | "error" | "warning") => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
   const handleCopyTourCode = () => {
     const code = booking?.departure?.tourCode ?? booking?.tour?.code;
     if (code) {
       Clipboard.setString(code);
-      Alert.alert("Thành công", `Đã sao chép mã tour: ${code}`);
+      showAlert("Thành công", `Đã sao chép mã tour: ${code}`, "success");
     }
   };
 
   const handleContactSupport = () => {
-    Alert.alert(
+    showAlert(
       "Liên hệ hỗ trợ",
-      "Vui lòng gọi hotline 1900 1808 hoặc gửi email tới info@benthanhtourist.com để được trợ giúp sớm nhất.",
+      "Vui lòng gọi hotline 1900 6668 hoặc gửi email tới benthanh@benthanhtourist.com để được trợ giúp sớm nhất.",
+      "warning",
     );
   };
 
@@ -215,70 +237,61 @@ export default function DetailTourScreen() {
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
       <StatusBar style={isDark ? "light" : "dark"} />
-      <SafeAreaView className="flex-1" edges={["top"]}>
-        {/* Header bar */}
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className={`p-2 rounded-full ${
-              isDark ? "bg-slate-800" : "bg-white shadow-sm shadow-slate-200"
-            }`}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={22}
-              color={isDark ? "#93C5FD" : "#D0021B"}
-            />
-          </TouchableOpacity>
-          <Text
-            className={`text-lg font-black ${
-              isDark ? "text-slate-100" : "text-slate-800"
-            }`}
-          >
-            Chi Tiết Đơn Hàng
-          </Text>
-          <View className="w-10 h-10" />
-        </View>
-
+      <SafeAreaView className="flex-1" edges={[]}>
         {loading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator
-              size="large"
-              color={isDark ? "#94A3B8" : "#D0021B"}
-            />
-            <Text
-              className={`font-semibold mt-3 ${
-                isDark ? "text-slate-400" : "text-slate-500"
-              }`}
-              style={{ fontSize: FONT_SIZE.xs }}
-            >
-              Đang tải thông tin chi tiết...
-            </Text>
-          </View>
+          <>
+            <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top + 12 }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className={`p-2 rounded-full ${isDark ? "bg-slate-800" : "bg-white shadow-sm"}`}
+              >
+                <Ionicons name="arrow-back" size={22} color={isDark ? "#93C5FD" : "#D0021B"} />
+              </TouchableOpacity>
+              <Text className={`ml-3 text-lg font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                Chi Tiết Đơn Hàng
+              </Text>
+            </View>
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#D0021B"} />
+              <Text
+                className={`font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
+                Đang tải thông tin chi tiết...
+              </Text>
+            </View>
+          </>
         ) : error || !booking ? (
-          <View className="flex-1 justify-center items-center px-6">
-            <Ionicons
-              name="alert-circle-outline"
-              size={64}
-              color={isDark ? "#EF4444" : "#DC2626"}
-            />
-            <Text
-              className={`font-bold mt-4 text-center ${
-                isDark ? "text-slate-200" : "text-slate-800"
-              }`}
-              style={{ fontSize: FONT_SIZE.xs }}
-            >
-              {error || "Đã xảy ra lỗi khi tải dữ liệu"}
-            </Text>
-            <TouchableOpacity
-              onPress={fetchBookingDetail}
-              className={`mt-6 px-6 py-2.5 rounded-full ${
-                isDark ? "bg-slate-700" : "bg-[#D0021B]"
-              }`}
-            >
-              <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Thử lại</Text>
-            </TouchableOpacity>
-          </View>
+          <>
+            <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top + 12 }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className={`p-2 rounded-full ${isDark ? "bg-slate-800" : "bg-white shadow-sm"}`}
+              >
+                <Ionicons name="arrow-back" size={22} color={isDark ? "#93C5FD" : "#D0021B"} />
+              </TouchableOpacity>
+              <Text className={`ml-3 text-lg font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                Chi Tiết Đơn Hàng
+              </Text>
+            </View>
+            <View className="flex-1 justify-center items-center px-6">
+              <Ionicons name="alert-circle-outline" size={64} color={isDark ? "#EF4444" : "#DC2626"} />
+              <Text
+                className={`font-bold mt-4 text-center ${isDark ? "text-slate-200" : "text-slate-800"}`}
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
+                {error || "Đã xảy ra lỗi khi tải dữ liệu"}
+              </Text>
+              <TouchableOpacity
+                onPress={fetchBookingDetail}
+                className={`mt-6 px-6 py-2.5 rounded-full ${isDark ? "bg-slate-700" : "bg-[#D0021B]"}`}
+              >
+                <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
+                  Thử lại
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
         ) : (
           <ScrollView
             ref={scrollViewRef}
@@ -290,104 +303,49 @@ export default function DetailTourScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: 20,
-              paddingTop: 10,
+              paddingTop: 0,
               paddingBottom: 40,
             }}
           >
-            {/* 1. TOUR CARD SHOWN */}
-            <View
-              className={`rounded-[32px] overflow-hidden border shadow-sm ${
-                isDark
-                  ? "bg-slate-800/90 border-slate-700/60"
-                  : "bg-white border-slate-100"
-              }`}
+          {/* Hero — full-bleed, cuộn cùng nội dung */}
+          <View style={{ marginHorizontal: -20 }}>
+            <TourHero
+              tour={booking.tour}
+              onBack={() => router.back()}
+              onPressImage={(url) => setZoomImageUrl(url)}
+              hideActions
+            />
+          </View>
+
+          {/* Tên tour + giá + VAT — giống tour/[id] */}
+          <View className="px-0 pt-3 pb-1">
+            <Text
+              className={`font-black leading-8 ${isDark ? "text-slate-50" : "text-slate-900"}`}
+              style={{ fontSize: FONT_SIZE.xl }}
             >
-              {/* Cover image with overlays */}
-              <View className="relative h-56 w-full bg-slate-900/10">
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => setZoomImageUrl(booking.tour.imageUrl)}
-                  style={{ width: "100%", height: "100%" }}
-                >
-                  <Image
-                    source={{ uri: booking.tour.imageUrl }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-                {/* Rating Badge */}
-                <View
-                  className={`absolute top-4 right-4 rounded-full px-3 py-1 flex-row items-center ${
-                    isDark ? "bg-slate-900/95" : "bg-white/95 shadow-sm"
-                  }`}
-                >
-                  <Ionicons name="star" size={14} color="#F59E0B" />
-                  <Text
-                    className={`font-black ml-1 ${
-                      isDark ? "text-slate-100" : "text-slate-800"
-                    }`}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                  >
-                    {booking.tour.rating}
-                  </Text>
-                  <Text className="text-slate-400 ml-0.5" style={{ fontSize: FONT_SIZE.xs }}>
-                    ({booking.tour.reviewsCount})
-                  </Text>
-                </View>
-
-                {/* Duration Badge */}
-                <View className="absolute bottom-4 left-4 bg-[#D0021B] px-3.5 py-1.5 rounded-2xl shadow-md">
-                  <Text className="text-white font-black uppercase tracking-wider" style={{ fontSize: FONT_SIZE.xs }}>
-                    {booking.tour.duration}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Title & Info */}
-              <View className="p-5">
-                <Text
-                  className={`font-black leading-8 ${
-                    isDark ? "text-slate-100" : "text-slate-800"
-                  }`}
-                  style={{ fontSize: FONT_SIZE.xl }}
-                >
-                  {booking.tour.name}
-                </Text>
-
-                <View className="flex-row items-start justify-between mt-4 pt-4 border-t border-slate-100/50">
-                  <View className="flex-1 mr-3">
-                    <Text className="font-bold text-slate-400 uppercase tracking-wide" style={{ fontSize: FONT_SIZE.card }}>
-                      Đơn giá trọn gói
-                    </Text>
-
-                    <Text
-                      className={`text-lg font-black mt-0.5 ${
-                        isDark ? "text-slate-200" : "text-[#D0021B]"
-                      }`}
-                    >
-                      {formatCurrency(booking.price)}
-                    </Text>
-                  </View>
-
-                  <View
-                    className={`px-3 py-1.5 rounded-full border self-start ${
-                      isDark
-                        ? "border-slate-700 bg-slate-800"
-                        : "border-red-100 bg-red-50"
-                    }`}
-                  >
-                    <Text
-                      className={`font-black ${
-                        isDark ? "text-slate-300" : "text-red-500"
-                      }`}
-                      style={{ fontSize: FONT_SIZE.xs }}
-                    >
-                      {booking.tour.hasVat ? "Đã bao gồm VAT" : "Chưa gồm VAT"}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+              {booking.tour.name}
+            </Text>
+            <Text
+              className="mt-1 font-black text-[#D0021B]"
+              style={{ fontSize: FONT_SIZE.xs }}
+            >
+              {booking.tour.hasVat ? "Đã gồm VAT" : "Chưa gồm VAT"}
+            </Text>
+            <View className="flex-row items-baseline mt-2">
+              <Text
+                className={`font-semibold mr-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                style={{ fontSize: FONT_SIZE.xs }}
+              >
+                Đơn giá trọn gói
+              </Text>
+              <Text
+                className={`font-black ${isDark ? "text-slate-200" : "text-[#D0021B]"}`}
+                style={{ fontSize: FONT_SIZE.lg }}
+              >
+                {formatCurrency(booking.price)}
+              </Text>
             </View>
+          </View>
 
             {/* 2. ORDER DETAILS CARD */}
             <View className={sectionCardClass}>
@@ -424,20 +382,20 @@ export default function DetailTourScreen() {
                           "text-green-400"
                           ? "#4ADE80"
                           : getStatusBadgeConfig(booking.status).text ===
-                            "text-amber-400"
+                              "text-amber-400"
                             ? "#FBBF24"
                             : getStatusBadgeConfig(booking.status).text ===
-                              "text-red-400"
+                                "text-red-400"
                               ? "#F87171"
                               : "#94A3B8"
                         : getStatusBadgeConfig(booking.status).text ===
                             "text-green-600"
                           ? "#16A34A"
                           : getStatusBadgeConfig(booking.status).text ===
-                            "text-amber-600"
+                              "text-amber-600"
                             ? "#D97706"
                             : getStatusBadgeConfig(booking.status).text ===
-                              "text-red-600"
+                                "text-red-600"
                               ? "#DC2626"
                               : "#64748B"
                     }
@@ -529,7 +487,10 @@ export default function DetailTourScreen() {
                   style={{ fontSize: FONT_SIZE.xs }}
                 >
                   * Thời gian chi tiết xin hãy xem ở phần{" "}
-                  <Text className="font-extrabold not-italic uppercase" style={{ fontSize: FONT_SIZE.xs }}>
+                  <Text
+                    className="font-extrabold not-italic uppercase"
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
                     LỊCH TRÌNH CHI TIẾT
                   </Text>
                 </Text>
@@ -582,7 +543,13 @@ export default function DetailTourScreen() {
                           }`}
                           style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Người lớn: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.adults}</Text>
+                          Người lớn:{" "}
+                          <Text
+                            className="font-black"
+                            style={{ fontSize: FONT_SIZE.xs }}
+                          >
+                            {booking.passengers.adults}
+                          </Text>
                         </Text>
                       </View>
                     )}
@@ -599,7 +566,13 @@ export default function DetailTourScreen() {
                           }`}
                           style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Trẻ em: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.children}</Text>
+                          Trẻ em:{" "}
+                          <Text
+                            className="font-black"
+                            style={{ fontSize: FONT_SIZE.xs }}
+                          >
+                            {booking.passengers.children}
+                          </Text>
                         </Text>
                       </View>
                     )}
@@ -616,7 +589,13 @@ export default function DetailTourScreen() {
                           }`}
                           style={{ fontSize: FONT_SIZE.xs }}
                         >
-                          Em bé: <Text className="font-black" style={{ fontSize: FONT_SIZE.xs }}>{booking.passengers.infants}</Text>
+                          Em bé:{" "}
+                          <Text
+                            className="font-black"
+                            style={{ fontSize: FONT_SIZE.xs }}
+                          >
+                            {booking.passengers.infants}
+                          </Text>
                         </Text>
                       </View>
                     )}
@@ -655,10 +634,16 @@ export default function DetailTourScreen() {
                       className={`h-[1px] my-1 ${isDark ? "bg-slate-700/40" : "bg-slate-100"}`}
                     />
                     <View className="flex-col items-start gap-2 py-3.5">
-                      <Text className="font-semibold text-green-500" style={{ fontSize: FONT_SIZE.xs }}>
+                      <Text
+                        className="font-semibold text-green-500"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
                         Giảm giá voucher
                       </Text>
-                      <Text className="font-black text-green-500" style={{ fontSize: FONT_SIZE.xs }}>
+                      <Text
+                        className="font-black text-green-500"
+                        style={{ fontSize: FONT_SIZE.xs }}
+                      >
                         -{formatCurrency(booking.discountAmount)}
                       </Text>
                     </View>
@@ -821,7 +806,10 @@ export default function DetailTourScreen() {
                         Phương thức thanh toán
                       </Text>
                       <View className="flex-row items-center">
-                        <Text className="mr-1 text-base" style={{ fontSize: FONT_SIZE.xs }}>
+                        <Text
+                          className="mr-1 text-base"
+                          style={{ fontSize: FONT_SIZE.xs }}
+                        >
                           {booking.paymentMethod === "AT_OFFICE" ? "🏢" : "🏦"}
                         </Text>
                         <Text
@@ -861,9 +849,11 @@ export default function DetailTourScreen() {
             </View>
 
             {/*  HIGHLIGHTS */}
-            <View className={sectionCardClass}>
-              <HighlightChips items={booking.tour.highlights} />
-            </View>
+            {!!booking.tour.highlights?.length && (
+              <View className={sectionCardClass}>
+                <HighlightChips items={booking.tour.highlights} />
+              </View>
+            )}
 
             {/* Lịch trình */}
             {booking.tour.schedules?.length ? (
@@ -888,6 +878,25 @@ export default function DetailTourScreen() {
                     hành 3 ngày.
                   </Text>
                 </View>
+
+                {/* Lịch trình chi tiết — link sẽ được bổ sung sau */}
+                <View className="mt-5">
+                  <SectionTitle title="Lịch trình chi tiết" />
+                  <View
+                    className={`mt-3 rounded-2xl px-4 py-4 border border-dashed ${
+                      isDark
+                        ? "bg-slate-900/40 border-slate-600"
+                        : "bg-slate-50 border-slate-300"
+                    }`}
+                  >
+                    <Text
+                      className={`text-center ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                      style={{ fontSize: FONT_SIZE.xs }}
+                    >
+                      Lịch trình chi tiết sẽ được cập nhật sớm.
+                    </Text>
+                  </View>
+                </View>
               </View>
             ) : null}
 
@@ -901,6 +910,27 @@ export default function DetailTourScreen() {
               <SectionTitle title="Điều khoản & Lưu ý chung" />
               <TermsAccordion />
             </View>
+
+            {/* Đánh giá — chỉ hiển thị khi tour đã hoàn thành */}
+            {booking.status === "COMPLETED" && (
+              <View className={sectionCardClass}>
+                <SectionTitle title="Đánh giá chuyến đi" />
+                <View
+                  className={`mt-4 rounded-2xl px-4 py-4 border border-dashed ${
+                    isDark
+                      ? "bg-slate-900/40 border-slate-600"
+                      : "bg-slate-50 border-slate-300"
+                  }`}
+                >
+                  <Text
+                    className={`text-center ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Tính năng đánh giá sẽ được cập nhật sớm.
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* 3. HELP / CONTACT ACTION */}
             <TouchableOpacity
@@ -978,6 +1008,14 @@ export default function DetailTourScreen() {
           </View>
         </Modal>
 
+        <CustomAlert
+          visible={alertVisible}
+          type={alertType}
+          title={alertTitle}
+          message={alertMessage}
+          onClose={() => setAlertVisible(false)}
+        />
+
         {/* Back to Top Button */}
         {showBackToTop && (
           <TouchableOpacity
@@ -989,9 +1027,9 @@ export default function DetailTourScreen() {
               position: "absolute",
               bottom: 30,
               right: 20,
-              width: 46,
-              height: 46,
-              borderRadius: 23,
+              width: 50,
+              height: 50,
+              borderRadius: 25,
               backgroundColor: "#D0021B",
               alignItems: "center",
               justifyContent: "center",
@@ -1006,6 +1044,8 @@ export default function DetailTourScreen() {
             <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         )}
+
+        <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
       </SafeAreaView>
     </LinearGradient>
   );

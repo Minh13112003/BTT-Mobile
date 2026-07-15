@@ -5,14 +5,12 @@ import { useTheme } from "@/context/Theme_Context";
 import { formatCurrency } from "@/helper/format";
 import {
   Departure,
-  extractDepartures,
-  getDeparturesByTour,
+  // extractDepartures, getDeparturesByTour, // NestJS — comment lại, Tour Detail đã chuyển sang Laravel
   sortUpcoming,
 } from "@/services/departure";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -37,14 +35,19 @@ const formatFullDate = (iso: string) => {
 };
 
 interface DeparturePickerProps {
-  tourId: string;
+  /**
+   * Danh sách đợt khởi hành đã có sẵn từ tour detail (Laravel `tour_days[]` đã map
+   * — xem services/tour.ts). Trước đây component tự fetch qua tourId (NestJS); giờ
+   * Tour Detail đã chuyển sang Laravel nên không còn endpoint departures riêng.
+   */
+  departures: Departure[];
   tourName: string;
   selected: Departure | null;
   onSelect: (departure: Departure) => void;
 }
 
 export function DeparturePicker({
-  tourId,
+  departures: allDepartures,
   tourName,
   selected,
   onSelect,
@@ -63,24 +66,25 @@ export function DeparturePicker({
   const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "confirm">("warning");
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await getDeparturesByTour(tourId);
-        const upcoming = sortUpcoming(extractDepartures(res));
-        if (active) setDepartures(upcoming);
-      } catch (error) {
-        console.error("Lỗi tải ngày khởi hành:", error);
-        if (active) setDepartures([]);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [tourId]);
+    // NestJS (comment lại — Tour Detail đã chuyển sang Laravel):
+    // let active = true;
+    // (async () => {
+    //   try {
+    //     setLoading(true);
+    //     const res = await getDeparturesByTour(tourId);
+    //     const upcoming = sortUpcoming(extractDepartures(res));
+    //     if (active) setDepartures(upcoming);
+    //   } catch (error) {
+    //     console.error("Lỗi tải ngày khởi hành:", error);
+    //     if (active) setDepartures([]);
+    //   } finally {
+    //     if (active) setLoading(false);
+    //   }
+    // })();
+    // return () => { active = false; };
+    setDepartures(sortUpcoming(allDepartures ?? []));
+    setLoading(false);
+  }, [allDepartures]);
 
   const handlePress = (dep: Departure) => {
     if (dep.availableSeats <= 0) {

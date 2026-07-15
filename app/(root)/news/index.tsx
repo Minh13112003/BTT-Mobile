@@ -1,4 +1,6 @@
 import { Footer } from "@/components/Footer";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
@@ -154,21 +156,29 @@ export default function NewsScreen() {
 
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slowLoad, setSlowLoad] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState<CategoryKey>("all");
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = async (silent = false) => {
-    if (!silent) setLoading(true);
+    if (!silent) {
+      setLoading(true);
+      slowTimer.current = setTimeout(() => setSlowLoad(true), 3000);
+    }
     try {
       const res = await getNews();
       setNews(Array.isArray(res.data) ? res.data : []);
     } catch {}
+    if (slowTimer.current) clearTimeout(slowTimer.current);
+    setSlowLoad(false);
     setLoading(false);
     setRefreshing(false);
   };
 
   useEffect(() => {
     load();
+    return () => { if (slowTimer.current) clearTimeout(slowTimer.current); };
   }, []);
 
   const filtered =
@@ -247,19 +257,11 @@ export default function NewsScreen() {
 
       {/* List */}
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
-        {loading ? (
+        {slowLoad ? (
+          <AppLoadingScreen message="Đang tải tin tức..." />
+        ) : loading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <ActivityIndicator size="large" color={palette.spinner} />
-            <Text
-              style={{
-                marginTop: 10,
-                fontSize: FONT_SIZE.xs,
-                fontWeight: "600",
-                color: isDark ? "#94A3B8" : "#64748B",
-              }}
-            >
-              Đang tải tin tức...
-            </Text>
           </View>
         ) : (
           <FlatList
@@ -326,9 +328,9 @@ export default function NewsScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -343,6 +345,8 @@ export default function NewsScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

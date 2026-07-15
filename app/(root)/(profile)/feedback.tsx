@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { postFeedback } from "@/services/feedback";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { useTheme } from "@/context/Theme_Context";
 
 export default function FeedbackScreen() {
@@ -245,6 +246,8 @@ export default function FeedbackScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        <ZaloFloatingButton />
       </SafeAreaView>
     </LinearGradient>
   );

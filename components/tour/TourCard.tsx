@@ -5,7 +5,7 @@ import { TourItem } from "@/services/tour";
 import { getNearestDeparture, formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Text, TouchableOpacity, View, ImageBackground } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 const lightShadow = {
   shadowColor: "#94A3B8",
@@ -75,17 +75,10 @@ export function TourCard({
       }`}
       style={isDark ? undefined : lightShadow}
     >
-      <ImageBackground
-        source={{ uri: tour.imageUrl }}
-        resizeMode="cover"
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-        imageStyle={{ opacity: 0.15 }}
-      />
-
       {/* Tour Image with Rating badge */}
       <View className="relative h-44 w-full bg-slate-900/10">
         <Image
-          source={{ uri: tour.imageUrl }}
+          source={{ uri: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl }}
           className="w-full h-full"
           resizeMode="cover"
         />

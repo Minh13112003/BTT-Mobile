@@ -2,6 +2,7 @@ import { Footer } from "@/components/Footer";
 import Header from "@/components/Header";
 import { FONT_SIZE } from "@/constants/typography";
 import { SearchBar } from "@/components/SearchBar";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
 import { getPalette } from "@/constants/theme";
@@ -234,7 +235,7 @@ export default function SearchScreen() {
       params: {
         id: tour.id,
         name: tour.name,
-        imageUrl: tour.imageUrl,
+        imageUrl: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl,
         price: displayPrice != null ? String(displayPrice) : "0",
         duration: tour.duration,
         rating: String(tour.rating),
@@ -513,9 +514,9 @@ export default function SearchScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -530,6 +531,8 @@ export default function SearchScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

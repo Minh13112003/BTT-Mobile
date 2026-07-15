@@ -4,14 +4,33 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl 
-  || process.env.EXPO_PUBLIC_API_URL 
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl
+  || process.env.EXPO_PUBLIC_API_URL
   || 'https://default-api.com';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 });
+
+// ==================== LARAVEL API (song song NestJS trong giai đoạn migrate) ====================
+// Xem .claude/rules/laravel-migration.md — API Laravel là public read API cho dữ liệu tour,
+// không cần Bearer token / refresh-token flow như NestJS, nên chỉ cần header cố định.
+const LARAVEL_API_BASE_URL = process.env.EXPO_PUBLIC_BASE_BTT_URL
+  || 'https://benthanhtourist.com';
+
+const laravelAxiosInstance = axios.create({
+  baseURL: LARAVEL_API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    Accept: 'application/json',
+  },
+});
+
+export const apiServiceLaravel = {
+  get: <T = any>(url: string, params = {}, config = {}) =>
+    laravelAxiosInstance.get<T>(url, { ...config, params }),
+};
 
 // ==================== SECURE STORE HELPERS ====================
 const storage = {
@@ -104,12 +123,15 @@ axiosInstance.interceptors.response.use(
     // Nếu không, lỗi 401 thật (vd "Invalid email or password") sẽ bị che thành "No refresh token".
     const requestUrl: string = originalRequest?.url ?? '';
     const isAuthRoute = /\/auth\/(login|register|refresh-token)/.test(requestUrl);
+    // PIN endpoints trả 401 khi PIN sai — không phải token hết hạn, không refresh
+    const isPinVerify = /\/users\/me\/pin/.test(requestUrl);
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !isAuthRoute
+      !isAuthRoute &&
+      !isPinVerify
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {

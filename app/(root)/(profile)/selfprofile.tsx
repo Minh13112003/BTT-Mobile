@@ -1,4 +1,5 @@
 import CustomToast from "@/components/CustomToast";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
@@ -1129,6 +1130,8 @@ export default function SelfProfileScreen() {
           await logout();
         }}
       />
+
+      <ZaloFloatingButton />
     </LinearGradient>
   );
 }

@@ -4,8 +4,9 @@ import { TourDetail } from "@/services/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ImageCarousel } from "./ImageCarousel";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -33,26 +34,33 @@ function CircleBtn({
   );
 }
 
-/** Full-bleed hero image with back/heart/share, duration badge and rating. */
-export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onBack: () => void; onPressImage?: () => void }) {
+/** Full-bleed hero carousel with back/heart/share, duration badge and rating. */
+export function TourHero({
+  tour,
+  onBack,
+  onPressImage,
+  hideActions = false,
+}: {
+  tour: TourDetail;
+  onBack: () => void;
+  onPressImage?: (url: string) => void;
+  hideActions?: boolean;
+}) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
 
+  const images = Array.isArray(tour.imageUrl) ? tour.imageUrl : [tour.imageUrl];
+
   return (
     <View style={{ height: 286 }}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={onPressImage}
-        disabled={!onPressImage}
-        style={{ width: "100%", height: "100%" }}
-      >
-        <Image
-          source={{ uri: tour.imageUrl }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+      <ImageCarousel
+        images={images}
+        height={286}
+        autoPlayInterval={5000}
+        onPressImage={onPressImage}
+      />
+
       <LinearGradient
         colors={[
           "rgba(8,10,16,0.45)",
@@ -62,6 +70,7 @@ export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onB
         ]}
         locations={[0, 0.28, 0.5, 1]}
         style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
 
       {/* Top action bar */}
@@ -70,10 +79,12 @@ export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onB
         className="flex-row justify-between"
       >
         <CircleBtn icon="chevron-back" onPress={onBack} isDark={isDark} />
-        <View className="flex-row gap-2">
-          <CircleBtn icon="heart-outline" isDark={isDark} />
-          <CircleBtn icon="share-social-outline" isDark={isDark} />
-        </View>
+        {!hideActions && (
+          <View className="flex-row gap-2">
+            <CircleBtn icon="heart-outline" isDark={isDark} />
+            <CircleBtn icon="share-social-outline" isDark={isDark} />
+          </View>
+        )}
       </View>
 
       {/* Duration badge */}
@@ -95,7 +106,9 @@ export function TourHero({ tour, onBack, onPressImage }: { tour: TourDetail; onB
         >
           {tour.rating}
         </Text>
-        <Text className="text-slate-400 ml-0.5" style={{ fontSize: FONT_SIZE.xs }}>({tour.reviewsCount})</Text>
+        <Text className="text-slate-400 ml-0.5" style={{ fontSize: FONT_SIZE.xs }}>
+          ({tour.reviewsCount})
+        </Text>
       </View>
     </View>
   );

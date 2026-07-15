@@ -1,12 +1,12 @@
 import * as urls from "./api/constants";
-import { apiService } from "./api/interceptor";
+import { apiService, apiServiceLaravel } from "./api/interceptor";
 import type { Departure } from "./departure";
 
 export interface TourItem {
   id: string;
   name: string;
-  imageUrl: string;
-  imagePublicId: string;
+  imageUrl: string[];
+  imagePublicId: string[];
   /** @deprecated Backend đã xóa — giá lấy từ departures[].price */
   price?: number;
   duration: string;
@@ -59,6 +59,34 @@ export interface TourDetail extends TourItem {
   notes?: string | null;
   schedules?: TourSchedule[];
   singleRoomSupplement?: number;
+  /**
+   * Lịch trình dạng HTML thô/ngày — chỉ có ở tour nguồn Laravel (field `plans[]`
+   * của `/api/tour/item`, xem docs/laravel-tour-api-samples.md). Không tương thích
+   * cấu trúc sáng/trưa/chiều/tối của {@link TourSchedule} nên tách field riêng —
+   * TourScheduleAccordion nhánh theo field nào có dữ liệu.
+   */
+  htmlPlans?: TourPlanLaravel[];
+  /** Điều khoản/lưu ý dạng HTML thô — chỉ có ở tour nguồn Laravel, thay thế TermsAccordion tĩnh. */
+  htmlTerms?: TourTermsLaravel;
+}
+
+/** 1 ngày trong lịch trình tour Laravel — `content` là HTML thô. */
+export interface TourPlanLaravel {
+  day: string;
+  title: string;
+  eats: string[];
+  main_vehicles: string[];
+  content: string;
+}
+
+/** Các khối điều khoản/lưu ý dạng HTML thô của tour Laravel. */
+export interface TourTermsLaravel {
+  priceIncluded: string;
+  priceNotIncluded: string;
+  warningNote: string;
+  cancelBooking: string;
+  paymentInstructions: string;
+  cancelPenalty: string;
 }
 
 export interface ListMeta {
@@ -118,10 +146,273 @@ export function getPopularTours(page = 1, limit = 10) {
 /**
  * Lọc tour theo loại hình. `country`/`region` khớp chính xác, `city` là
  * tìm-chứa-chuỗi không phân biệt hoa thường. Tham số undefined được bỏ qua.
+ * @deprecated Đang migrate sang Laravel — xem {@link getTourCategories} / {@link getToursByCategory}
+ * và `.claude/rules/laravel-migration.md`. Giữ lại cho các nhánh chưa migrate.
  */
 export function getToursByType(params: TourTypeQuery) {
   const { page = 1, limit = 10, ...rest } = params;
   return apiService.get(urls.URL_GetToursByType, { ...rest, page, limit });
+}
+
+// ==================== TOUR APIs (Laravel) ====================
+// Xem docs/laravel-tour-api-samples.md cho response mẫu đầy đủ.
+
+/** 1 thể loại tour trả về từ Laravel — trộn lẫn loại tour, vùng miền, tỉnh/quốc gia trong 1 danh sách phẳng. */
+export interface TourCategoryLaravel {
+  hash: number;
+  name: string;
+}
+
+/** 1 tour rút gọn trong danh sách theo category (Laravel). */
+export interface TourItemLaravel {
+  id: string;
+  code: string;
+  name: string;
+  image: string;
+  departure_place: string;
+  destination_place: string;
+  days: number;
+  nights: number;
+  departure_date: string;
+  destination_date: string;
+  price: number;
+  is_available: boolean;
+}
+
+export interface TourCategoryListMetaLaravel {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+export interface TourCategoryListResponseLaravel {
+  data: TourItemLaravel[];
+  links: { first: string; last: string; prev: string | null; next: string | null };
+  meta: TourCategoryListMetaLaravel;
+  error: boolean;
+  message: string | null;
+}
+
+/** Danh sách toàn bộ thể loại tour (loại + vùng miền + tỉnh/quốc gia), không phân trang. */
+export function getTourCategories() {
+  return apiServiceLaravel.get<{
+    error: boolean;
+    data: TourCategoryLaravel[];
+    message: string | null;
+  }>(urls.URL_GetTourCategories);
+}
+
+/**
+ * Danh sách tour thuộc 1 category_id (hash), có phân trang chuẩn Laravel.
+ * Một tour có thể thuộc nhiều category_id cùng lúc (vd Tour Hà Nội thuộc cả
+ * "Trong Nước", "Miền Bắc" và "Hà Nội") — đây không phải cây cha-con.
+ */
+export function getToursByCategory(categoryId: number, page = 1) {
+  return apiServiceLaravel.get<TourCategoryListResponseLaravel>(
+    urls.URL_GetToursByCategory,
+    { category_id: categoryId, page },
+  );
+}
+
+function normalizeCategoryName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .trim();
+}
+
+// Module-level cache — tránh gọi lại /api/tour/categories mỗi lần cần resolve hash.
+let categoryNameToHashCache: Map<string, number> | null = null;
+let categoryFetchPromise: Promise<Map<string, number>> | null = null;
+
+/**
+ * Trả về map "tên đã normalize" -> hash, fetch 1 lần và cache ở module-level.
+ * Dùng để chuyển tên hiển thị hiện có (vd "Miền Bắc", "Châu Á") sang category_id
+ * thật của Laravel mà không cần hardcode — nếu Laravel đổi hash, map vẫn đúng.
+ */
+async function getCategoryNameToHashMap(): Promise<Map<string, number>> {
+  if (categoryNameToHashCache) return categoryNameToHashCache;
+  if (!categoryFetchPromise) {
+    categoryFetchPromise = getTourCategories().then((res) => {
+      const list = res.data?.data ?? [];
+      const map = new Map<string, number>();
+      for (const item of list) {
+        map.set(normalizeCategoryName(item.name), item.hash);
+      }
+      categoryNameToHashCache = map;
+      return map;
+    });
+  }
+  return categoryFetchPromise;
+}
+
+/** Resolve tên hiển thị (vd "Trong Nước", "Miền Bắc", "Hà Nội") sang category_id (hash) của Laravel. */
+export async function resolveCategoryHashByName(name: string): Promise<number | null> {
+  const map = await getCategoryNameToHashMap();
+  return map.get(normalizeCategoryName(name)) ?? null;
+}
+
+/**
+ * Map 1 tour rút gọn từ Laravel sang {@link TourItem} để UI (TourCard, search results...)
+ * không cần đổi gì. Laravel không trả `rating`/`reviewsCount` ở endpoint category —
+ * để 0 và TourCard tự fallback (không hiện sao). `departures` chỉ có đúng 1 phần tử vì
+ * endpoint category không trả `tour_days[]` (nhiều đợt) — chỉ có ở `/api/tour/item`,
+ * xem {@link mapTourItemDetailLaravelToTourDetail}.
+ */
+function mapTourItemLaravelToTourItem(item: TourItemLaravel): TourItem {
+  return {
+    id: item.id,
+    name: item.name,
+    imageUrl: [item.image],
+    imagePublicId: [],
+    duration: `${item.days}N${item.nights}Đ`,
+    rating: 0,
+    reviewsCount: 0,
+    hasVat: false,
+    departures: [
+      {
+        id: item.id,
+        tourId: item.id,
+        departureDate: item.departure_date,
+        price: item.price,
+        availableSeats: item.is_available ? 1 : 0,
+      },
+    ],
+  };
+}
+
+/**
+ * Danh sách tour theo category (Laravel), đã map sang {@link TourItem} để dùng
+ * chung với TourCard/useTourSearch hiện có. Trả kèm meta phân trang gốc của Laravel.
+ */
+export async function getToursByCategoryMapped(categoryId: number, page = 1) {
+  const res = await getToursByCategory(categoryId, page);
+  const items = (res.data?.data ?? []).map(mapTourItemLaravelToTourItem);
+  return { items, meta: res.data?.meta ?? null };
+}
+
+/** 1 đợt khởi hành trong `tour_days[]` — KHÔNG có field ngày riêng, phải parse từ `code`. */
+export interface TourDayLaravel {
+  id: string;
+  code: string;
+  departure_place: string;
+  destination_place: string;
+  stock_qty: number;
+  price: number;
+}
+
+/** Response đầy đủ của GET /api/tour/item — xem docs/laravel-tour-api-samples.md. */
+export interface TourItemDetailLaravel {
+  id: string;
+  code: string;
+  name: string;
+  image: string;
+  images: string[];
+  departure_place: string;
+  destination_place: string;
+  days: number;
+  nights: number;
+  departure_date: string;
+  destination_date: string;
+  stock_qty: number;
+  price: number;
+  is_available: boolean;
+  tour_days: TourDayLaravel[];
+  plans: TourPlanLaravel[];
+  tour_price_included: string;
+  tour_price_not_included: string;
+  warning_note: string;
+  cancel_booking: string;
+  tuts_booking_payment: string;
+  punishment_cancel_booking: string;
+  warning_note_visa: string;
+  featured_description: string;
+}
+
+/** Chi tiết 1 tour theo tour_key (Laravel). */
+export function getTourItem(tourKey: string) {
+  return apiServiceLaravel.get<{
+    data: TourItemDetailLaravel;
+    error: boolean;
+    message: string | null;
+  }>(urls.URL_GetTourItem, { tour_key: tourKey });
+}
+
+/**
+ * Parse ngày khởi hành từ 8 số cuối của `code` (định dạng YYYYMMDD), quy ước xác nhận
+ * từ dữ liệu thật của BenThanh Tourist — vd "TD1NFHG2620260823" -> "2026-08-23".
+ * Trả về null nếu code không khớp định dạng thay vì throw, để UI tự fallback.
+ */
+function parseDepartureDateFromCode(code: string): string | null {
+  const match = code.match(/(\d{4})(\d{2})(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const iso = `${year}-${month}-${day}`;
+  return isNaN(new Date(iso).getTime()) ? null : iso;
+}
+
+/**
+ * Map `tour_days[]` (nhiều đợt khởi hành thật) sang {@link Departure}[]. Nếu tour
+ * không có `tour_days` (chỉ 1 lịch cố định), dựng 1 departure duy nhất từ field
+ * top-level `departure_date`/`price`/`stock_qty`.
+ */
+function mapTourDaysToDepartures(detail: TourItemDetailLaravel): Departure[] {
+  if (detail.tour_days?.length) {
+    return detail.tour_days.map((d) => ({
+      id: d.id,
+      tourId: detail.id,
+      departureDate: parseDepartureDateFromCode(d.code) ?? detail.departure_date,
+      price: d.price,
+      availableSeats: d.stock_qty,
+    }));
+  }
+  return [
+    {
+      id: detail.id,
+      tourId: detail.id,
+      departureDate: detail.departure_date,
+      price: detail.price,
+      availableSeats: detail.stock_qty,
+    },
+  ];
+}
+
+/** Map response chi tiết Laravel sang {@link TourDetail} — UI (TourHero, TripInfoCard...) dùng chung interface. */
+function mapTourItemDetailLaravelToTourDetail(detail: TourItemDetailLaravel): TourDetail {
+  return {
+    id: detail.id,
+    code: detail.code,
+    name: detail.name,
+    imageUrl: detail.images?.length ? detail.images : [detail.image],
+    imagePublicId: [],
+    duration: `${detail.days}N${detail.nights}Đ`,
+    rating: 0,
+    reviewsCount: 0,
+    hasVat: false,
+    departureFrom: detail.departure_place,
+    departures: mapTourDaysToDepartures(detail),
+    htmlPlans: detail.plans,
+    htmlTerms: {
+      priceIncluded: detail.tour_price_included,
+      priceNotIncluded: detail.tour_price_not_included,
+      warningNote: detail.warning_note,
+      cancelBooking: detail.cancel_booking,
+      paymentInstructions: detail.tuts_booking_payment,
+      cancelPenalty: detail.punishment_cancel_booking,
+    },
+  };
+}
+
+/** Chi tiết tour (Laravel), đã map sang {@link TourDetail} để dùng chung UI với luồng NestJS. */
+export async function getTourItemMapped(tourKey: string): Promise<TourDetail> {
+  const res = await getTourItem(tourKey);
+  return mapTourItemDetailLaravelToTourDetail(res.data.data);
 }
 
 // Generic fallbacks so the "Thông tin chuyến đi" card always renders a complete

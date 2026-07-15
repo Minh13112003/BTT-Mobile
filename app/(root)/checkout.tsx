@@ -2,6 +2,9 @@ import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { booking, PaymentMethod } from "@/services/booking";
 import { getVouchers } from "@/services/voucher";
+import { getPinStatus, verifyPin } from "@/services/pin";
+import PINInput from "@/components/PINInput";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,7 +12,6 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -120,6 +122,8 @@ export default function CheckoutScreen() {
     ? parseInt(params.availableSeats as string, 10)
     : Infinity;
 
+  const maxTotal = availableSeats === Infinity ? 99 : availableSeats;
+
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
@@ -135,6 +139,10 @@ export default function CheckoutScreen() {
   const [voucherCode, setVoucherCode] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinError, setPinError] = useState("");
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
@@ -254,8 +262,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  const handleBookingSubmit = () => {
-    // Validation before confirming.
+  const handleBookingSubmit = async () => {
     if (!departureId) {
       triggerAlert("Thông báo", "Vui lòng chọn ngày khởi hành", "warning");
       return;
@@ -268,17 +275,54 @@ export default function CheckoutScreen() {
       triggerAlert("Thông báo", "Phải có ít nhất 1 người lớn", "warning");
       return;
     }
-    if (adults + children + infants > 99) {
-      triggerAlert("Thông báo", "Số lượng khách tối đa là 99 người", "warning");
+    const totalPassengers = adults + children + infants;
+    if (totalPassengers > maxTotal) {
+      triggerAlert(
+        "Thông báo",
+        availableSeats === Infinity
+          ? "Số lượng khách tối đa là 99 người"
+          : `Chỉ còn ${availableSeats} chỗ cho chuyến đi này`,
+        "warning"
+      );
       return;
     }
 
-    triggerAlert(
-      "Xác nhận đặt tour",
-      "Bạn có chắc chắn muốn đặt chuyến đi này không?",
-      "confirm",
-      performBooking
-    );
+    try {
+      const res = await getPinStatus();
+      const hasPin = res.data?.hasPin ?? false;
+      if (hasPin) {
+        setPinError("");
+        setShowPinModal(true);
+      } else {
+        triggerAlert(
+          "Xác nhận đặt tour",
+          "Bạn có chắc chắn muốn đặt chuyến đi này không?",
+          "confirm",
+          performBooking
+        );
+      }
+    } catch {
+      triggerAlert(
+        "Xác nhận đặt tour",
+        "Bạn có chắc chắn muốn đặt chuyến đi này không?",
+        "confirm",
+        performBooking
+      );
+    }
+  };
+
+  const handlePinSubmit = async (pin: string) => {
+    try {
+      setPinLoading(true);
+      setPinError("");
+      await verifyPin(pin);
+      setShowPinModal(false);
+      performBooking();
+    } catch {
+      setPinError("Mã PIN không chính xác. Vui lòng thử lại.");
+    } finally {
+      setPinLoading(false);
+    }
   };
 
   const performBooking = async () => {
@@ -441,7 +485,21 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-slate-100/50">
+              <View className="mt-3 pt-3 border-t border-slate-100/50">
+                {tourHasVat && (
+                  <View
+                    className={`self-start border px-2 py-0.5 rounded-lg mb-2 ${
+                      isDark
+                        ? "border-slate-700 bg-slate-750"
+                        : "border-red-100 bg-red-50/50"
+                    }`}
+                  >
+                    <Text className="font-black uppercase text-red-500" style={{ fontSize: FONT_SIZE.xs }}>
+                      Đã gồm VAT
+                    </Text>
+                  </View>
+                )}
+
                 <View>
                   <Text className="font-bold text-slate-400 uppercase tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
                     Đơn giá trọn gói
@@ -455,20 +513,6 @@ export default function CheckoutScreen() {
                     {formatCurrency(tourPrice)}
                   </Text>
                 </View>
-
-                {tourHasVat && (
-                  <View
-                    className={`border px-2 py-0.5 rounded-lg ${
-                      isDark
-                        ? "border-slate-700 bg-slate-750"
-                        : "border-red-100 bg-red-50/50"
-                    }`}
-                  >
-                    <Text className="font-black uppercase text-red-500" style={{ fontSize: FONT_SIZE.xs }}>
-                      Đã gồm VAT
-                    </Text>
-                  </View>
-                )}
               </View>
             </View>
           </View>
@@ -499,7 +543,7 @@ export default function CheckoutScreen() {
                   onDec: () => setAdults(Math.max(1, adults - 1)),
                   onInc: () =>
                     setAdults(
-                      Math.min(99 - children - infants, adults + 1),
+                      Math.min(maxTotal - children - infants, adults + 1),
                     ),
                   unitPrice: tourPrice,
                 },
@@ -510,7 +554,7 @@ export default function CheckoutScreen() {
                   onDec: () => setChildren(Math.max(0, children - 1)),
                   onInc: () =>
                     setChildren(
-                      Math.min(99 - adults - infants, children + 1),
+                      Math.min(maxTotal - adults - infants, children + 1),
                     ),
                   unitPrice: tourPrice * 0.8,
                 },
@@ -521,7 +565,7 @@ export default function CheckoutScreen() {
                   onDec: () => setInfants(Math.max(0, infants - 1)),
                   onInc: () =>
                     setInfants(
-                      Math.min(99 - adults - children, infants + 1),
+                      Math.min(maxTotal - adults - children, infants + 1),
                     ),
                   unitPrice: tourPrice * 0.4,
                 },
@@ -614,6 +658,24 @@ export default function CheckoutScreen() {
                 </View>
               </View>
             ))}
+
+            {/* Cảnh báo số chỗ */}
+            {availableSeats !== Infinity && adults + children + infants >= maxTotal && (
+              <View className="mt-3 flex-row items-center" style={{ gap: 6 }}>
+                <Ionicons name="warning-outline" size={16} color="#F97316" />
+                <Text style={{ fontSize: FONT_SIZE.xs, color: "#F97316", fontWeight: "700" }}>
+                  Đã đặt tối đa {maxTotal} chỗ còn lại
+                </Text>
+              </View>
+            )}
+            {availableSeats !== Infinity && availableSeats <= 5 && adults + children + infants < maxTotal && (
+              <View className="mt-3 flex-row items-center" style={{ gap: 6 }}>
+                <Ionicons name="alert-circle-outline" size={16} color="#EAB308" />
+                <Text style={{ fontSize: FONT_SIZE.xs, color: "#EAB308", fontWeight: "600" }}>
+                  Chỉ còn {availableSeats} chỗ — đặt ngay!
+                </Text>
+              </View>
+            )}
 
             {/* Total passengers + total cost summary */}
             <View className="flex-row justify-between items-center mt-4 pt-3 border-t border-slate-200/60">
@@ -1057,6 +1119,9 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+
+      <ZaloFloatingButton baseBottom={130} />
+
       {showToast && (
         <View
           style={{
@@ -1086,6 +1151,15 @@ export default function CheckoutScreen() {
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
         onConfirm={onAlertConfirm}
+      />
+      <PINInput
+        visible={showPinModal}
+        title="Xác nhận đặt tour"
+        subtitle="Nhập mã PIN 6 chữ số để xác nhận đặt tour"
+        loading={pinLoading}
+        error={pinError}
+        onSubmit={handlePinSubmit}
+        onClose={() => setShowPinModal(false)}
       />
     </LinearGradient>
   );

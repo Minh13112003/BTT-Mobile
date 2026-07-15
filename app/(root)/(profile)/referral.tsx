@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getReferralStats } from "@/services/referral";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { useTheme } from "@/context/Theme_Context";
 
 export default function ReferralScreen() {
@@ -254,6 +255,8 @@ export default function ReferralScreen() {
             </View>
           </ScrollView>
         )}
+
+        <ZaloFloatingButton />
       </SafeAreaView>
     </LinearGradient>
   );

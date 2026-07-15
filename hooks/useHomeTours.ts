@@ -3,13 +3,12 @@ import {
   getHotTours,
   getNewestTours,
   getPopularTours,
-  getToursByType,
   TourItem,
 } from "@/services/tour";
 import { useCallback, useEffect, useState } from "react";
 
 export type HomeSections = Record<
-  "newest" | "hot" | "popular" | "domestic" | "foreign",
+  "newest" | "hot" | "popular",
   TourItem[]
 >;
 
@@ -17,9 +16,10 @@ const EMPTY: HomeSections = {
   newest: [],
   hot: [],
   popular: [],
-  domestic: [],
-  foreign: [],
 };
+
+// Cache giữ data giữa các lần navigate — tránh load lại khi quay về home
+let cachedSections: HomeSections | null = null;
 
 const pickItems = (
   result: PromiseSettledResult<{ data?: { items?: TourItem[] } }>,
@@ -31,10 +31,12 @@ const pickItems = (
 /**
  * Fetch all five Home sections in parallel. Uses `allSettled` so a single
  * failing endpoint only blanks its own rail instead of the whole screen.
+ * Data is cached in module scope so navigating back to home never re-shows
+ * the fullscreen loading screen — only the very first load or pull-to-refresh.
  */
 export function useHomeTours() {
-  const [sections, setSections] = useState<HomeSections>(EMPTY);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState<HomeSections>(cachedSections ?? EMPTY);
+  const [loading, setLoading] = useState(cachedSections === null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -42,23 +44,24 @@ export function useHomeTours() {
       getNewestTours(1, 6),
       getHotTours(1, 5),
       getPopularTours(1, 5),
-      getToursByType({ country: "Trong nước", page: 1, limit: 5 }),
-      getToursByType({ country: "Nước ngoài", page: 1, limit: 5 }),
     ]);
 
-    setSections({
+    const next: HomeSections = {
       newest: pickItems(results[0] as any),
       hot: pickItems(results[1] as any),
       popular: pickItems(results[2] as any),
-      domestic: pickItems(results[3] as any),
-      foreign: pickItems(results[4] as any),
-    });
+    };
+    cachedSections = next;
+    setSections(next);
     setLoading(false);
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    load();
+    // Nếu đã có cache thì không load lại, chỉ load khi lần đầu tiên
+    if (cachedSections === null) {
+      load();
+    }
   }, [load]);
 
   const onRefresh = useCallback(() => {

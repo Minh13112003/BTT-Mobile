@@ -21,8 +21,17 @@ export type SearchMode =
 /** Khu vực hợp lệ cho country = "Trong nước". */
 export const DOMESTIC_REGIONS = ["Miền Bắc", "Miền Trung", "Miền Nam"] as const;
 
-/** Khu vực (châu lục) hợp lệ cho country = "Nước ngoài". */
-export const FOREIGN_REGIONS = ["Châu Á", "Châu Âu", "Châu Phi"] as const;
+/**
+ * Khu vực (châu lục) hợp lệ cho country = "Nước ngoài".
+ * Mở rộng đủ 5 châu để khớp danh mục Laravel (xem docs/laravel-tour-api-samples.md).
+ */
+export const FOREIGN_REGIONS = [
+  "Châu Á",
+  "Châu Âu",
+  "Châu Úc",
+  "Châu Mỹ",
+  "Châu Phi",
+] as const;
 
 /** Tiêu đề section trên màn Home. */
 export const SECTION_LABELS: Record<SearchMode, string> = {

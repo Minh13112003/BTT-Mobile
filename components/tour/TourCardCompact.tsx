@@ -43,7 +43,7 @@ export function TourCardCompact({
     >
       <View style={{ height: imageHeight }} className="w-full bg-slate-900/10">
         <Image
-          source={{ uri: tour.imageUrl }}
+          source={{ uri: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -86,8 +86,8 @@ export function TourCardCompact({
       <View className="p-3">
         <Text
           numberOfLines={2}
-          style={{ fontSize: FONT_SIZE.xl, minHeight: 60 }}
-          className={`font-black leading-7 ${
+          style={{ fontSize: FONT_SIZE.xl, minHeight: 68 }}
+          className={`font-black leading-8 ${
             isDark ? "text-slate-100" : "text-slate-800"
           }`}
         >

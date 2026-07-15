@@ -3,6 +3,7 @@ import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { login } from "@/services/auth";
+import { getPinStatus } from "@/services/pin";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -32,6 +33,22 @@ export default function LoginScreen() {
     if (isLoggedIn) router.replace("/(root)/(tabs)");
   }, [isLoggedIn]);
 
+  const checkPinAndNavigate = async () => {
+    try {
+      const res = await getPinStatus();
+      if (!res.data?.hasPin) {
+        router.replace({
+          pathname: "/(root)/(profile)/setup-pin" as any,
+          params: { fromLogin: "true" },
+        });
+      } else {
+        router.replace("/(root)/(tabs)");
+      }
+    } catch {
+      router.replace("/(root)/(tabs)");
+    }
+  };
+
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +70,7 @@ export default function LoginScreen() {
         res.data.refreshToken,
         res.data.user,
       );
-      router.replace("/(root)/(tabs)/profile");
+      await checkPinAndNavigate();
     } catch (err: any) {
       setError(
         err?.response?.data?.message || "Email hoặc mật khẩu không đúng",
@@ -211,7 +228,7 @@ export default function LoginScreen() {
                 paddingLeft: 4,
               }}
             >
-              Email hoặc Số điện thoại
+              Số điện thoại
             </Text>
             <View
               style={{
@@ -240,7 +257,7 @@ export default function LoginScreen() {
                   fontWeight: "600",
                   color: isDark ? "#F1F5F9" : "#181C23",
                 }}
-                placeholder="name@example.com hoặc 0123456789"
+                placeholder="0123456789"
                 placeholderTextColor={isDark ? "#6B7280" : "#926E6A"}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -315,7 +332,9 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={{ alignSelf: "flex-end", marginTop: 12 }}
               activeOpacity={0.6}
-              onPress={() => router.push("/(root)/(auth)/forgot-password" as any)}
+              onPress={() =>
+                router.push("/(root)/(auth)/forgot-password" as any)
+              }
             >
               <Text
                 style={{

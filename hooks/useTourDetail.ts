@@ -1,5 +1,6 @@
 import {
-  getTourById,
+  // getTourById, // NestJS — comment lại, Tour Detail đã chuyển sang Laravel (xem .claude/rules/laravel-migration.md)
+  getTourItemMapped,
   normalizeTourDetail,
   TourDetail
 } from "@/services/tour";
@@ -54,8 +55,10 @@ export function useTourDetail(id?: string, fallback?: TourDetail | null) {
     if (!fb?.id) setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const res = await getTourById(id);
-      const data = res?.data?.data ?? res?.data?.item ?? res?.data;
+      // NestJS (comment lại — Tour Detail đã chuyển sang Laravel):
+      // const res = await getTourById(id);
+      // const data = res?.data?.data ?? res?.data?.item ?? res?.data;
+      const data = await getTourItemMapped(id);
       if (data?.id) {
         setState({
           tour: normalizeTourDetail(data),

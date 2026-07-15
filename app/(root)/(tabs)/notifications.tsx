@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
@@ -593,9 +594,9 @@ export default function NotificationsScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -610,6 +611,8 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

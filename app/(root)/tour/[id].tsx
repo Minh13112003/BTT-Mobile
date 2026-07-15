@@ -1,10 +1,13 @@
 import { BookingBar } from "@/components/tour/BookingBar";
 import { DeparturePicker } from "@/components/tour/DeparturePicker";
 import { HighlightChips } from "@/components/tour/HighlightChips";
-import { TermsAccordion } from "@/components/tour/TermsAccordion";
+// import { TermsAccordion } from "@/components/tour/TermsAccordion"; // NestJS — điều khoản tĩnh, thay bằng TermsHtmlAccordion (Laravel)
+import { TermsHtmlAccordion } from "@/components/tour/TermsHtmlAccordion";
 import { TourHero } from "@/components/tour/TourHero";
-import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
+// import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion"; // NestJS — cấu trúc sáng/trưa/chiều/tối, thay bằng TourScheduleHtmlAccordion (Laravel)
+import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAccordion";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
@@ -19,13 +22,12 @@ import { StatusBar } from "expo-status-bar";
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  Image,
+  Modal,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
-  Modal,
-  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePinchToZoom } from "@/hooks/usePinchToZoom";
@@ -61,8 +63,8 @@ export default function TourDetailScreen() {
     return {
       id: id ?? "",
       name: params.name,
-      imageUrl: params.imageUrl ?? "",
-      imagePublicId: "",
+      imageUrl: params.imageUrl ? [params.imageUrl] : [],
+      imagePublicId: [],
       price: params.price ? parseFloat(params.price) : 0,
       duration: params.duration ?? "",
       rating: params.rating ? parseFloat(params.rating) : 0,
@@ -155,7 +157,7 @@ export default function TourDetailScreen() {
       params: {
         id: tour.id,
         name: tour.name,
-        imageUrl: tour.imageUrl,
+        imageUrl: tour.imageUrl[0] ?? "",
         tourCode: tour.code ?? "",
         price: String(selectedDeparture.price),
         duration: tour.duration,
@@ -261,7 +263,7 @@ export default function TourDetailScreen() {
         <TourHero
           tour={tour}
           onBack={() => router.back()}
-          onPressImage={() => setZoomImageUrl(tour.imageUrl)}
+          onPressImage={(url) => setZoomImageUrl(url)}
         />
 
         <View className="px-4 -mt-2">
@@ -289,21 +291,21 @@ export default function TourDetailScreen() {
           <HighlightChips items={tour.highlights} />
 
           <DeparturePicker
-            tourId={tour.id}
+            departures={tour.departures ?? []}
             tourName={tour.name}
             selected={selectedDeparture}
             onSelect={setSelectedDeparture}
           />
 
-          {tour.schedules?.length ? (
-            <TourScheduleAccordion schedules={tour.schedules} />
-          ) : null}
+          {/* NestJS: <TourScheduleAccordion schedules={tour.schedules} /> — tour.schedules không còn được backend Laravel trả về */}
+          <TourScheduleHtmlAccordion plans={tour.htmlPlans} />
 
           <TripInfoCard tour={tour} />
 
           <View className="mt-5">
             <SectionTitle title="Điều khoản & Lưu ý chung" />
-            <TermsAccordion />
+            {/* NestJS: <TermsAccordion /> — nội dung tĩnh, tour Laravel dùng HTML thật từ API */}
+            <TermsHtmlAccordion terms={tour.htmlTerms} />
           </View>
         </View>
       </ScrollView>
@@ -377,9 +379,9 @@ export default function TourDetailScreen() {
             position: "absolute",
             bottom: 130,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -394,6 +396,8 @@ export default function TourDetailScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton baseBottom={130} liftBy={showBackToTop ? 60 : 0} />
 
       <CustomAlert
         visible={alertVisible}

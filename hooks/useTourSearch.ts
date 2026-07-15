@@ -4,6 +4,8 @@ import {
   getNewestTours,
   getPopularTours,
   getToursByType,
+  getToursByCategoryMapped,
+  resolveCategoryHashByName,
   PaginatedMeta,
   TourItem,
 } from "@/services/tour";
@@ -164,8 +166,33 @@ export function useTourSearch(init?: UseTourSearchInit) {
           hasNext: false,
           hasPrevious: false,
         };
+      } else if (!city && !MODE_TOUR_TYPE[mode] && MODE_COUNTRY[mode]) {
+        // domestic/foreign — Laravel (xem .claude/rules/laravel-migration.md).
+        // Ưu tiên category cụ thể (region đã chọn, vd "Miền Bắc"/"Châu Á"), nếu
+        // chưa chọn thì dùng category gốc (region=null -> "Trong Nước"/"Nước Ngoài").
+        const categoryName = region ?? MODE_COUNTRY[mode]!;
+        const categoryId = await resolveCategoryHashByName(categoryName);
+        if (categoryId != null) {
+          const { items: laravelItems, meta: laravelMeta } =
+            await getToursByCategoryMapped(categoryId, pageNum);
+          items = laravelItems;
+          paginatedMeta = laravelMeta
+            ? {
+                total: laravelMeta.total,
+                page: laravelMeta.current_page,
+                limit: laravelMeta.per_page,
+                totalPages: laravelMeta.last_page,
+                hasNext: laravelMeta.current_page < laravelMeta.last_page,
+                hasPrevious: laravelMeta.current_page > 1,
+              }
+            : null;
+        } else {
+          console.error(`Không tìm thấy category Laravel khớp tên "${categoryName}"`);
+          items = [];
+          paginatedMeta = null;
+        }
       } else {
-        // Standard search logic
+        // Standard search logic (NestJS)
         if (city) {
           res = await getToursByType({ city, page: pageNum, limit: LIMIT });
         } else if (mode === "newest") {
@@ -180,14 +207,16 @@ export function useTourSearch(init?: UseTourSearchInit) {
             page: pageNum,
             limit: LIMIT,
           });
-        } else {
-          res = await getToursByType({
-            country: MODE_COUNTRY[mode],
-            region: region ?? undefined,
-            page: pageNum,
-            limit: LIMIT,
-          });
         }
+        // NestJS (comment lại — domestic/foreign đã chuyển sang Laravel ở nhánh trên):
+        // else {
+        //   res = await getToursByType({
+        //     country: MODE_COUNTRY[mode],
+        //     region: region ?? undefined,
+        //     page: pageNum,
+        //     limit: LIMIT,
+        //   });
+        // }
         items = Array.isArray(res?.data?.items) ? res.data.items : [];
         paginatedMeta = res?.data?.meta ?? null;
       }

@@ -1,6 +1,7 @@
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getTipById, TravelTip } from "@/services/tips";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -582,9 +583,9 @@ export default function TipDetailScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -599,6 +600,8 @@ export default function TipDetailScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

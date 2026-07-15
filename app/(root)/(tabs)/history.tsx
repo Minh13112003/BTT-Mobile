@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FONT_SIZE } from "@/constants/typography";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
 import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
@@ -312,7 +313,7 @@ export default function HistoryScreen() {
                 >
                   {/* Faint tour image blended under the card background */}
                   <ImageBackground
-                    source={{ uri: item.tour.imageUrl }}
+                    source={{ uri: Array.isArray(item.tour.imageUrl) ? item.tour.imageUrl[0] : item.tour.imageUrl }}
                     resizeMode="cover"
                     style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
                     imageStyle={{ opacity: isDark ? 0.3 : 0.22 }}
@@ -324,7 +325,7 @@ export default function HistoryScreen() {
                       <View className="flex-1 mr-3">
                         <Text
                           style={{ fontSize: FONT_SIZE.md }}
-                          className={`font-black leading-6 ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
+                          className={`font-black leading-7 ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
                         >
                           {item.tour.name}
                         </Text>
@@ -562,9 +563,9 @@ export default function HistoryScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -579,6 +580,8 @@ export default function HistoryScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

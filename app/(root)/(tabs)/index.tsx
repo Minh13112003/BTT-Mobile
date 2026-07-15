@@ -1,5 +1,7 @@
 import { CollapsingHeader } from "@/components/CollapsingHeader";
 import { Footer } from "@/components/Footer";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
 import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
@@ -20,7 +22,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState, useRef } from "react";
 import {
-  ActivityIndicator,
   Image,
   RefreshControl,
   ScrollView,
@@ -32,7 +33,7 @@ import {
 import DatePickerCalendar from "@/components/tour/DatePickerCalendar";
 
 /** Vertical sections rendered below the hot-tour carousel, in order. */
-const HOME_SECTIONS: (keyof HomeSections)[] = ["newest", "popular", "domestic", "foreign"];
+const HOME_SECTIONS: (keyof HomeSections)[] = ["newest", "popular"];
 
 function QuickIcon({
   label,
@@ -182,7 +183,7 @@ export default function HomeScreen() {
       params: {
         id: tour.id,
         name: tour.name,
-        imageUrl: tour.imageUrl,
+        imageUrl: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl,
         price: displayPrice != null ? String(displayPrice) : "0",
         duration: tour.duration,
         rating: String(tour.rating),
@@ -233,6 +234,10 @@ export default function HomeScreen() {
       </View>
     );
   };
+
+  if (loading && !refreshing) {
+    return <AppLoadingScreen message="Đang tải trang chủ..." />;
+  }
 
   return (
     <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
@@ -639,14 +644,14 @@ export default function HomeScreen() {
               ))}
             </ScrollView>
             {/* Custom horizontal scroll indicator (Shopee/Lazada style) */}
-            <View style={{ alignItems: "center", marginTop: 8 }}>
-              <View style={{ width: 36, height: 3, borderRadius: 1.5, backgroundColor: isDark ? "#334155" : "#CBD5E1", overflow: "hidden", flexDirection: "row" }}>
+            <View style={{ alignItems: "center", marginTop: 10 }}>
+              <View style={{ width: 64, height: 6, borderRadius: 3, backgroundColor: isDark ? "#334155" : "#CBD5E1", overflow: "hidden", flexDirection: "row" }}>
                 <View style={{
-                  width: 12,
-                  height: 3,
-                  borderRadius: 1.5,
+                  width: 22,
+                  height: 6,
+                  borderRadius: 3,
                   backgroundColor: "#D0021B",
-                  marginLeft: iconScrollProgress * 24
+                  marginLeft: iconScrollProgress * 42
                 }} />
               </View>
             </View>
@@ -709,19 +714,7 @@ export default function HomeScreen() {
               onSeeAll={() => openSearch({ mode: "hot" })}
             />
           </View>
-          {loading ? (
-            <View className="py-10 items-center">
-              <ActivityIndicator size="large" color={isDark ? "#94A3B8" : "#E51F27"} />
-              <Text
-                className={`mt-2 font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                style={{ fontSize: FONT_SIZE.xs }}
-              >
-                Đang tải dữ liệu...
-              </Text>
-            </View>
-          ) : (
-            <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
-          )}
+          <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
 
           {/* SECTIONS: HOT / POPULAR / DOMESTIC / FOREIGN */}
           {!loading && HOME_SECTIONS.map((mode) => renderSection(mode))}
@@ -846,9 +839,9 @@ export default function HomeScreen() {
             position: "absolute",
             bottom: 30,
             right: 20,
-            width: 46,
-            height: 46,
-            borderRadius: 23,
+            width: 50,
+            height: 50,
+            borderRadius: 25,
             backgroundColor: "#D0021B",
             alignItems: "center",
             justifyContent: "center",
@@ -863,6 +856,8 @@ export default function HomeScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
     </View>
   );
 }

@@ -1,1 +1,9 @@
 @AGENTS.md
+@.claude/rules/workflow-guardrails.md
+@.claude/rules/project-overview.md
+@.claude/rules/project-structure.md
+@.claude/rules/styling.md
+@.claude/rules/alerts-and-dialogs.md
+@.claude/rules/api-and-services.md
+@.claude/rules/navigation.md
+@.claude/rules/laravel-migration.md

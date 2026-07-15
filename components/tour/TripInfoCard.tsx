@@ -25,7 +25,7 @@ function InfoRow({
   if (!value) return null;
   return (
     <View
-      className={`flex-row items-center justify-between py-2.5 ${
+      className={`flex-row items-start justify-between py-2.5 ${
         top
           ? isDark
             ? "border-t border-[#232938]"
@@ -33,7 +33,7 @@ function InfoRow({
           : ""
       }`}
     >
-      <View className="flex-row items-center">
+      <View className="flex-row items-center flex-shrink-0">
         <Ionicons
           name={icon}
           size={15}
@@ -50,8 +50,8 @@ function InfoRow({
         </Text>
       </View>
       <Text
-        style={{ fontSize: FONT_SIZE.xs }}
-        className={`font-bold text-center max-w-[130px] ${
+        style={{ fontSize: FONT_SIZE.xs, marginLeft: 12 }}
+        className={`flex-1 font-bold text-right ${
           isDark ? "text-slate-100" : "text-slate-800"
         }`}
       >
