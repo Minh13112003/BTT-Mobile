@@ -7,7 +7,7 @@ import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
 import { SectionRow } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
-import { SECTION_LABELS, SearchMode } from "@/constants/tourFilters";
+import { SECTION_LABELS } from "@/constants/tourFilters";
 import { useAuth } from "@/context/Auth_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
@@ -33,7 +33,7 @@ import {
 import DatePickerCalendar from "@/components/tour/DatePickerCalendar";
 
 /** Vertical sections rendered below the hot-tour carousel, in order. */
-const HOME_SECTIONS: (keyof HomeSections)[] = ["newest", "popular"];
+const HOME_SECTIONS: (keyof HomeSections)[] = ["upcoming"];
 
 function QuickIcon({
   label,
@@ -208,7 +208,7 @@ export default function HomeScreen() {
     ? (["#1E222B", "#111318"] as const)
     : (["#E0F2FE", "#F1F5F9"] as const);
 
-  /** A vertical section (Hot / Popular / Domestic / Foreign) using the full TourCard. */
+  /** A vertical section (Tour sắp khởi hành) using the full TourCard. */
   const renderSection = (mode: keyof HomeSections) => {
     const data = sections[mode];
     return (
@@ -716,7 +716,7 @@ export default function HomeScreen() {
           </View>
           <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
 
-          {/* SECTIONS: HOT / POPULAR / DOMESTIC / FOREIGN */}
+          {/* SECTION: TOUR SẮP KHỞI HÀNH */}
           {!loading && HOME_SECTIONS.map((mode) => renderSection(mode))}
 
           {/* TIN TỨC NỔI BẬT */}

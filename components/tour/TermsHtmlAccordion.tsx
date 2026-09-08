@@ -11,18 +11,18 @@ interface Props {
 }
 
 const SECTIONS: { key: keyof TourTermsLaravel; title: string }[] = [
-  { key: "priceIncluded", title: "Giá tour bao gồm" },
-  { key: "priceNotIncluded", title: "Giá tour không bao gồm" },
   { key: "paymentInstructions", title: "Hướng dẫn thanh toán" },
   { key: "cancelBooking", title: "Điều kiện hủy/đổi tour" },
   { key: "cancelPenalty", title: "Phí phạt hủy tour" },
   { key: "warningNote", title: "Lưu ý quan trọng" },
+  { key: "warningNoteVisa", title: "Lưu ý visa" },
 ];
 
 /**
  * "ĐIỀU KHOẢN & LƯU Ý CHUNG" cho tour nguồn Laravel — nội dung là HTML thô trả về
- * từ API (`tour_price_included`, `warning_note`...), khác TermsAccordion (NestJS)
+ * từ API (`warning_note`, `cancel_booking`...), khác TermsAccordion (NestJS)
  * vốn dùng danh sách bullet tĩnh trong constants/tourTerms.ts. Bỏ qua section rỗng.
+ * "Giá tour bao gồm/không bao gồm" KHÔNG còn ở đây — xem PriceIncludedCard.
  */
 export function TermsHtmlAccordion({ terms }: Props) {
   const { theme } = useTheme();

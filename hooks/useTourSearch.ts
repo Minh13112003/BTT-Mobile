@@ -1,10 +1,12 @@
 import { MODE_COUNTRY, SearchMode, MODE_TOUR_TYPE } from "@/constants/tourFilters";
 import {
-  getHotTours,
+  // getHotTours, // NestJS — comment lại, mode "hot" đã chuyển sang Laravel (getTourHotMapped)
   getNewestTours,
   getPopularTours,
   getToursByType,
   getToursByCategoryMapped,
+  getTourHotMapped,
+  getTourListMapped,
   resolveCategoryHashByName,
   PaginatedMeta,
   TourItem,
@@ -191,14 +193,40 @@ export function useTourSearch(init?: UseTourSearchInit) {
           items = [];
           paginatedMeta = null;
         }
+      } else if (!city && mode === "hot") {
+        // Tour hot — Laravel /api/tour/hot (xem .claude/rules/laravel-migration.md).
+        // Endpoint KHÔNG phân trang — trả nguyên mảng hiện có mỗi lần gọi, không hỗ
+        // trợ load more theo trang. Khi backend thêm tour hot mới, mảng tự dài ra.
+        const hotItems = await getTourHotMapped();
+        items = pageNum === 1 ? hotItems : [];
+        paginatedMeta = {
+          total: hotItems.length,
+          page: 1,
+          limit: hotItems.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrevious: false,
+        };
+      } else if (!city && mode === "upcoming") {
+        // Tour sắp khởi hành — Laravel /api/tour/list, phân trang chuẩn Laravel.
+        const { items: upcomingItems, meta: upcomingMeta } = await getTourListMapped(pageNum);
+        items = upcomingItems;
+        paginatedMeta = upcomingMeta
+          ? {
+              total: upcomingMeta.total,
+              page: upcomingMeta.current_page,
+              limit: upcomingMeta.per_page,
+              totalPages: upcomingMeta.last_page,
+              hasNext: upcomingMeta.current_page < upcomingMeta.last_page,
+              hasPrevious: upcomingMeta.current_page > 1,
+            }
+          : null;
       } else {
         // Standard search logic (NestJS)
         if (city) {
           res = await getToursByType({ city, page: pageNum, limit: LIMIT });
         } else if (mode === "newest") {
           res = await getNewestTours(pageNum, LIMIT);
-        } else if (mode === "hot") {
-          res = await getHotTours(pageNum, LIMIT);
         } else if (mode === "popular") {
           res = await getPopularTours(pageNum, LIMIT);
         } else if (MODE_TOUR_TYPE[mode]) {

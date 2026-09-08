@@ -23,13 +23,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureViewer } from "react-native-gesture-image-viewer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-const CATEGORY_LABEL: Record<string, string> = {
-  company: "Công ty",
-  promotion: "Khuyến mãi",
-  destination: "Điểm đến",
-  other: "Khác",
-};
-
 const cleanTextForVietnamese = (text: string): string => {
   if (!text) return "";
   return text
@@ -74,7 +67,10 @@ export default function NewsDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Custom image renderer for HTML contents to make them zoomable on click
+  // Custom image renderer for HTML contents to make them zoomable on click.
+  // Width is forced to 100% explicitly — some source HTML wraps <img> in a
+  // <figure style="width:75%;"> (Laravel CMS output), and without an explicit
+  // width here the container can collapse to 0 instead of the article width.
   const renderers = {
     img: (props: any) => {
       const src = props.tnode.attributes.src;
@@ -82,7 +78,7 @@ export default function NewsDetailScreen() {
         <TouchableOpacity
           activeOpacity={0.95}
           onPress={() => setZoomImageUrl(src)}
-          style={{ marginVertical: 12, borderRadius: 8, overflow: "hidden" }}
+          style={{ width: "100%", marginVertical: 12, borderRadius: 8, overflow: "hidden" }}
         >
           <Image
             source={{ uri: src }}
@@ -216,7 +212,7 @@ export default function NewsDetailScreen() {
                       color: "#D0021B",
                     }}
                   >
-                    {CATEGORY_LABEL[item.category] ?? "Tin tức"}
+                    {item.categoryName ?? "Tin tức"}
                   </Text>
                 </View>
                 <Text
@@ -305,7 +301,6 @@ export default function NewsDetailScreen() {
                         fontSize: 18,
                         color: isDark ? "#CBD5E1" : "#334155",
                         lineHeight: 28,
-                        textAlign: "left",
                       },
                       strong: {
                         fontWeight: "700",
@@ -317,6 +312,7 @@ export default function NewsDetailScreen() {
                         alignSelf: "center",
                       },
                       figure: {
+                        width: "100%",
                         margin: 0,
                         marginVertical: 12,
                         alignItems: "center",

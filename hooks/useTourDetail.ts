@@ -15,17 +15,19 @@ interface TourDetailState {
 /**
  * Load a single tour by id and expose a normalized {@link TourDetail}.
  *
- * `fallback` carries the basic fields already known from the list screen. When
- * present we render it immediately (no spinner) and refresh from the API in the
- * background, so navigating from the list feels instant and still degrades
- * gracefully if the detail endpoint is slow or unavailable.
+ * `fallback` carries the basic fields already known from the list screen.
+ * It is only used to keep the screen usable if the detail endpoint fails —
+ * the screen always waits (full loading state) for the real API response
+ * before rendering, since the Laravel detail endpoint can take several
+ * seconds and rendering the fallback early left schedule/terms/departures
+ * blank in the meantime.
  */
 export function useTourDetail(id?: string, fallback?: TourDetail | null) {
-  const [state, setState] = useState<TourDetailState>(() =>
-    fallback?.id
-      ? { tour: normalizeTourDetail(fallback), loading: false, error: null }
-      : { tour: null, loading: true, error: null },
-  );
+  const [state, setState] = useState<TourDetailState>({
+    tour: null,
+    loading: true,
+    error: null,
+  });
 
   // Keep the latest fallback without forcing a refetch when params change identity.
   const fallbackRef = useRef(fallback);
@@ -51,8 +53,7 @@ export function useTourDetail(id?: string, fallback?: TourDetail | null) {
       return;
     }
 
-    // Only block with a spinner when there is no fallback content yet.
-    if (!fb?.id) setState((prev) => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       // NestJS (comment lại — Tour Detail đã chuyển sang Laravel):

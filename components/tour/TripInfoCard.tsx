@@ -63,17 +63,12 @@ function InfoRow({
 
 /**
  * "THÔNG TIN CHUYẾN ĐI" — dynamic trip data mapped from the API:
- * departureFrom, transport, included[] (✓), notIncluded[] (•) and notes.
+ * departureFrom, transport, notes. "Dịch vụ bao gồm/Chưa bao gồm" đã chuyển sang
+ * card riêng PriceIncludedCard (Tour Detail nguồn Laravel) — không còn ở đây.
  */
 export function TripInfoCard({ tour }: { tour: TourDetail }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const subClass = `font-black uppercase tracking-wide mt-4 mb-2 ${
-    isDark ? "text-slate-300" : "text-slate-600"
-  }`;
-  const bodyClass = `flex-1 ${
-    isDark ? "text-slate-300" : "text-slate-600"
-  }`;
 
   return (
     <Card className="mt-4">
@@ -92,45 +87,6 @@ export function TripInfoCard({ tour }: { tour: TourDetail }) {
         top
         isDark={isDark}
       />
-
-      {tour.included?.length ? (
-        <>
-          <Text style={{ fontSize: FONT_SIZE.xs }} className={subClass}>Dịch vụ bao gồm</Text>
-          {tour.included.map((item, i) => (
-            <View key={i} className="flex-row items-start py-1">
-              <Ionicons
-                name="checkmark-circle"
-                size={15}
-                color={isDark ? "#4CAF50" : "#16A34A"}
-                style={{ marginRight: 8, marginTop: 1 }}
-              />
-              <Text style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }} className={bodyClass}>{item}</Text>
-            </View>
-          ))}
-        </>
-      ) : null}
-
-      {tour.notIncluded?.length ? (
-        <>
-          <Text style={{ fontSize: FONT_SIZE.xs }} className={subClass}>Chưa bao gồm</Text>
-          {tour.notIncluded.map((item, i) => (
-            <View key={i} className="flex-row items-start py-1">
-              <Text
-                style={{
-                  color: "#E5953B",
-                  fontWeight: "900",
-                  marginRight: 9,
-                  fontSize: FONT_SIZE.xs,
-                  lineHeight: 24,
-                }}
-              >
-                •
-              </Text>
-              <Text style={{ fontSize: FONT_SIZE.xs, lineHeight: 24 }} className={bodyClass}>{item}</Text>
-            </View>
-          ))}
-        </>
-      ) : null}
 
       {tour.notes ? (
         <View

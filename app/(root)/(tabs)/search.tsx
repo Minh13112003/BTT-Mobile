@@ -455,14 +455,14 @@ export default function SearchScreen() {
               ))}
             </ScrollView>
 
-            {/* Hàng 2: 5 tab tiếp theo */}
+            {/* Hàng 2: các tab còn lại */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={{ marginTop: 8 }}
               contentContainerStyle={{ paddingRight: 20 }}
             >
-              {SECTION_ORDER.slice(5, 10).map((m) => (
+              {SECTION_ORDER.slice(5).map((m) => (
                 <Chip
                   key={m}
                   label={MODE_CHIP_LABELS[m]}

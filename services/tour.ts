@@ -68,6 +68,12 @@ export interface TourDetail extends TourItem {
   htmlPlans?: TourPlanLaravel[];
   /** Điều khoản/lưu ý dạng HTML thô — chỉ có ở tour nguồn Laravel, thay thế TermsAccordion tĩnh. */
   htmlTerms?: TourTermsLaravel;
+  /** "Giá tour bao gồm" dạng HTML thô — tách khỏi htmlTerms, dùng cho card riêng (PriceIncludedCard) thay vì nằm trong điều khoản. */
+  htmlPriceIncluded?: string;
+  /** "Giá tour không bao gồm" dạng HTML thô — tách khỏi htmlTerms, dùng cho card riêng (PriceIncludedCard). */
+  htmlPriceNotIncluded?: string;
+  /** "Điểm nổi bật" dạng HTML thô — chỉ có ở tour nguồn Laravel (field `featured_description`). */
+  htmlFeaturedDescription?: string;
 }
 
 /** 1 ngày trong lịch trình tour Laravel — `content` là HTML thô. */
@@ -79,11 +85,15 @@ export interface TourPlanLaravel {
   content: string;
 }
 
-/** Các khối điều khoản/lưu ý dạng HTML thô của tour Laravel. */
+/**
+ * Các khối điều khoản/lưu ý dạng HTML thô của tour Laravel.
+ * `priceIncluded`/`priceNotIncluded` KHÔNG còn ở đây — tách sang
+ * `TourDetail.htmlPriceIncluded`/`htmlPriceNotIncluded` (card riêng, xem PriceIncludedCard).
+ */
 export interface TourTermsLaravel {
-  priceIncluded: string;
-  priceNotIncluded: string;
   warningNote: string;
+  /** Lưu ý riêng cho tour có yêu cầu visa (field `warning_note_visa`) — rỗng nếu tour không cần visa. */
+  warningNoteVisa: string;
   cancelBooking: string;
   paymentInstructions: string;
   cancelPenalty: string;
@@ -271,7 +281,7 @@ function mapTourItemLaravelToTourItem(item: TourItemLaravel): TourItem {
     name: item.name,
     imageUrl: [item.image],
     imagePublicId: [],
-    duration: `${item.days}N${item.nights}Đ`,
+    duration: `${item.days} ngày ${item.nights} đêm`,
     rating: 0,
     reviewsCount: 0,
     hasVat: false,
@@ -297,12 +307,51 @@ export async function getToursByCategoryMapped(categoryId: number, page = 1) {
   return { items, meta: res.data?.meta ?? null };
 }
 
-/** 1 đợt khởi hành trong `tour_days[]` — KHÔNG có field ngày riêng, phải parse từ `code`. */
+/**
+ * Tour hot (Laravel) — KHÔNG phân trang, trả cố định 1 mảng ngắn (xác nhận thực tế:
+ * 4 tour, không có `meta`/`links` trong response). Dùng cho Featured Carousel trên Home.
+ */
+export function getTourHot() {
+  return apiServiceLaravel.get<{
+    data: TourItemLaravel[];
+    error: boolean;
+    message: string | null;
+  }>(urls.URL_GetTourHot);
+}
+
+/** Tour hot (Laravel), đã map sang {@link TourItem}. */
+export async function getTourHotMapped() {
+  const res = await getTourHot();
+  return (res.data?.data ?? []).map(mapTourItemLaravelToTourItem);
+}
+
+/**
+ * Tour sắp khởi hành (Laravel) — CÓ phân trang chuẩn Laravel (`links`/`meta`,
+ * xác nhận thực tế: per_page=10, ví dụ total=57/6 trang). Thay thế
+ * `getNewestTours` (NestJS) trên Home.
+ */
+export function getTourList(page = 1) {
+  return apiServiceLaravel.get<TourCategoryListResponseLaravel>(
+    urls.URL_GetTourList,
+    { page },
+  );
+}
+
+/** Tour sắp khởi hành (Laravel), đã map sang {@link TourItem}. Trả kèm meta phân trang gốc. */
+export async function getTourListMapped(page = 1) {
+  const res = await getTourList(page);
+  const items = (res.data?.data ?? []).map(mapTourItemLaravelToTourItem);
+  return { items, meta: res.data?.meta ?? null };
+}
+
+/** 1 đợt khởi hành trong `tour_days[]`. */
 export interface TourDayLaravel {
   id: string;
   code: string;
   departure_place: string;
   destination_place: string;
+  departure_date: string;
+  destination_date: string;
   stock_qty: number;
   price: number;
 }
@@ -345,19 +394,6 @@ export function getTourItem(tourKey: string) {
 }
 
 /**
- * Parse ngày khởi hành từ 8 số cuối của `code` (định dạng YYYYMMDD), quy ước xác nhận
- * từ dữ liệu thật của BenThanh Tourist — vd "TD1NFHG2620260823" -> "2026-08-23".
- * Trả về null nếu code không khớp định dạng thay vì throw, để UI tự fallback.
- */
-function parseDepartureDateFromCode(code: string): string | null {
-  const match = code.match(/(\d{4})(\d{2})(\d{2})$/);
-  if (!match) return null;
-  const [, year, month, day] = match;
-  const iso = `${year}-${month}-${day}`;
-  return isNaN(new Date(iso).getTime()) ? null : iso;
-}
-
-/**
  * Map `tour_days[]` (nhiều đợt khởi hành thật) sang {@link Departure}[]. Nếu tour
  * không có `tour_days` (chỉ 1 lịch cố định), dựng 1 departure duy nhất từ field
  * top-level `departure_date`/`price`/`stock_qty`.
@@ -367,7 +403,7 @@ function mapTourDaysToDepartures(detail: TourItemDetailLaravel): Departure[] {
     return detail.tour_days.map((d) => ({
       id: d.id,
       tourId: detail.id,
-      departureDate: parseDepartureDateFromCode(d.code) ?? detail.departure_date,
+      departureDate: d.departure_date,
       price: d.price,
       availableSeats: d.stock_qty,
     }));
@@ -391,7 +427,7 @@ function mapTourItemDetailLaravelToTourDetail(detail: TourItemDetailLaravel): To
     name: detail.name,
     imageUrl: detail.images?.length ? detail.images : [detail.image],
     imagePublicId: [],
-    duration: `${detail.days}N${detail.nights}Đ`,
+    duration: `${detail.days} ngày ${detail.nights} đêm`,
     rating: 0,
     reviewsCount: 0,
     hasVat: false,
@@ -399,13 +435,15 @@ function mapTourItemDetailLaravelToTourDetail(detail: TourItemDetailLaravel): To
     departures: mapTourDaysToDepartures(detail),
     htmlPlans: detail.plans,
     htmlTerms: {
-      priceIncluded: detail.tour_price_included,
-      priceNotIncluded: detail.tour_price_not_included,
       warningNote: detail.warning_note,
+      warningNoteVisa: detail.warning_note_visa,
       cancelBooking: detail.cancel_booking,
       paymentInstructions: detail.tuts_booking_payment,
       cancelPenalty: detail.punishment_cancel_booking,
     },
+    htmlPriceIncluded: detail.tour_price_included,
+    htmlPriceNotIncluded: detail.tour_price_not_included,
+    htmlFeaturedDescription: detail.featured_description,
   };
 }
 
@@ -415,28 +453,63 @@ export async function getTourItemMapped(tourKey: string): Promise<TourDetail> {
   return mapTourItemDetailLaravelToTourDetail(res.data.data);
 }
 
+/**
+ * Tách HTML thô dạng `<ul><li>...</li></ul>` thành mảng HTML của từng `<li>` cấp
+ * ngoài cùng, dùng để gắn icon tick/dấu (PriceIncludedCard) thay vì render 1 khối
+ * HTML liền. Đếm độ sâu thẻ `<li>` để KHÔNG tách vỡ `<ul><li>` lồng bên trong 1 item
+ * (dữ liệu thật của BenThanh Tourist có trường hợp này, vd "Vé máy bay quốc tế khứ
+ * hồi... <ul><li>TPHCM – Rome/Paris...</li></ul>" là 1 item duy nhất) — nội dung lồng
+ * được giữ nguyên trong string trả về, không xử lý đệ quy tiếp.
+ */
+export function splitTopLevelListItems(html: string): string[] {
+  const outerMatch = html.match(/^\s*<ul[^>]*>([\s\S]*)<\/ul>\s*$/i);
+  const inner = outerMatch ? outerMatch[1] : html;
+
+  const items: string[] = [];
+  const tagRe = /<li[^>]*>|<\/li>/gi;
+  let depth = 0;
+  let itemStart = -1;
+  let match: RegExpExecArray | null;
+  while ((match = tagRe.exec(inner))) {
+    const isOpenTag = match[0].toLowerCase().startsWith("<li");
+    if (isOpenTag) {
+      if (depth === 0) itemStart = tagRe.lastIndex;
+      depth++;
+    } else {
+      depth--;
+      if (depth === 0 && itemStart !== -1) {
+        items.push(inner.substring(itemStart, match.index).trim());
+        itemStart = -1;
+      }
+    }
+  }
+  return items;
+}
+
 // Generic fallbacks so the "Thông tin chuyến đi" card always renders a complete
 // block even when the backend omits the extended fields.
-const DEFAULT_INCLUDED = [
-  "Vé máy bay khứ hồi (theo chương trình)",
-  "Khách sạn tiêu chuẩn & các bữa ăn theo lịch trình",
-  "Hướng dẫn viên & xe du lịch suốt tuyến",
-  "Vé tham quan các điểm trong chương trình",
-  "Bảo hiểm du lịch theo quy định",
-];
-const DEFAULT_NOT_INCLUDED = [
-  "Chi phí cá nhân, ăn uống ngoài chương trình",
-  "Tip cho hướng dẫn viên & tài xế",
-  "Các dịch vụ không được đề cập trong chương trình",
-];
+// TripInfoCard không còn hiển thị included/notIncluded nữa (chuyển sang
+// PriceIncludedCard) — comment lại thay vì xoá, phòng khi cần dùng lại.
+// const DEFAULT_INCLUDED = [
+//   "Vé máy bay khứ hồi (theo chương trình)",
+//   "Khách sạn tiêu chuẩn & các bữa ăn theo lịch trình",
+//   "Hướng dẫn viên & xe du lịch suốt tuyến",
+//   "Vé tham quan các điểm trong chương trình",
+//   "Bảo hiểm du lịch theo quy định",
+// ];
+// const DEFAULT_NOT_INCLUDED = [
+//   "Chi phí cá nhân, ăn uống ngoài chương trình",
+//   "Tip cho hướng dẫn viên & tài xế",
+//   "Các dịch vụ không được đề cập trong chương trình",
+// ];
 const DEFAULT_NOTES =
   "Giá tour có thể thay đổi vào dịp Lễ, Tết. Quý khách lẻ ghép đoàn, vui lòng liên hệ tổng đài để được tư vấn phụ thu phòng đơn.";
 
 /**
  * Map a raw tour object into a fully-populated {@link TourDetail}, filling the
- * always-present fields (departure, transport, included/notIncluded, notes)
- * with sensible defaults and leaving genuinely tour-specific sections
- * (itinerary, highlights) undefined when absent so they can be hidden.
+ * always-present fields (departure, transport, notes) with sensible defaults
+ * and leaving genuinely tour-specific sections (itinerary, highlights)
+ * undefined when absent so they can be hidden.
  */
 export function normalizeTourDetail(
   raw: Partial<TourDetail> & TourItem,
@@ -445,10 +518,6 @@ export function normalizeTourDetail(
     ...raw,
     departureFrom: raw.departureFrom || "TP. Hồ Chí Minh",
     transport: raw.transport || "Máy bay & xe du lịch",
-    included: raw.included?.length ? raw.included : DEFAULT_INCLUDED,
-    notIncluded: raw.notIncluded?.length
-      ? raw.notIncluded
-      : DEFAULT_NOT_INCLUDED,
     notes: raw.notes || DEFAULT_NOTES,
     highlights: raw.highlights?.length ? raw.highlights : undefined,
     schedules: raw.schedules?.length ? raw.schedules : undefined,

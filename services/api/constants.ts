@@ -33,11 +33,18 @@ export const URL_GetPopularTours = `${API_BASE_URL}/api/v1/tours/popular`;
 export const URL_GetToursByType = `${API_BASE_URL}/api/v1/tours/by-type`;
 
 //Tour APIs (Laravel — xem .claude/rules/laravel-migration.md)
-const LARAVEL_API_BASE_URL =
+export const LARAVEL_API_BASE_URL =
   process.env.EXPO_PUBLIC_BASE_BTT_URL || "https://benthanhtourist.com";
 export const URL_GetTourCategories = `${LARAVEL_API_BASE_URL}/api/tour/categories`;
 export const URL_GetToursByCategory = `${LARAVEL_API_BASE_URL}/api/tour/category`;
 export const URL_GetTourItem = `${LARAVEL_API_BASE_URL}/api/tour/item`;
+export const URL_GetTourHot = `${LARAVEL_API_BASE_URL}/api/tour/hot`;
+export const URL_GetTourList = `${LARAVEL_API_BASE_URL}/api/tour/list`;
+
+//Blog APIs (Laravel — xem .claude/rules/laravel-migration.md)
+export const URL_GetBlogCategories = `${LARAVEL_API_BASE_URL}/api/blog/categories`;
+export const URL_GetBlogCategory = `${LARAVEL_API_BASE_URL}/api/blog/category`;
+export const URL_GetBlogItem = `${LARAVEL_API_BASE_URL}/api/blog/item`;
 
 //Departure APIs
 export const URL_GetDeparturesByTour = `${API_BASE_URL}/api/v1/departures/tour/`;

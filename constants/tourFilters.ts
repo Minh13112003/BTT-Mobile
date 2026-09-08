@@ -10,6 +10,7 @@ export type SearchMode =
   | "newest"
   | "hot"
   | "popular"
+  | "upcoming"
   | "domestic"
   | "foreign"
   | "tour_of_the_year_2026"
@@ -38,6 +39,7 @@ export const SECTION_LABELS: Record<SearchMode, string> = {
   newest: "Tour mới nhất",
   hot: "Tour hot nhất",
   popular: "Tour bán chạy nhất",
+  upcoming: "Tour sắp khởi hành",
   domestic: "Tour trong nước",
   foreign: "Tour quốc tế",
   tour_of_the_year_2026: "TOUR OF THE YEAR 2026",
@@ -59,6 +61,7 @@ export const MODE_CHIP_LABELS: Record<SearchMode, string> = {
   newest: "Mới nhất",
   hot: "Đang hot",
   popular: "Bán chạy",
+  upcoming: "Sắp khởi hành",
   domestic: "Trong nước",
   foreign: "Quốc tế",
   tour_of_the_year_2026: "TOUR OF THE YEAR 2026",
@@ -72,6 +75,7 @@ export const MODE_CHIP_LABELS: Record<SearchMode, string> = {
 export const SECTION_ORDER: SearchMode[] = [
   "newest",
   "hot",
+  "upcoming",
   "popular",
   "domestic",
   "foreign",

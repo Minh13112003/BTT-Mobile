@@ -4,12 +4,18 @@ import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
-import { getNews, NewsItem } from "@/services/news";
+import {
+  BLOG_CATEGORY_COMPANY_NEWS,
+  BLOG_CATEGORY_TRAVEL_EXPERIENCE,
+  BLOG_CATEGORY_TRAVEL_GUIDE,
+  getBlogCategoryMapped,
+  NewsItem,
+} from "@/services/news";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -22,11 +28,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+/**
+ * 3 category Laravel dùng cho trang Tin tức. Đã bỏ chip "Tất cả" — Laravel không có
+ * endpoint gộp toàn bộ tin tức thật (không có category_id=all), trước đây chip này chỉ
+ * gộp preview trang 1 (per_page=3) của mỗi category nên hiển thị thiếu và không load
+ * more được, gây hiểu lầm cho user. Mặc định chọn category đầu tiên.
+ */
 const CATEGORIES = [
-  { key: "all", label: "Tất cả" },
-  { key: "company", label: "Công ty" },
-  { key: "promotion", label: "Khuyến mãi" },
-  { key: "destination", label: "Điểm đến" },
+  { key: "company", label: "Tin tức hoạt động công ty", categoryId: BLOG_CATEGORY_COMPANY_NEWS },
+  { key: "guide", label: "Cẩm nang du lịch", categoryId: BLOG_CATEGORY_TRAVEL_GUIDE },
+  { key: "experience", label: "Kinh nghiệm du lịch", categoryId: BLOG_CATEGORY_TRAVEL_EXPERIENCE },
 ] as const;
 
 type CategoryKey = (typeof CATEGORIES)[number]["key"];
@@ -158,33 +169,54 @@ export default function NewsScreen() {
   const [loading, setLoading] = useState(true);
   const [slowLoad, setSlowLoad] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [category, setCategory] = useState<CategoryKey>("all");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [category, setCategory] = useState<CategoryKey>(CATEGORIES[0].key);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const load = async (silent = false) => {
-    if (!silent) {
-      setLoading(true);
-      slowTimer.current = setTimeout(() => setSlowLoad(true), 3000);
-    }
-    try {
-      const res = await getNews();
-      setNews(Array.isArray(res.data) ? res.data : []);
-    } catch {}
-    if (slowTimer.current) clearTimeout(slowTimer.current);
-    setSlowLoad(false);
-    setLoading(false);
-    setRefreshing(false);
-  };
+  const activeCategoryId = CATEGORIES.find((c) => c.key === category)!.categoryId;
+
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setLoading(true);
+        slowTimer.current = setTimeout(() => setSlowLoad(true), 3000);
+      }
+      try {
+        const { items, meta } = await getBlogCategoryMapped(activeCategoryId, 1);
+        setNews(items);
+        setHasNext(meta ? meta.current_page < meta.last_page : false);
+        setPage(1);
+      } catch {
+        setNews([]);
+        setHasNext(false);
+      }
+      if (slowTimer.current) clearTimeout(slowTimer.current);
+      setSlowLoad(false);
+      setLoading(false);
+      setRefreshing(false);
+    },
+    [activeCategoryId],
+  );
 
   useEffect(() => {
     load();
     return () => { if (slowTimer.current) clearTimeout(slowTimer.current); };
-  }, []);
+  }, [load]);
 
-  const filtered =
-    category === "all"
-      ? news
-      : news.filter((n) => n.category.toLowerCase() === category);
+  const loadMore = useCallback(async () => {
+    if (!hasNext || loadingMore || loading) return;
+    setLoadingMore(true);
+    try {
+      const next = page + 1;
+      const { items, meta } = await getBlogCategoryMapped(activeCategoryId, next);
+      setNews((prev) => [...prev, ...items]);
+      setHasNext(meta ? meta.current_page < meta.last_page : false);
+      setPage(next);
+    } catch {}
+    setLoadingMore(false);
+  }, [hasNext, loadingMore, loading, activeCategoryId, page]);
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
@@ -266,7 +298,7 @@ export default function NewsScreen() {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={filtered}
+            data={news}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
@@ -275,6 +307,9 @@ export default function NewsScreen() {
               const offsetY = event.nativeEvent.contentOffset.y;
               setShowBackToTop(offsetY > 300);
             }}
+            onEndReachedThreshold={0.4}
+            onEndReached={loadMore}
+            ListFooterComponentStyle={{ marginTop: 4 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -312,7 +347,20 @@ export default function NewsScreen() {
                 </Text>
               </View>
             }
-            ListFooterComponent={filtered.length > 0 ? <Footer /> : null}
+            ListFooterComponent={
+              news.length > 0 ? (
+                <View>
+                  {loadingMore && (
+                    <ActivityIndicator
+                      size="small"
+                      color={palette.spinner}
+                      style={{ marginBottom: 16 }}
+                    />
+                  )}
+                  <Footer />
+                </View>
+              ) : null
+            }
           />
         )}
       </LinearGradient>
