@@ -1146,7 +1146,7 @@ export default function CheckoutScreen() {
       {showToast && (
         <View
           style={{
-            ...StyleSheet.absoluteFillObject,
+            ...StyleSheet.absoluteFill,
             backgroundColor: "rgba(0,0,0,0.3)",
             zIndex: 9998,
           }}

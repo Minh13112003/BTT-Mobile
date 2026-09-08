@@ -80,10 +80,8 @@ export default function ProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar
-        style="light"
-        backgroundColor={isDark ? palette.surface : "#D0021B"}
-      />
+      {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+      <StatusBar style="light" />
       <Header title="BENTHANH TOURIST" showActions={true} />
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <ScrollView

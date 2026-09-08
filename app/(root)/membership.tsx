@@ -155,7 +155,8 @@ export default function MembershipScreen() {
 
   return (
     <View style={[s.root, { backgroundColor: isDark ? "#111318" : "#F1F5F9" }]}>
-      <StatusBar style="light" backgroundColor="#E51F27" />
+      {/* Màu vùng status bar nằm trong LinearGradient header bên dưới (paddingTop: insets.top) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+      <StatusBar style="light" />
 
       {/* Header */}
       <LinearGradient colors={["#E51F27", "#A0141A"]} style={[s.header, { paddingTop: insets.top + 12 }]}>

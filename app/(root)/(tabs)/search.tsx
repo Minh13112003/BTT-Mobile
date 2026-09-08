@@ -251,10 +251,8 @@ export default function SearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar
-        style="light"
-        backgroundColor={isDark ? "#1E222B" : "#D0021B"}
-      />
+      {/* RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor — màu do backdrop View ngay dưới đây phủ */}
+      <StatusBar style="light" />
 
       {/* Persistent safe-area backdrop so the status bar always has a brand backdrop */}
       <View

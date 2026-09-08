@@ -6,7 +6,6 @@ import {
 import { useTheme } from "@/context/Theme_Context";
 import { getPalette, RADIUS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import React from "react";
 import {
@@ -31,11 +30,23 @@ const ICONS: Record<
 };
 
 /**
+ * Type của prop `tabBar` lấy trực tiếp từ <Tabs> của expo-router (thay vì
+ * import BottomTabBarProps từ @react-navigation/bottom-tabs) — SDK 57 dùng
+ * BottomTabDescriptorMap riêng của expo-router, không còn tương thích 1-1 với
+ * type gốc của @react-navigation, gây lỗi type nếu import rời.
+ */
+type TabBarProps = NonNullable<
+  React.ComponentProps<typeof Tabs>["tabBar"]
+> extends (props: infer P) => React.ReactNode
+  ? P
+  : never;
+
+/**
  * Custom bottom nav styled after the redesign mockup: outline→filled icon on
  * focus, an active red dot under the label, and a silvery dim overlay while the
  * user scrolls (non-interactive so taps still reach the buttons).
  */
-function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { hidden, setHidden } = useScrollVisibility();
   const { theme } = useTheme();
   const isDark = theme === "dark";

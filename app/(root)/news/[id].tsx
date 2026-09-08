@@ -92,10 +92,8 @@ export default function NewsDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar
-        style="light"
-        backgroundColor={isDark ? "#1E222B" : "#D0021B"}
-      />
+      {/* Màu vùng status bar nằm trong Header bên dưới (paddingTop: insets.top) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+      <StatusBar style="light" />
 
       {/* Header */}
       <View

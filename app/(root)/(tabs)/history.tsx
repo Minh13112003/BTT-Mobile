@@ -216,9 +216,9 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
+      <StatusBar style="light" />
 
-      {/* Safe-area backdrop */}
+      {/* Safe-area backdrop — RN edge-to-edge không còn tô màu status bar qua <StatusBar>, phải tự vẽ View phủ vùng safe-area-top */}
       <View style={{ height: insets.top, backgroundColor: isDark ? "#1E222B" : "#D0021B", zIndex: 20 }} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>

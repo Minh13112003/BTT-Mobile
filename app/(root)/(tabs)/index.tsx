@@ -248,7 +248,8 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
-      <StatusBar style="light" backgroundColor={isDark ? palette.surface : "#E51F27"} />
+      {/* Màu vùng status bar do <CollapsingHeader> tự phủ backdrop — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+      <StatusBar style="light" />
       <CollapsingHeader title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>

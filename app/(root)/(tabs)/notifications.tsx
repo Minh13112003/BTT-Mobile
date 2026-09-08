@@ -423,7 +423,8 @@ export default function NotificationsScreen() {
   if (!user) {
     return (
       <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
-        <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
+        {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+        <StatusBar style="light" />
         <Header title="Thông báo" showActions={false} />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons
@@ -450,7 +451,8 @@ export default function NotificationsScreen() {
 
   return (
     <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
-      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#D0021B"} />
+      {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
+      <StatusBar style="light" />
       <Header title="Thông báo" showActions={false} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
