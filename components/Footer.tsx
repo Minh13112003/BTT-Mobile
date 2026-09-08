@@ -64,21 +64,6 @@ export function Footer() {
           </Text>
         </Text>
       </View>
-
-      {/* Signature thiết kế ở cuối, canh giữa */}
-      <Text
-        style={{
-          fontSize: FONT_SIZE.card - 3,
-          fontWeight: "700",
-          letterSpacing: 1.5,
-          color: isDark ? "#4B5563" : "#A68D89",
-          textTransform: "uppercase",
-          textAlign: "center",
-          marginTop: 16,
-        }}
-      >
-        Thiết kế bởi: SOLA
-      </Text>
     </View>
   );
 }
