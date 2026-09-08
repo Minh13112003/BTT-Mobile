@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FONT_SIZE } from "@/constants/typography";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
-import { getPalette } from "@/constants/theme";
+import { getPalette, getShadow } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
 import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
@@ -299,17 +299,7 @@ export default function HistoryScreen() {
                       ? "bg-slate-800/90 border-slate-700/50"
                       : "bg-white border-slate-100"
                   }`}
-                  style={
-                    isDark
-                      ? undefined
-                      : {
-                          shadowColor: "#000",
-                          shadowOpacity: 0.07,
-                          shadowRadius: 16,
-                          shadowOffset: { width: 0, height: 2 },
-                          elevation: 2,
-                        }
-                  }
+                  style={getShadow(isDark, "md")}
                 >
                   {/* Faint tour image blended under the card background */}
                   <ImageBackground
@@ -440,9 +430,10 @@ export default function HistoryScreen() {
                           })
                         }
                         activeOpacity={0.8}
-                        className={`flex-row items-center px-4 py-2 rounded-xl ${
+                        className={`flex-row items-center px-4 py-3 rounded-xl ${
                           isDark ? "bg-slate-700" : "bg-[#D0021B]/10"
                         }`}
+                        style={{ minHeight: 44 }}
                       >
                         <Text
                           className={`font-extrabold mr-1.5 ${isDark ? "text-slate-200" : "text-[#D0021B]"}`}
@@ -513,24 +504,17 @@ export default function HistoryScreen() {
                 <TouchableOpacity
                   key={status}
                   onPress={() => setSelectedStatus(status)}
-                  className={`px-[18px] py-2 rounded-full ${
+                  className={`px-[18px] py-3 rounded-full ${
                     isActive
                       ? "bg-[#D0021B]"
                       : isDark
                         ? "bg-[#1E222B] border border-slate-700"
                         : "bg-white"
                   }`}
-                  style={
-                    isActive || isDark
-                      ? undefined
-                      : {
-                          shadowColor: "#000",
-                          shadowOpacity: 0.07,
-                          shadowRadius: 6,
-                          shadowOffset: { width: 0, height: 1 },
-                          elevation: 1,
-                        }
-                  }
+                  style={[
+                    { minHeight: 44, justifyContent: "center" },
+                    isActive || isDark ? undefined : getShadow(isDark, "sm"),
+                  ]}
                   activeOpacity={0.8}
                 >
                   <Text
@@ -566,14 +550,18 @@ export default function HistoryScreen() {
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: palette.brand,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            elevation: 6,
+            ...(isDark
+              ? getShadow(isDark, "lg")
+              : {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }),
             zIndex: 99,
           }}
         >

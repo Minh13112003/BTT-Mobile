@@ -5,7 +5,7 @@ import { SearchBar } from "@/components/SearchBar";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
-import { getPalette } from "@/constants/theme";
+import { getPalette, getShadow } from "@/constants/theme";
 import {
   MODE_CHIP_LABELS,
   SECTION_ORDER,
@@ -53,14 +53,14 @@ function Chip({
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
-      className={`px-4 py-2 rounded-full border ${
+      className={`px-4 py-3 rounded-full border ${
         active
           ? "bg-[#D0021B] border-[#D0021B]"
           : isDark
             ? "bg-[#1E222B] border-slate-700/60"
             : "bg-white border-slate-200"
       }`}
-      style={[{ marginRight: 6, marginBottom: 8 }, style]}
+      style={[{ marginRight: 6, marginBottom: 8, minHeight: 44, justifyContent: "center" }, style]}
     >
       <Text
         className={`font-bold ${
@@ -374,7 +374,8 @@ export default function SearchScreen() {
                       referrer: "",
                     });
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-[#D0021B]"
+                  className="px-6 py-3.5 rounded-xl bg-[#D0021B]"
+                  style={{ minHeight: 44, justifyContent: "center", alignItems: "center" }}
                 >
                   <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
                     Quay lại ban đầu
@@ -517,14 +518,18 @@ export default function SearchScreen() {
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: palette.brand,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            elevation: 6,
+            ...(isDark
+              ? getShadow(isDark, "lg")
+              : {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }),
             zIndex: 99,
           }}
         >

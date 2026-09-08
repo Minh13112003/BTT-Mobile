@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
+import { getPalette, RADIUS, getShadow } from "@/constants/theme";
 import { RedesignedMembershipBanner } from "../membership";
 import { FeaturedCarousel } from "@/components/tour/FeaturedCarousel";
 import { SectionRow } from "@/components/tour/SectionHeader";
@@ -52,13 +53,18 @@ function QuickIcon({
   onPress: () => void;
   isDark: boolean;
 }) {
+  const palette = getPalette(isDark);
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={{ flex: 1, alignItems: "center" }}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.75}
+      style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+    >
       <View
         style={{
           width: 52,
           height: 52,
-          borderRadius: 16,
+          borderRadius: RADIUS.md,
           backgroundColor: isDark ? bgDark : bgLight,
           alignItems: "center",
           justifyContent: "center",
@@ -71,7 +77,7 @@ function QuickIcon({
         style={{
           fontSize: FONT_SIZE.card,
           fontWeight: "700",
-          color: isDark ? "#94A3B8" : "#475569",
+          color: palette.textSecondary,
           textAlign: "center",
         }}
       >
@@ -86,6 +92,7 @@ export default function HomeScreen() {
   const { user, rewardPoints } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const palette = getPalette(isDark);
 
   const { sections, loading, refreshing, onRefresh } = useHomeTours();
   const onScroll = useHideOnScroll();
@@ -240,8 +247,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
-      <StatusBar style="light" backgroundColor={isDark ? "#1E222B" : "#E51F27"} />
+    <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
+      <StatusBar style="light" backgroundColor={isDark ? palette.surface : "#E51F27"} />
       <CollapsingHeader title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -259,7 +266,7 @@ export default function HomeScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={isDark ? "#94A3B8" : "#E51F27"}
+              tintColor={palette.spinner}
             />
           }
         >
@@ -325,30 +332,32 @@ export default function HomeScreen() {
           <View className="px-5 mt-9">
             <View
               style={{
-                backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-                borderRadius: 20,
+                backgroundColor: palette.surface,
+                borderRadius: RADIUS.lg,
                 borderWidth: 1,
-                borderColor: isDark ? "#334155" : "#E2E8F0",
-                padding: 14,
-                shadowColor: "#000",
-                shadowOpacity: 0.04,
-                shadowOffset: { width: 0, height: 2 },
-                shadowRadius: 8,
-                elevation: 2,
+                borderColor: palette.border,
+                padding: 16,
+                ...getShadow(isDark, "sm"),
               }}
             >
               {/* Ô tìm kiếm tích hợp vào lịch */}
               <View
-                className={`flex-row items-center rounded-2xl border px-4 h-12 shadow-sm mb-4 ${
-                  isDark
-                    ? "bg-[#111318] border-slate-700/60"
-                    : "bg-slate-50 border-slate-200"
-                }`}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderRadius: RADIUS.md,
+                  borderWidth: 1,
+                  borderColor: palette.border,
+                  backgroundColor: palette.surfaceAlt,
+                  paddingHorizontal: 16,
+                  height: 48,
+                  marginBottom: 16,
+                }}
               >
                 <Ionicons
                   name="search-outline"
                   size={18}
-                  color={isDark ? "#6B7280" : "#94A3B8"}
+                  color={palette.iconMuted}
                 />
                 <TextInput
                   className={`flex-1 h-full ml-3 font-semibold ${
@@ -356,18 +365,21 @@ export default function HomeScreen() {
                   }`}
                   style={{ fontSize: FONT_SIZE.xs }}
                   placeholder="Bạn muốn tìm tour du lịch nào?"
-                  placeholderTextColor={isDark ? "#6B7280" : "#94A3B8"}
+                  placeholderTextColor={palette.iconMuted}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   returnKeyType="search"
                   onSubmitEditing={submitSearch}
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchQuery("")}>
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery("")}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
                     <Ionicons
                       name="close-circle"
                       size={18}
-                      color={isDark ? "#6B7280" : "#94A3B8"}
+                      color={palette.iconMuted}
                     />
                   </TouchableOpacity>
                 )}
@@ -377,7 +389,7 @@ export default function HomeScreen() {
                 style={{
                   fontSize: FONT_SIZE.xs,
                   fontWeight: "700",
-                  color: isDark ? "#F8FAFC" : "#0F172A",
+                  color: palette.textPrimary,
                   marginBottom: 10,
                 }}
               >
@@ -391,17 +403,19 @@ export default function HomeScreen() {
                   onPress={() => setDateSearchMode("specific")}
                   style={{
                     flex: 1,
+                    minHeight: 44,
                     paddingVertical: 10,
                     alignItems: "center",
+                    justifyContent: "center",
                     borderBottomWidth: 2,
-                    borderBottomColor: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : "#D0021B") : "transparent",
+                    borderBottomColor: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : palette.brand) : "transparent",
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 20,
                       fontWeight: "700",
-                      color: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
+                      color: dateSearchMode === "specific" ? (isDark ? "#FFFFFF" : palette.brand) : palette.textSecondary,
                     }}
                   >
                     Ngày cụ thể
@@ -413,17 +427,19 @@ export default function HomeScreen() {
                   onPress={() => setDateSearchMode("range")}
                   style={{
                     flex: 1,
+                    minHeight: 44,
                     paddingVertical: 10,
                     alignItems: "center",
+                    justifyContent: "center",
                     borderBottomWidth: 2,
-                    borderBottomColor: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : "#D0021B") : "transparent",
+                    borderBottomColor: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : palette.brand) : "transparent",
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 20,
                       fontWeight: "700",
-                      color: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : "#D0021B") : (isDark ? "#94A3B8" : "#64748B"),
+                      color: dateSearchMode === "range" ? (isDark ? "#FFFFFF" : palette.brand) : palette.textSecondary,
                     }}
                   >
                     Khoảng ngày
@@ -439,20 +455,21 @@ export default function HomeScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
+                    minHeight: 44,
                     padding: 12,
-                    borderRadius: 12,
+                    borderRadius: RADIUS.sm,
                     borderWidth: 1,
-                    borderColor: isDark ? "#334155" : "#E2E8F0",
-                    backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                    borderColor: palette.border,
+                    backgroundColor: palette.surfaceAlt,
                     marginBottom: 12,
                   }}
                 >
-                  <Ionicons name="calendar-outline" size={18} color="#D0021B" style={{ marginRight: 8 }} />
+                  <Ionicons name="calendar-outline" size={18} color={palette.brand} style={{ marginRight: 8 }} />
                   <Text
                     style={{
                       fontSize: FONT_SIZE.xs,
                       fontWeight: "600",
-                      color: specificDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                      color: specificDate ? palette.textPrimary : palette.textMuted,
                     }}
                   >
                     {specificDate ? formatDateDisplay(specificDate) : "Chọn ngày khởi hành"}
@@ -467,20 +484,21 @@ export default function HomeScreen() {
                       flex: 1,
                       flexDirection: "row",
                       alignItems: "center",
+                      minHeight: 44,
                       padding: 12,
-                      borderRadius: 12,
+                      borderRadius: RADIUS.sm,
                       borderWidth: 1,
-                      borderColor: isDark ? "#334155" : "#E2E8F0",
-                      backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
                     }}
                   >
-                    <Ionicons name="calendar-outline" size={16} color="#D0021B" style={{ marginRight: 6 }} />
+                    <Ionicons name="calendar-outline" size={16} color={palette.brand} style={{ marginRight: 6 }} />
                     <Text
                       numberOfLines={1}
                       style={{
                         fontSize: FONT_SIZE.xs,
                         fontWeight: "600",
-                        color: startDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                        color: startDate ? palette.textPrimary : palette.textMuted,
                       }}
                     >
                       {startDate ? formatDateDisplay(startDate) : "Từ ngày"}
@@ -494,20 +512,21 @@ export default function HomeScreen() {
                       flex: 1,
                       flexDirection: "row",
                       alignItems: "center",
+                      minHeight: 44,
                       padding: 12,
-                      borderRadius: 12,
+                      borderRadius: RADIUS.sm,
                       borderWidth: 1,
-                      borderColor: isDark ? "#334155" : "#E2E8F0",
-                      backgroundColor: isDark ? "#111318" : "#F8FAFC",
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
                     }}
                   >
-                    <Ionicons name="calendar-outline" size={16} color="#D0021B" style={{ marginRight: 6 }} />
+                    <Ionicons name="calendar-outline" size={16} color={palette.brand} style={{ marginRight: 6 }} />
                     <Text
                       numberOfLines={1}
                       style={{
                         fontSize: FONT_SIZE.xs,
                         fontWeight: "600",
-                        color: endDate ? (isDark ? "#F8FAFC" : "#0F172A") : (isDark ? "#64748B" : "#94A3B8"),
+                        color: endDate ? palette.textPrimary : palette.textMuted,
                       }}
                     >
                       {endDate ? formatDateDisplay(endDate) : "Đến ngày"}
@@ -523,16 +542,18 @@ export default function HomeScreen() {
                     activeOpacity={0.8}
                     onPress={clearDateFilters}
                     style={{
-                      paddingVertical: 10,
-                      paddingHorizontal: 14,
-                      borderRadius: 12,
+                      minWidth: 44,
+                      minHeight: 44,
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      borderRadius: RADIUS.sm,
                       borderWidth: 1,
-                      borderColor: isDark ? "#4A5568" : "#CBD5E0",
+                      borderColor: palette.border,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Ionicons name="refresh-outline" size={18} color={isDark ? "#CBD5E1" : "#475569"} />
+                    <Ionicons name="refresh-outline" size={18} color={palette.textSecondary} />
                   </TouchableOpacity>
                 )}
 
@@ -541,9 +562,10 @@ export default function HomeScreen() {
                   onPress={submitSearch}
                   style={{
                     flex: 1,
-                    backgroundColor: "#D0021B",
-                    paddingVertical: 10,
-                    borderRadius: 12,
+                    minHeight: 44,
+                    backgroundColor: palette.brand,
+                    paddingVertical: 12,
+                    borderRadius: RADIUS.sm,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
@@ -610,16 +632,12 @@ export default function HomeScreen() {
                       height: 80,
                       borderRadius: 40,
                       borderWidth: 2,
-                      borderColor: "#D0021B",
+                      borderColor: palette.brand,
                       overflow: "hidden",
-                      backgroundColor: "#FFFFFF",
+                      backgroundColor: palette.surface,
                       justifyContent: "center",
                       alignItems: "center",
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 2,
+                      ...getShadow(isDark, "sm"),
                     }}
                   >
                     <Image
@@ -632,7 +650,7 @@ export default function HomeScreen() {
                     style={{
                       fontSize: 13,
                       fontWeight: "800",
-                      color: isDark ? "#CBD5E1" : "#1E293B",
+                      color: isDark ? "#CBD5E1" : palette.textPrimary,
                       textAlign: "center",
                       marginTop: 6,
                       lineHeight: 16,
@@ -650,7 +668,7 @@ export default function HomeScreen() {
                   width: 22,
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: "#D0021B",
+                  backgroundColor: palette.brand,
                   marginLeft: iconScrollProgress * 42
                 }} />
               </View>
@@ -659,14 +677,11 @@ export default function HomeScreen() {
 
           {/* QUICK ACCESS GRID — Shopee style */}
           <View
-            className="mx-5 mt-9 rounded-2xl"
+            className="mx-5 mt-9"
             style={{
-              backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-              shadowColor: "#000",
-              shadowOpacity: 0.06,
-              shadowOffset: { width: 0, height: 2 },
-              shadowRadius: 10,
-              elevation: 3,
+              backgroundColor: palette.surface,
+              borderRadius: RADIUS.md,
+              ...getShadow(isDark, "sm"),
               paddingVertical: 16,
               paddingHorizontal: 8,
             }}
@@ -731,8 +746,12 @@ export default function HomeScreen() {
                 >
                   Tin tức nổi bật
                 </Text>
-                <TouchableOpacity onPress={() => router.push("/(root)/news" as any)} activeOpacity={0.7}>
-                  <Text className="font-black text-[#D0021B]" style={{ fontSize: FONT_SIZE.xs }}>Xem tất cả →</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/(root)/news" as any)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text className="font-black" style={{ fontSize: FONT_SIZE.xs, color: palette.brand }}>Xem tất cả →</Text>
                 </TouchableOpacity>
               </View>
 
@@ -842,14 +861,18 @@ export default function HomeScreen() {
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: palette.brand,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            elevation: 6,
+            ...(isDark
+              ? getShadow(isDark, "lg")
+              : {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }),
             zIndex: 99,
           }}
         >

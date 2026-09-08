@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { logout as apiLogout } from "@/services/auth";
+import { getPalette, getShadow, RADIUS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -37,6 +38,7 @@ export default function Header({
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+  const palette = getPalette(isDark);
   const { isLoggedIn, user, logout } = useAuth();
   const [showProfileCard, setShowProfileCard] = useState(false);
   const router = useRouter();
@@ -51,22 +53,23 @@ export default function Header({
 
   return (
     <Wrapper
-      className={isDark ? "bg-[#1E222B]" : "bg-[#D0021B]"}
+      style={{ backgroundColor: isDark ? palette.surface : palette.brand }}
       {...(safeArea ? { edges: ["top"] as const } : {})}
     >
       <View
         className={`flex-row items-center px-5 py-3.5 ${
           showActions ? "justify-between" : "justify-center"
-        } ${
-          isDark ? "bg-[#1E222B] border-b border-slate-800" : "bg-[#D0021B]"
-        }`}
+        } ${isDark ? "border-b border-slate-800" : ""}`}
+        style={{ backgroundColor: isDark ? palette.surface : palette.brand }}
       >
         <View className="flex-row items-center flex-1 mr-2">
           {showBackButton && (
             <TouchableOpacity
               onPress={onBackPress}
               activeOpacity={0.7}
-              className="mr-3 p-1 rounded-full bg-white/10"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              className="mr-3 rounded-full bg-white/10 items-center justify-center"
+              style={{ width: 44, height: 44 }}
             >
               <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
@@ -134,7 +137,9 @@ export default function Header({
             <TouchableOpacity
               onPress={toggleTheme}
               activeOpacity={0.7}
-              className="w-8 h-8 rounded-full bg-white/10 items-center justify-center"
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              className="rounded-full bg-white/10 items-center justify-center"
+              style={{ width: 44, height: 44 }}
             >
               <Ionicons
                 name={isDark ? "sunny-outline" : "moon-outline"}
@@ -148,6 +153,7 @@ export default function Header({
               <TouchableOpacity
                 onPress={() => setShowProfileCard(true)}
                 activeOpacity={0.8}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{
                   width: 32,
                   height: 32,
@@ -211,33 +217,33 @@ export default function Header({
               style={{
                 width: "100%",
                 maxWidth: 320,
-                backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-                borderRadius: 28,
+                backgroundColor: palette.surface,
+                borderRadius: RADIUS.xl,
                 borderWidth: 1,
-                borderColor: isDark ? "#334155" : "#E2E8F0",
+                borderColor: palette.border,
                 padding: 24,
                 alignItems: "center",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.2,
-                shadowRadius: 16,
-                elevation: 10,
+                ...getShadow(isDark, "lg"),
               }}
               activeOpacity={1}
             >
               {/* Close Button */}
               <TouchableOpacity
                 onPress={() => setShowProfileCard(false)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 style={{
                   position: "absolute",
-                  top: 16,
-                  right: 16,
-                  padding: 4,
-                  borderRadius: 12,
-                  backgroundColor: isDark ? "#2D3748" : "#F1F5F9",
+                  top: 12,
+                  right: 12,
+                  width: 44,
+                  height: 44,
+                  borderRadius: RADIUS.sm,
+                  backgroundColor: palette.surfaceAlt,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Ionicons name="close" size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+                <Ionicons name="close" size={20} color={palette.textSecondary} />
               </TouchableOpacity>
 
               {/* Email Header */}
@@ -245,7 +251,7 @@ export default function Header({
                 style={{
                   fontSize: 12,
                   fontWeight: "600",
-                  color: isDark ? "#64748B" : "#94A3B8",
+                  color: palette.textMuted,
                   marginBottom: 16,
                   marginTop: 8,
                 }}
@@ -261,11 +267,11 @@ export default function Header({
                   borderRadius: 40,
                   overflow: "hidden",
                   borderWidth: 3,
-                  borderColor: isDark ? "#93C5FD" : "#D0021B",
+                  borderColor: palette.icon,
                   justifyContent: "center",
                   alignItems: "center",
                   marginBottom: 16,
-                  backgroundColor: isDark ? "#2D3748" : "#F8FAFC",
+                  backgroundColor: palette.surfaceAlt,
                 }}
               >
                 {user.avatarUrl ? (
@@ -278,7 +284,7 @@ export default function Header({
                   <Ionicons
                     name="person"
                     size={36}
-                    color={isDark ? "#93C5FD" : "#D0021B"}
+                    color={palette.icon}
                   />
                 )}
               </View>
@@ -288,7 +294,7 @@ export default function Header({
                 style={{
                   fontSize: 20,
                   fontWeight: "800",
-                  color: isDark ? "#F8FAFC" : "#0F172A",
+                  color: palette.textPrimary,
                   textAlign: "center",
                 }}
               >
@@ -299,7 +305,7 @@ export default function Header({
               <Text
                 style={{
                   fontSize: 14,
-                  color: isDark ? "#94A3B8" : "#64748B",
+                  color: palette.textSecondary,
                   textAlign: "center",
                   marginTop: 2,
                 }}
@@ -315,18 +321,18 @@ export default function Header({
                   marginTop: 12,
                   paddingHorizontal: 16,
                   paddingVertical: 8,
-                  borderRadius: 12,
-                  backgroundColor: isDark ? "#2D3748" : "#F8FAFC",
+                  borderRadius: RADIUS.sm,
+                  backgroundColor: palette.surfaceAlt,
                   width: "100%",
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="call-outline" size={16} color={isDark ? "#93C5FD" : "#D0021B"} />
+                <Ionicons name="call-outline" size={16} color={palette.icon} />
                 <Text
                   style={{
                     fontSize: 14,
                     fontWeight: "600",
-                    color: isDark ? "#CBD5E1" : "#475569",
+                    color: palette.textSecondary,
                     marginLeft: 8,
                   }}
                 >
@@ -339,7 +345,7 @@ export default function Header({
                 style={{
                   width: "100%",
                   height: 1,
-                  backgroundColor: isDark ? "#334155" : "#E2E8F0",
+                  backgroundColor: palette.border,
                   marginVertical: 20,
                 }}
               />
@@ -362,15 +368,12 @@ export default function Header({
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: isDark ? "#991B1B" : "#EF4444",
-                  borderRadius: 16,
+                  backgroundColor: palette.danger,
+                  borderRadius: RADIUS.md,
                   height: 48,
                   width: "100%",
-                  shadowColor: "#EF4444",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
+                  ...getShadow(isDark, "md"),
+                  ...(isDark ? {} : { shadowColor: "#EF4444" }),
                 }}
               >
                 <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />

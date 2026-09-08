@@ -147,6 +147,7 @@ export default function CustomToast({
                   onPress={onAction}
                   activeOpacity={0.7}
                   disabled={actionLoading}
+                  hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
                   style={styles.actionButton}
                 >
                   {actionLoading ? (
@@ -165,6 +166,7 @@ export default function CustomToast({
                 <TouchableOpacity
                   onPress={onClose}
                   activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
                   style={styles.dismissButton}
                 >
                   <Text
@@ -186,6 +188,7 @@ export default function CustomToast({
           <TouchableOpacity
             onPress={onClose}
             activeOpacity={0.6}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
             style={styles.closeIconButton}
           >
             <Ionicons
@@ -256,7 +259,7 @@ const styles = {
     gap: 16,
   } as ViewStyle,
   actionButton: {
-    paddingVertical: 4,
+    paddingVertical: 10,
   } as ViewStyle,
   actionText: {
     fontSize: FONT_SIZE.xs,
@@ -264,7 +267,7 @@ const styles = {
     letterSpacing: 0.5,
   } as TextStyle,
   dismissButton: {
-    paddingVertical: 4,
+    paddingVertical: 10,
   } as ViewStyle,
   dismissText: {
     fontSize: FONT_SIZE.xs,
@@ -275,6 +278,6 @@ const styles = {
     position: "absolute",
     top: 12,
     right: 12,
-    padding: 4,
+    padding: 8,
   } as ViewStyle,
 };

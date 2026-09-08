@@ -4,6 +4,7 @@ import {
   useScrollVisibility,
 } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
+import { getPalette, RADIUS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
@@ -16,8 +17,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const ACTIVE = "#D0021B";
 
 /** Per-route icon (filled when focused, outline otherwise) — matches the mockup. */
 const ICONS: Record<
@@ -42,6 +41,8 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotification();
+  const palette = getPalette(isDark);
+  const ACTIVE = palette.brand;
 
   const contentOpacity = hidden.interpolate({
     inputRange: [0, 1],
@@ -106,6 +107,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               activeOpacity={0.7}
               style={{
                 flex: 1,
+                minHeight: 44,
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -122,8 +124,8 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                       position: "absolute",
                       top: -5,
                       right: -8,
-                      backgroundColor: "#D0021B",
-                      borderRadius: 99,
+                      backgroundColor: ACTIVE,
+                      borderRadius: RADIUS.pill,
                       minWidth: 18,
                       height: 18,
                       paddingHorizontal: 3,

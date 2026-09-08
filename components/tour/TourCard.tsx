@@ -1,4 +1,5 @@
 import { FONT_SIZE } from "@/constants/typography";
+import { getShadow, RADIUS } from "@/constants/theme";
 import { useTheme } from "@/context/Theme_Context";
 import { formatPrice } from "@/helper/format";
 import { TourItem } from "@/services/tour";
@@ -6,14 +7,6 @@ import { getNearestDeparture, formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-
-const lightShadow = {
-  shadowColor: "#94A3B8",
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.12,
-  shadowRadius: 12,
-  elevation: 4,
-};
 
 /** Tour list card — reused by Home and Search. Tapping opens the detail screen. */
 export function TourCard({
@@ -68,12 +61,12 @@ export function TourCard({
     <TouchableOpacity
       activeOpacity={0.95}
       onPress={onPress}
-      className={`rounded-[24px] mb-5 border shadow-sm overflow-hidden ${
+      className={`mb-5 border overflow-hidden ${
         isDark
-          ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
+          ? "bg-slate-800/90 border-slate-700/50"
           : "bg-white border-slate-100"
       }`}
-      style={isDark ? undefined : lightShadow}
+      style={{ borderRadius: RADIUS.xl, ...getShadow(isDark, "sm") }}
     >
       {/* Tour Image with Rating badge */}
       <View className="relative h-44 w-full bg-slate-900/10">
@@ -167,11 +160,12 @@ export function TourCard({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPress}
-            className={`rounded-xl px-5 py-2.5 ${
+            className={`rounded-xl px-5 py-3 items-center justify-center ${
               isDark
                 ? "bg-slate-700 border border-slate-600 active:bg-slate-600"
                 : "bg-[#D0021B] active:bg-[#A80016]"
             }`}
+            style={{ minHeight: 44 }}
           >
             <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
               Xem chi tiết

@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
-import { getPalette } from "@/constants/theme";
+import { getPalette, RADIUS, getShadow } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
@@ -250,7 +250,7 @@ export default function NotificationsScreen() {
         style={{
           marginHorizontal: 16,
           marginBottom: 20, // 20px gap based on design guidelines
-          borderRadius: 20,
+          borderRadius: RADIUS.lg,
           borderWidth: 1,
           borderLeftWidth: 4,
           borderLeftColor: iconCfg.color,
@@ -261,11 +261,7 @@ export default function NotificationsScreen() {
             : item.isRead
             ? "#efeded"
             : "#e8bdb6",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0 : 0.04,
-          shadowRadius: 10,
-          elevation: isDark ? 0 : 2,
+          ...getShadow(isDark, "sm"),
         }}
       >
         <View className="flex-row items-start p-4">
@@ -478,6 +474,7 @@ export default function NotificationsScreen() {
               disabled={markingAll}
               activeOpacity={0.7}
               className="flex-row items-center"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               {markingAll ? (
                 <ActivityIndicator size="small" color="#D0021B" />
@@ -597,14 +594,18 @@ export default function NotificationsScreen() {
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: palette.brand,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            elevation: 6,
+            ...(isDark
+              ? getShadow(isDark, "lg")
+              : {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }),
             zIndex: 99,
           }}
         >

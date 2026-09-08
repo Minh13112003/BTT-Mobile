@@ -28,6 +28,7 @@ export function Accordion({ title, number, defaultOpen = false, children }: Acco
         activeOpacity={0.7}
         onPress={() => setOpen((o) => !o)}
         className="flex-row items-center justify-between px-3.5 py-3.5"
+        style={{ minHeight: 48 }}
       >
         <View className="flex-row items-center flex-1 pr-3">
           {number != null && (

@@ -2,6 +2,7 @@ import { Footer } from "@/components/Footer";
 import Header from "@/components/Header";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
+import { getPalette, RADIUS, getShadow } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { logout as apiLogout } from "@/services/auth";
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const palette = getPalette(isDark);
   const insets = useSafeAreaInsets();
   const [hasPin, setHasPin] = useState(false);
   const [avatarZoom, setAvatarZoom] = useState(false);
@@ -77,10 +79,10 @@ export default function ProfileScreen() {
     : (["#F5F6FA", "#F5F6FA"] as const);
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F5F6FA]"}`}>
+    <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       <StatusBar
         style="light"
-        backgroundColor={isDark ? "#1E222B" : "#D0021B"}
+        backgroundColor={isDark ? palette.surface : "#D0021B"}
       />
       <Header title="BENTHANH TOURIST" showActions={true} />
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
@@ -125,7 +127,7 @@ export default function ProfileScreen() {
                     width: 32,
                     height: 32,
                     borderRadius: 16,
-                    backgroundColor: "#D0021B",
+                    backgroundColor: palette.brand,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
@@ -159,11 +161,12 @@ export default function ProfileScreen() {
 
           {/* Menu Chức năng */}
           <View
-            className={`rounded-[24px] mx-6 p-4 border ${
+            className={`mx-6 p-4 border ${
               isDark
-                ? "bg-slate-800/90 border-slate-700/50 shadow-2xl shadow-black/40"
-                : "bg-white border-slate-100 shadow-xl shadow-slate-900/5"
+                ? "bg-slate-800/90 border-slate-700/50"
+                : "bg-white border-slate-100"
             }`}
+            style={{ borderRadius: RADIUS.xl, ...getShadow(isDark, "md") }}
           >
             {/* Chức năng 1: Thông tin cá nhân */}
             <TouchableOpacity

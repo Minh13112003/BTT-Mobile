@@ -42,7 +42,10 @@ export function SearchBar({
         returnKeyType="search"
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText("")}>
+        <TouchableOpacity
+          onPress={() => onChangeText("")}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <Ionicons
             name="close-circle"
             size={18}

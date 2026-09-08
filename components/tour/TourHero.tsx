@@ -23,7 +23,8 @@ function CircleBtn({
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
-      className="w-10 h-10 rounded-full items-center justify-center border"
+      hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+      className="w-11 h-11 rounded-full items-center justify-center border"
       style={{
         backgroundColor: isDark ? "rgba(10,12,18,0.55)" : "rgba(255,255,255,0.85)",
         borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.08)",

@@ -1,4 +1,5 @@
 import { FONT_SIZE } from "@/constants/typography";
+import { getShadow, RADIUS } from "@/constants/theme";
 import React from "react";
 import {
   Modal,
@@ -78,7 +79,9 @@ export default function CustomAlert({
             {
               backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
               borderColor: isDark ? "#334155" : "#E2E8F0",
+              borderRadius: RADIUS.xl,
             },
+            getShadow(isDark, "lg"),
           ]}
         >
           {/* Header Icon */}
@@ -171,15 +174,9 @@ const styles = StyleSheet.create({
   alertBox: {
     width: "100%",
     maxWidth: 340,
-    borderRadius: 24,
     borderWidth: 1,
     padding: 24,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
   } as ViewStyle,
   iconWrapper: {
     width: 64,
@@ -209,7 +206,7 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     height: 48,
-    borderRadius: 14,
+    borderRadius: RADIUS.sm,
     alignItems: "center",
     justifyContent: "center",
   } as ViewStyle,
