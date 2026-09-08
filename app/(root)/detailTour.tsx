@@ -3,7 +3,7 @@ import { useTheme } from "@/context/Theme_Context";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { usePinchToZoom } from "@/hooks/usePinchToZoom";
 import { getBookingById } from "@/services/booking";
-import { TourDetail } from "@/services/tour";
+import { getTourItemMapped, TourDetail } from "@/services/tour";
 import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,6 +31,11 @@ import CustomAlert from "@/components/CustomAlert";
 import { HighlightChips } from "@/components/tour/HighlightChips";
 import { TermsAccordion } from "@/components/tour/TermsAccordion";
 import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion";
+// DEMO — biến thể HTML cho booking nguồn Laravel (song song bản NestJS tĩnh phía trên)
+import { TermsHtmlAccordion } from "@/components/tour/TermsHtmlAccordion";
+import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAccordion";
+import { PriceIncludedCard } from "@/components/tour/PriceIncludedCard";
+import { FeaturedHighlightsCard } from "@/components/tour/FeaturedHighlightsCard";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 interface BookingDetail {
@@ -44,6 +49,10 @@ interface BookingDetail {
     availableSeats?: number;
   };
   quantity: number;
+  /** DEMO — nguồn booking: "NESTJS" | "LARAVEL" (xem .claude/rules/laravel-migration.md). */
+  source?: string;
+  /** DEMO — id tour Laravel, dùng gọi lại GET /api/tour/item để render đầy đủ. */
+  tourKey?: string | null;
   passengers?: {
     adults?: number;
     adultUnitPrice?: number;
@@ -138,7 +147,28 @@ export default function DetailTourScreen() {
       setError("");
       const res = await getBookingById(id);
       if (res && res.data) {
-        setBooking(res.data);
+        const data: BookingDetail = res.data;
+
+        // DEMO — booking nguồn Laravel: NestJS chỉ lưu snapshot rút gọn.
+        // Gọi lại benthanhtourist.com /api/tour/item bằng tourKey để có
+        // hero ảnh + lịch trình HTML + điều khoản đầy đủ, merge vào booking.tour.
+        // Thông tin riêng của đơn (số khách, giá chốt, voucher, status, ngày KH)
+        // vẫn giữ nguyên từ NestJS.
+        if (data.source === "LARAVEL" && data.tourKey) {
+          try {
+            const laravelTour = await getTourItemMapped(data.tourKey);
+            data.tour = {
+              ...laravelTour,
+              // Giữ mã tour & VAT theo snapshot NestJS (đúng đợt đã đặt)
+              code: data.tour?.code ?? laravelTour.code,
+              hasVat: data.tour?.hasVat ?? laravelTour.hasVat,
+            };
+          } catch (e) {
+            console.warn("Không tải được chi tiết tour Laravel, dùng snapshot:", e);
+          }
+        }
+
+        setBooking(data);
       } else {
         setError("Không tìm thấy thông tin đơn hàng");
       }
@@ -855,8 +885,25 @@ export default function DetailTourScreen() {
               </View>
             )}
 
-            {/* Lịch trình */}
-            {booking.tour.schedules?.length ? (
+            {/* DEMO — Lịch trình + dịch vụ + điểm nổi bật (nguồn Laravel, HTML thô) */}
+            {booking.source === "LARAVEL" && (
+              <>
+                <FeaturedHighlightsCard
+                  featuredDescription={booking.tour.htmlFeaturedDescription}
+                />
+                <View className={sectionCardClass}>
+                  <SectionTitle title="Lịch trình chuyến đi" />
+                  <TourScheduleHtmlAccordion plans={booking.tour.htmlPlans} />
+                </View>
+                <PriceIncludedCard
+                  priceIncluded={booking.tour.htmlPriceIncluded}
+                  priceNotIncluded={booking.tour.htmlPriceNotIncluded}
+                />
+              </>
+            )}
+
+            {/* Lịch trình (nguồn NestJS — cấu trúc sáng/trưa/chiều/tối) */}
+            {booking.source !== "LARAVEL" && booking.tour.schedules?.length ? (
               <View className={sectionCardClass}>
                 <SectionTitle title="Lịch trình dự kiến" />
                 <TourScheduleAccordion schedules={booking.tour.schedules} />
@@ -908,7 +955,11 @@ export default function DetailTourScreen() {
             {/* Điều khoản và Lưu ý chung */}
             <View className={sectionCardClass}>
               <SectionTitle title="Điều khoản & Lưu ý chung" />
-              <TermsAccordion />
+              {booking.source === "LARAVEL" ? (
+                <TermsHtmlAccordion terms={booking.tour.htmlTerms} />
+              ) : (
+                <TermsAccordion />
+              )}
             </View>
 
             {/* Đánh giá — chỉ hiển thị khi tour đã hoàn thành */}

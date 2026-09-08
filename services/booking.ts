@@ -7,14 +7,23 @@ import { apiService } from "./api/interceptor";
 export type PaymentMethod = "AT_OFFICE" | "BANK_TRANSFER";
 
 interface Booking {
-  idTour: string;
-  departureId: string;
+  // NestJS-sourced booking (luồng cũ). Optional vì booking nguồn Laravel không dùng.
+  idTour?: string;
+  departureId?: string;
   adults: number;
   children?: number;
   infants?: number;
   paymentMethod: PaymentMethod;
   voucherCode?: string | null;
   notice?: string | null;
+
+  // ===== DEMO — booking từ nguồn Laravel (benthanhtourist.com) =====
+  // Khi có tourKey, backend NestJS gọi /api/tour/item lấy snapshot & bỏ qua idTour/departureId.
+  // Xem .claude/rules/laravel-migration.md.
+  tourKey?: string;
+  departureKey?: string;
+  departureDate?: string;
+  unitPrice?: number;
 }
 
 export const getDashboardOverview = async (): Promise<{ data: any }> => {
@@ -98,3 +107,5 @@ export function getBookingById(id: string) {
 export function booking(bookingData : Booking){
   return apiService.post(urls.URL_Booking, bookingData);
 }
+
+export type { Booking };

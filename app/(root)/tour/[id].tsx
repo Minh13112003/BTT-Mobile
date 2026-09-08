@@ -1,12 +1,15 @@
 import { BookingBar } from "@/components/tour/BookingBar";
 import { DeparturePicker } from "@/components/tour/DeparturePicker";
+import { FeaturedHighlightsCard } from "@/components/tour/FeaturedHighlightsCard";
 import { HighlightChips } from "@/components/tour/HighlightChips";
+import { PriceIncludedCard } from "@/components/tour/PriceIncludedCard";
 // import { TermsAccordion } from "@/components/tour/TermsAccordion"; // NestJS — điều khoản tĩnh, thay bằng TermsHtmlAccordion (Laravel)
 import { TermsHtmlAccordion } from "@/components/tour/TermsHtmlAccordion";
 import { TourHero } from "@/components/tour/TourHero";
 // import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion"; // NestJS — cấu trúc sáng/trưa/chiều/tối, thay bằng TourScheduleHtmlAccordion (Laravel)
 import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAccordion";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
@@ -21,7 +24,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
-  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
@@ -167,6 +169,11 @@ export default function TourDetailScreen() {
         departureId: selectedDeparture.id,
         departureDate: selectedDeparture.departureDate,
         availableSeats: String(selectedDeparture.availableSeats),
+        // DEMO — nguồn tour hiện tại là Laravel (useTourDetail → getTourItemMapped).
+        // tourKey = id tour Laravel, departureKey = tour_days[].id (đã map trong services/tour.ts).
+        source: "LARAVEL",
+        tourKey: tour.id,
+        departureKey: selectedDeparture.id,
       },
     });
   };
@@ -189,15 +196,7 @@ export default function TourDetailScreen() {
         >
           <Ionicons name="chevron-back" size={20} color={palette.icon} />
         </TouchableOpacity>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={palette.spinner} />
-          <Text
-            className={`font-semibold mt-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}
-            style={{ fontSize: FONT_SIZE.xs }}
-          >
-            Đang tải chi tiết tour...
-          </Text>
-        </View>
+        <AppLoadingScreen message="Đang tải chi tiết tour..." />
       </View>
     );
   }
@@ -297,8 +296,15 @@ export default function TourDetailScreen() {
             onSelect={setSelectedDeparture}
           />
 
+          <FeaturedHighlightsCard featuredDescription={tour.htmlFeaturedDescription} />
+
           {/* NestJS: <TourScheduleAccordion schedules={tour.schedules} /> — tour.schedules không còn được backend Laravel trả về */}
           <TourScheduleHtmlAccordion plans={tour.htmlPlans} />
+
+          <PriceIncludedCard
+            priceIncluded={tour.htmlPriceIncluded}
+            priceNotIncluded={tour.htmlPriceNotIncluded}
+          />
 
           <TripInfoCard tour={tour} />
 

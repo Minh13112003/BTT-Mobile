@@ -122,6 +122,12 @@ export default function CheckoutScreen() {
     ? parseInt(params.availableSeats as string, 10)
     : Infinity;
 
+  // DEMO — nguồn Laravel: khi có tourKey, gửi lên NestJS để backend gọi
+  // benthanhtourist.com lấy snapshot & bỏ qua idTour/departureId.
+  const isLaravelSource = params.source === "LARAVEL" && !!params.tourKey;
+  const tourKey = (params.tourKey as string) || "";
+  const departureKey = (params.departureKey as string) || "";
+
   const maxTotal = availableSeats === Infinity ? 99 : availableSeats;
 
   const [adults, setAdults] = useState(1);
@@ -263,7 +269,8 @@ export default function CheckoutScreen() {
   };
 
   const handleBookingSubmit = async () => {
-    if (!departureId) {
+    const hasDeparture = isLaravelSource ? !!departureKey : !!departureId;
+    if (!hasDeparture) {
       triggerAlert("Thông báo", "Vui lòng chọn ngày khởi hành", "warning");
       return;
     }
@@ -328,16 +335,30 @@ export default function CheckoutScreen() {
   const performBooking = async () => {
     try {
       setSubmitting(true);
-      const bookingData = {
-        idTour: tourId,
-        departureId,
-        adults,
-        children,
-        infants,
-        paymentMethod: paymentMethod as PaymentMethod,
-        voucherCode: selectedVoucher ? selectedVoucher.code : null,
-        notice: notice || null,
-      };
+      const bookingData = isLaravelSource
+        ? {
+            // DEMO — booking nguồn Laravel: backend NestJS gọi /api/tour/item lấy snapshot.
+            tourKey,
+            departureKey,
+            departureDate: departureDate || undefined,
+            unitPrice: tourPrice,
+            adults,
+            children,
+            infants,
+            paymentMethod: paymentMethod as PaymentMethod,
+            voucherCode: selectedVoucher ? selectedVoucher.code : null,
+            notice: notice || null,
+          }
+        : {
+            idTour: tourId,
+            departureId,
+            adults,
+            children,
+            infants,
+            paymentMethod: paymentMethod as PaymentMethod,
+            voucherCode: selectedVoucher ? selectedVoucher.code : null,
+            notice: notice || null,
+          };
 
       const res = await booking(bookingData);
       if (res) {
