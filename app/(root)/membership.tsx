@@ -638,10 +638,9 @@ export function RedesignedMembershipBanner({
   const progressColors = PROGRESS_COLORS[tier.name] ?? ["#D0E8F8", "#80B0CC"];
   const tc = TIER_TEXT[tier.name] ?? TIER_TEXT["Bạc"];
   const cardWidth = SW - 48;
-  // Thực tế trên thiết bị thật (iOS lẫn Android) nội dung bị đè/tràn ở tỉ lệ
-  // gần giống thẻ tín dụng (~0.58-0.62) — ưu tiên đủ chỗ chứa hơn giống thẻ
-  // ngân hàng tuyệt đối, tăng hẳn lên gần vuông để chắc chắn không chật.
-  const cardHeight = Math.round(cardWidth * 0.75);
+  // Chip + điểm tích lũy giờ gộp chung 1 hàng ngang (không còn xếp dọc 3 tầng
+  // chip/label/số) nên đủ chỗ để quay lại tỉ lệ gần thẻ tín dụng thật hơn.
+  const cardHeight = Math.round(cardWidth * 0.58);
 
   return (
     <View
@@ -703,46 +702,54 @@ export function RedesignedMembershipBanner({
           </View>
         </View>
 
-        {/* ── Chip + Points — chip xếp trên nhãn/số điểm, đúng thứ tự thẻ tín dụng thật ── */}
+        {/* ── Chip + Points — chip trái, nhãn+số điểm cùng 1 hàng ngang bên phải,
+            gộp chỗ chip/label/số từng xếp dọc 3 tầng thành 1 hàng duy nhất ── */}
         {/* marginTop cố định thay vì phụ thuộc justifyContent: space-between của
             cha — trên 1 số kích thước màn hình space-between từng ép khối này
             sát lên Header, đè "0"/số điểm lên logo. */}
-        <View style={{ marginTop: 20 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            marginTop: 16,
+          }}
+        >
           <CardChip tint={tc.main} />
-          <Text
-            style={{
-              fontSize: 12,
-              color: tc.muted,
-              fontWeight: "700",
-              letterSpacing: 1,
-              marginTop: 10,
-            }}
-          >
-            ĐIỂM TÍCH LŨY
-          </Text>
-          <Text
-            style={{
-              fontSize: 34,
-              color: tc.main,
-              fontWeight: "800",
-              marginTop: 2,
-              letterSpacing: 1,
-              fontVariant: ["tabular-nums"],
-            }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-          >
-            {pointsStr}
-          </Text>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                color: tc.muted,
+                fontWeight: "700",
+                letterSpacing: 1,
+              }}
+            >
+              ĐIỂM TÍCH LŨY
+            </Text>
+            <Text
+              style={{
+                fontSize: 34,
+                color: tc.main,
+                fontWeight: "800",
+                letterSpacing: 1,
+                fontVariant: ["tabular-nums"],
+              }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {pointsStr}
+            </Text>
+          </View>
         </View>
 
         {/* ── Footer: tên chủ thẻ · hạng kế tiếp — giống "CARD HOLDER" trên thẻ thật ── */}
-        <View style={{ marginTop: 22 }}>
+        <View style={{ marginTop: 16 }}>
           <View
             style={{
               height: 1,
               backgroundColor: tc.sub,
-              marginBottom: 10,
+              marginBottom: 8,
             }}
           />
           {/* Tên chủ thẻ chiếm toàn bộ chiều rộng — chừa chỗ cho họ tên dài
@@ -781,7 +788,7 @@ export function RedesignedMembershipBanner({
               backgroundColor: tc.sub,
               borderRadius: 3,
               overflow: "hidden",
-              marginTop: 10,
+              marginTop: 8,
             }}
           >
             <LinearGradient
@@ -799,7 +806,7 @@ export function RedesignedMembershipBanner({
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: 6,
+              marginTop: 5,
             }}
           >
             <Text style={{ fontSize: 14, color: tc.muted, fontWeight: "500" }}>
