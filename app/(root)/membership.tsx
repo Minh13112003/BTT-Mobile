@@ -15,6 +15,7 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,7 +24,6 @@ import {
   ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import QRCode from "react-native-qrcode-svg";
 import Svg, {
   Defs,
   Line,
@@ -232,7 +232,6 @@ export default function MembershipScreen() {
                         : undefined
                     }
                     tierOverride={tier}
-                    showQR
                   />
                 </View>
               );
@@ -526,13 +525,27 @@ const TIER_TEXT: Record<string, { main: string; muted: string; sub: string }> = 
   Ruby:       { main: "#FFE8EC", muted: "rgba(255,184,196,0.75)", sub: "rgba(255,152,168,0.40)" },
 };
 
-function generateCardNumber(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) {
-    h = (Math.imul(31, h) + name.charCodeAt(i)) | 0;
-  }
-  const n = String(Math.abs(h) % 100_000_000).padStart(8, "0");
-  return `${n.slice(0, 4)}  ${n.slice(4)}`;
+/** Logo hoa BTT (không chữ) + chữ "BTT" cạnh nhau — góc trên trái, như logo ngân hàng in trên thẻ thật. */
+function CardBrandMark({ tint }: { tint: string }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+      <Image
+        source={require("@/assets/images/Logo_BTT-2024.png")}
+        style={{ width: 22, height: 22 }}
+        resizeMode="contain"
+      />
+      <Text
+        style={{
+          fontSize: 16,
+          color: tint,
+          fontWeight: "800",
+          letterSpacing: 2,
+        }}
+      >
+        BTT
+      </Text>
+    </View>
+  );
 }
 
 /** Chip kim loại giả lập (như thẻ Visa/Mastercard) — chi tiết nhận diện "đây là thẻ". */
@@ -558,7 +571,7 @@ function CardChip({ tint }: { tint: string }) {
   );
 }
 
-/** Vân sáng chéo rất nhẹ trên bề mặt thẻ, thay cho họa tiết cánh/tia sáng cũ. */
+/** Vân sáng chéo mượt trên bề mặt thẻ + quầng sáng góc — thay cho họa tiết cánh/tia sáng cũ. */
 function CardSheen({ width, height }: { width: number; height: number }) {
   return (
     <Svg
@@ -569,18 +582,23 @@ function CardSheen({ width, height }: { width: number; height: number }) {
     >
       <Defs>
         <SvgLinearGradient id="sheen" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.16} />
-          <Stop offset="35%" stopColor="#FFFFFF" stopOpacity={0} />
+          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.14} />
+          <Stop offset="45%" stopColor="#FFFFFF" stopOpacity={0.03} />
           <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
         </SvgLinearGradient>
-        <RadialGradient id="glow-corner" cx="100%" cy="0%" r="75%">
-          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.14} />
+        <RadialGradient id="glow-corner" cx="100%" cy="0%" r="80%">
+          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.16} />
           <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+        </RadialGradient>
+        <RadialGradient id="glow-bottom" cx="8%" cy="100%" r="60%">
+          <Stop offset="0%" stopColor="#000000" stopOpacity={0.1} />
+          <Stop offset="100%" stopColor="#000000" stopOpacity={0} />
         </RadialGradient>
       </Defs>
       <Rect width={width} height={height} fill="url(#glow-corner)" />
+      <Rect width={width} height={height} fill="url(#glow-bottom)" />
       <Path
-        d={`M0,0 L${width * 0.62},0 L${width * 0.22},${height} L0,${height} Z`}
+        d={`M0,0 L${width * 0.7},0 L${width * 0.28},${height} L0,${height} Z`}
         fill="url(#sheen)"
       />
     </Svg>
@@ -592,13 +610,11 @@ export function RedesignedMembershipBanner({
   rewardPoints = 0,
   name = "Nguyễn Nhật Minh",
   tierOverride,
-  showQR = false,
 }: {
   earnedPoints: number;
   rewardPoints?: number;
   name?: string;
   tierOverride?: Tier;
-  showQR?: boolean;
 }) {
   const tier = tierOverride ?? getTier(earnedPoints);
   const next = getNextMilestone(tier.min);
@@ -611,9 +627,6 @@ export function RedesignedMembershipBanner({
   const nextTierName = next != null ? getTier(next).name : null;
   const greetName = name.trim() || "Quý khách";
   const pointsStr = earnedPoints.toLocaleString("vi-VN");
-  const rewardStr = rewardPoints.toLocaleString("vi-VN");
-  const cardNumber = generateCardNumber(greetName);
-  const qrValue = `BENTHANH-${cardNumber.replace(/\s/g, "")}`;
 
   const progressLeft =
     next != null
@@ -625,6 +638,7 @@ export function RedesignedMembershipBanner({
   const progressColors = PROGRESS_COLORS[tier.name] ?? ["#D0E8F8", "#80B0CC"];
   const tc = TIER_TEXT[tier.name] ?? TIER_TEXT["Bạc"];
   const cardWidth = SW - 48;
+  const cardHeight = Math.round(cardWidth * 0.62);
 
   return (
     <View
@@ -643,33 +657,20 @@ export function RedesignedMembershipBanner({
         colors={cardBg}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ padding: 20 }}
+        style={{ padding: 20, height: cardHeight, justifyContent: "space-between" }}
       >
         {/* Vân sáng bề mặt — họa tiết duy nhất, thay cho cánh/tia sáng cũ */}
-        <CardSheen width={cardWidth} height={showQR ? 340 : 230} />
+        <CardSheen width={cardWidth} height={cardHeight} />
 
-        {/* ── Header: chip + hạng thẻ ── */}
+        {/* ── Header: logo + tên thương hiệu · hạng thẻ ── */}
         <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "flex-start",
+            alignItems: "center",
           }}
         >
-          <View>
-            <CardChip tint={tc.main} />
-            <Text
-              style={{
-                fontSize: 14,
-                color: tc.muted,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                marginTop: 10,
-              }}
-            >
-              THÀNH VIÊN
-            </Text>
-          </View>
+          <CardBrandMark tint={tc.main} />
 
           {/* Tier badge */}
           <View
@@ -699,64 +700,116 @@ export function RedesignedMembershipBanner({
           </View>
         </View>
 
-        {/* ── Points section — điểm nhấn chính, canh đều kiểu số thẻ ── */}
-        <View style={{ marginTop: 20 }}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: tc.muted,
-              fontWeight: "700",
-              letterSpacing: 1,
-            }}
-          >
-            ĐIỂM TÍCH LŨY
-          </Text>
-          <Text
-            style={{
-              fontSize: 34,
-              color: tc.main,
-              fontWeight: "800",
-              marginTop: 4,
-              letterSpacing: 1,
-              fontVariant: ["tabular-nums"],
-            }}
-          >
-            {pointsStr}
-          </Text>
+        {/* ── Chip + Points — chip đúng vị trí thẻ tín dụng thật, số điểm làm điểm nhấn ── */}
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
+          <CardChip tint={tc.main} />
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: tc.muted,
+                fontWeight: "700",
+                letterSpacing: 1,
+              }}
+            >
+              ĐIỂM TÍCH LŨY
+            </Text>
+            <Text
+              style={{
+                fontSize: 34,
+                color: tc.main,
+                fontWeight: "800",
+                marginTop: 2,
+                letterSpacing: 1,
+                fontVariant: ["tabular-nums"],
+              }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {pointsStr}
+            </Text>
+          </View>
         </View>
 
-        {/* Tên chủ thẻ — in hoa, canh dưới cùng phần thân như thẻ ngân hàng thật */}
-        <Text
-          style={{
-            fontSize: 22,
-            color: tc.main,
-            fontWeight: "800",
-            marginTop: 16,
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-          }}
-          numberOfLines={1}
-        >
-          {greetName}
-        </Text>
-
-        {/* ── Divider ── */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: tc.sub,
-            marginVertical: 14,
-          }}
-        />
-
-        {/* ── Progress bar ── */}
+        {/* ── Footer: tên chủ thẻ · hạng kế tiếp — giống "CARD HOLDER" trên thẻ thật ── */}
         <View>
+          <View
+            style={{
+              height: 1,
+              backgroundColor: tc.sub,
+              marginBottom: 12,
+            }}
+          />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+            }}
+          >
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: tc.muted,
+                  fontWeight: "700",
+                  letterSpacing: 1,
+                }}
+              >
+                CHỦ THẺ
+              </Text>
+              <Text
+                style={{
+                  fontSize: 22,
+                  color: tc.main,
+                  fontWeight: "800",
+                  marginTop: 2,
+                  letterSpacing: 1.2,
+                  textTransform: "uppercase",
+                }}
+                numberOfLines={1}
+              >
+                {greetName}
+              </Text>
+            </View>
+            {nextTierName ? (
+              <View style={{ alignItems: "flex-end" }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: tc.muted,
+                    fontWeight: "700",
+                    letterSpacing: 1,
+                  }}
+                >
+                  HẠNG KẾ TIẾP
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: accent,
+                    fontWeight: "700",
+                    marginTop: 4,
+                  }}
+                >
+                  {nextTierName}
+                </Text>
+              </View>
+            ) : (
+              <Text style={{ fontSize: 16, color: accent, fontWeight: "700" }}>
+                ✦ Cao nhất
+              </Text>
+            )}
+          </View>
+
+          {/* Progress bar */}
           <View
             style={{
               height: 6,
               backgroundColor: tc.sub,
               borderRadius: 3,
               overflow: "hidden",
+              marginTop: 10,
             }}
           >
             <LinearGradient
@@ -766,96 +819,17 @@ export function RedesignedMembershipBanner({
               style={{ height: "100%", width: `${progress * 100}%` }}
             />
           </View>
-          <View
+          <Text
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginTop: 7,
+              fontSize: 14,
+              color: tc.muted,
+              fontWeight: "500",
+              marginTop: 6,
             }}
           >
-            <Text
-              style={{
-                fontSize: 16,
-                color: tc.muted,
-                fontWeight: "500",
-              }}
-            >
-              {progressLeft}
-            </Text>
-            {nextTierName && (
-              <Text style={{ fontSize: 16, color: accent, fontWeight: "700" }}>
-                ⬆ {nextTierName}
-              </Text>
-            )}
-          </View>
+            {progressLeft}
+          </Text>
         </View>
-
-        {/* ── QR section ── */}
-        {showQR && (
-          <>
-            <View
-              style={{
-                height: 1,
-                backgroundColor: tc.sub,
-                marginVertical: 14,
-              }}
-            />
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {/* QR code */}
-              <View
-                style={{
-                  width: 68,
-                  height: 68,
-                  backgroundColor: "#fff",
-                  borderRadius: 10,
-                  padding: 4,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <QRCode
-                  value={qrValue}
-                  size={60}
-                  backgroundColor="white"
-                  color="#000"
-                />
-              </View>
-
-              {/* Card number */}
-              <View style={{ flex: 1, alignItems: "center" }}>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    color: tc.main,
-                    fontWeight: "700",
-                    letterSpacing: 3,
-                    fontVariant: ["tabular-nums"],
-                  }}
-                >
-                  {cardNumber}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: tc.muted,
-                    marginTop: 4,
-                  }}
-                >
-                  Chạm để quét
-                </Text>
-              </View>
-
-              {/* Refresh icon */}
-              <TouchableOpacity activeOpacity={0.7} style={{ padding: 8 }}>
-                <Ionicons
-                  name="refresh-outline"
-                  size={22}
-                  color={tc.muted}
-                />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
       </LinearGradient>
     </View>
   );
