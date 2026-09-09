@@ -638,9 +638,10 @@ export function RedesignedMembershipBanner({
   const progressColors = PROGRESS_COLORS[tier.name] ?? ["#D0E8F8", "#80B0CC"];
   const tc = TIER_TEXT[tier.name] ?? TIER_TEXT["Bạc"];
   const cardWidth = SW - 48;
-  // Tỉ lệ thấp hơn thẻ tín dụng thật (~1.6:1) một chút để đủ chỗ thở cho 6 tầng
-  // nội dung trong footer (chủ thẻ/hạng kế tiếp/progress) mà không bị chật.
-  const cardHeight = Math.round(cardWidth * 0.58);
+  // Thực tế trên thiết bị thật (iOS lẫn Android) nội dung bị đè/tràn ở tỉ lệ
+  // gần giống thẻ tín dụng (~0.58-0.62) — ưu tiên đủ chỗ chứa hơn giống thẻ
+  // ngân hàng tuyệt đối, tăng hẳn lên gần vuông để chắc chắn không chật.
+  const cardHeight = Math.round(cardWidth * 0.75);
 
   return (
     <View
@@ -659,7 +660,7 @@ export function RedesignedMembershipBanner({
         colors={cardBg}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ padding: 20, height: cardHeight, justifyContent: "space-between" }}
+        style={{ padding: 20, minHeight: cardHeight }}
       >
         {/* Vân sáng bề mặt — họa tiết duy nhất, thay cho cánh/tia sáng cũ */}
         <CardSheen width={cardWidth} height={cardHeight} />
@@ -703,7 +704,10 @@ export function RedesignedMembershipBanner({
         </View>
 
         {/* ── Chip + Points — chip đúng vị trí thẻ tín dụng thật, số điểm làm điểm nhấn ── */}
-        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
+        {/* marginTop cố định thay vì phụ thuộc justifyContent: space-between của
+            cha — trên 1 số kích thước màn hình space-between từng ép khối này
+            sát lên Header, đè "0"/số điểm lên logo. */}
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16, marginTop: 22 }}>
           <CardChip tint={tc.main} />
           <View style={{ flex: 1 }}>
             <Text
@@ -734,7 +738,7 @@ export function RedesignedMembershipBanner({
         </View>
 
         {/* ── Footer: tên chủ thẻ · hạng kế tiếp — giống "CARD HOLDER" trên thẻ thật ── */}
-        <View>
+        <View style={{ marginTop: 22 }}>
           <View
             style={{
               height: 1,
