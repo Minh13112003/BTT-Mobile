@@ -16,8 +16,8 @@ import {
 } from "@/services/notification";
 import { getTransactionHistory } from "@/services/booking";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -98,7 +99,7 @@ export default function NotificationsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
-  const notifListenerRef = useRef<Notifications.EventSubscription | null>(null);
+  const notifListenerRef = useRef<{ remove: () => void } | null>(null);
 
   const fetchPage = useCallback(
     async (p: number, replace: boolean) => {
@@ -126,10 +127,26 @@ export default function NotificationsScreen() {
 
   // Tự reload list khi nhận notification mới qua push (foreground listener)
   useEffect(() => {
-    notifListenerRef.current = Notifications.addNotificationReceivedListener(() => {
-      fetchPage(1, true);
+    // Expo Go + Android: expo-notifications tự đăng ký 1 push token listener
+    // ngay lúc module được import (side-effect ở DevicePushTokenAutoRegistration.fx.js
+    // bên trong package) — chỉ cần static/dynamic import module này là đã crash
+    // app trên Expo Go Android. Dùng dynamic import + điều kiện chặn trước để
+    // module không bao giờ được load ở tổ hợp này. Xem giải thích đầy đủ ở
+    // hooks/usePushNotifications.ts.
+    const isExpoGoAndroid =
+      Constants.appOwnership === "expo" && Platform.OS === "android";
+    if (isExpoGoAndroid) return;
+
+    let cancelled = false;
+    import("expo-notifications").then((Notifications) => {
+      if (cancelled) return;
+      notifListenerRef.current = Notifications.addNotificationReceivedListener(() => {
+        fetchPage(1, true);
+      });
     });
+
     return () => {
+      cancelled = true;
       notifListenerRef.current?.remove();
     };
   }, [fetchPage]);
