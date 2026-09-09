@@ -1,8 +1,24 @@
 import { useEffect, useRef } from "react";
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { registerFcmToken } from "@/services/user";
 import { useNotification } from "@/context/Notification_Context";
+
+// Từ Expo SDK 53, Expo Go trên Android không còn hỗ trợ remote push notification
+// (Google giới hạn quota FCM dùng chung của Expo Go) — gọi getExpoPushTokenAsync()
+// trong trường hợp này sẽ crash ứng dụng. iOS qua Expo Go KHÔNG bị ảnh hưởng, và
+// development/production build thật (không qua Expo Go) cũng không bị ảnh hưởng
+// ở cả 2 nền tảng vì lúc đó dùng project Firebase riêng của app, không qua Expo Go.
+// Xem: https://docs.expo.dev/develop/development-builds/introduction/
+//
+// Dùng appOwnership (dù đã deprecated) thay vì executionEnvironment được khuyến
+// nghị thay thế: executionEnvironment chỉ có "storeClient" gộp chung Expo Go VÀ
+// development build (expo-dev-client) làm một — nếu dùng nó để chặn thì
+// development build (thứ cần dùng để test push thật) cũng bị chặn theo, sai mục
+// đích. appOwnership === "expo" mới phân biệt đúng riêng Expo Go.
+const isExpoGoAndroid =
+  Constants.appOwnership === "expo" && Platform.OS === "android";
 
 // Hiển thị banner khi app đang mở (foreground)
 Notifications.setNotificationHandler({
@@ -20,6 +36,10 @@ export function usePushNotifications(isLoggedIn: boolean) {
 
   useEffect(() => {
     if (!isLoggedIn) return;
+    // Bỏ qua hẳn trên Expo Go + Android — gọi bất kỳ API push nào ở tổ hợp này
+    // đều crash app (xem giải thích ở isExpoGoAndroid phía trên). Development/
+    // production build thật và Expo Go trên iOS vẫn chạy đầy đủ như cũ.
+    if (isExpoGoAndroid) return;
 
     let cancelled = false;
 
