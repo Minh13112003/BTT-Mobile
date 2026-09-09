@@ -703,38 +703,37 @@ export function RedesignedMembershipBanner({
           </View>
         </View>
 
-        {/* ── Chip + Points — chip đúng vị trí thẻ tín dụng thật, số điểm làm điểm nhấn ── */}
+        {/* ── Chip + Points — chip xếp trên nhãn/số điểm, đúng thứ tự thẻ tín dụng thật ── */}
         {/* marginTop cố định thay vì phụ thuộc justifyContent: space-between của
             cha — trên 1 số kích thước màn hình space-between từng ép khối này
             sát lên Header, đè "0"/số điểm lên logo. */}
-        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16, marginTop: 22 }}>
+        <View style={{ marginTop: 20 }}>
           <CardChip tint={tc.main} />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                color: tc.muted,
-                fontWeight: "700",
-                letterSpacing: 1,
-              }}
-            >
-              ĐIỂM TÍCH LŨY
-            </Text>
-            <Text
-              style={{
-                fontSize: 34,
-                color: tc.main,
-                fontWeight: "800",
-                marginTop: 2,
-                letterSpacing: 1,
-                fontVariant: ["tabular-nums"],
-              }}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {pointsStr}
-            </Text>
-          </View>
+          <Text
+            style={{
+              fontSize: 12,
+              color: tc.muted,
+              fontWeight: "700",
+              letterSpacing: 1,
+              marginTop: 10,
+            }}
+          >
+            ĐIỂM TÍCH LŨY
+          </Text>
+          <Text
+            style={{
+              fontSize: 34,
+              color: tc.main,
+              fontWeight: "800",
+              marginTop: 2,
+              letterSpacing: 1,
+              fontVariant: ["tabular-nums"],
+            }}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {pointsStr}
+          </Text>
         </View>
 
         {/* ── Footer: tên chủ thẻ · hạng kế tiếp — giống "CARD HOLDER" trên thẻ thật ── */}
@@ -746,67 +745,34 @@ export function RedesignedMembershipBanner({
               marginBottom: 10,
             }}
           />
-          <View
+          {/* Tên chủ thẻ chiếm toàn bộ chiều rộng — chừa chỗ cho họ tên dài
+              (4-5 từ): tự thu nhỏ tối đa 2px (minimumFontScale ~0.91 của size
+              22 ≈ 20) thay vì tràn dòng hoặc bị cắt "...". */}
+          <Text
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
+              fontSize: 12,
+              color: tc.muted,
+              fontWeight: "700",
+              letterSpacing: 1,
             }}
           >
-            <View style={{ flex: 1, marginRight: 12 }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: tc.muted,
-                  fontWeight: "700",
-                  letterSpacing: 1,
-                }}
-              >
-                CHỦ THẺ
-              </Text>
-              <Text
-                style={{
-                  fontSize: 22,
-                  color: tc.main,
-                  fontWeight: "800",
-                  marginTop: 2,
-                  letterSpacing: 1.2,
-                  textTransform: "uppercase",
-                }}
-                numberOfLines={1}
-              >
-                {greetName}
-              </Text>
-            </View>
-            {nextTierName ? (
-              <View style={{ alignItems: "flex-end" }}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: tc.muted,
-                    fontWeight: "700",
-                    letterSpacing: 1,
-                  }}
-                >
-                  HẠNG KẾ TIẾP
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: accent,
-                    fontWeight: "700",
-                    marginTop: 4,
-                  }}
-                >
-                  {nextTierName}
-                </Text>
-              </View>
-            ) : (
-              <Text style={{ fontSize: 16, color: accent, fontWeight: "700" }}>
-                ✦ Cao nhất
-              </Text>
-            )}
-          </View>
+            CHỦ THẺ
+          </Text>
+          <Text
+            style={{
+              fontSize: 22,
+              color: tc.main,
+              fontWeight: "800",
+              marginTop: 2,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+            }}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={20 / 22}
+          >
+            {greetName}
+          </Text>
 
           {/* Progress bar */}
           <View
@@ -815,7 +781,7 @@ export function RedesignedMembershipBanner({
               backgroundColor: tc.sub,
               borderRadius: 3,
               overflow: "hidden",
-              marginTop: 8,
+              marginTop: 10,
             }}
           >
             <LinearGradient
@@ -825,16 +791,24 @@ export function RedesignedMembershipBanner({
               style={{ height: "100%", width: `${progress * 100}%` }}
             />
           </View>
-          <Text
+
+          {/* Tiến độ (trái) · hạng kế tiếp (phải) — gọn trên cùng 1 dòng, thay
+              cho khối "HẠNG KẾ TIẾP" riêng biệt trước đó. */}
+          <View
             style={{
-              fontSize: 14,
-              color: tc.muted,
-              fontWeight: "500",
-              marginTop: 5,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 6,
             }}
           >
-            {progressLeft}
-          </Text>
+            <Text style={{ fontSize: 14, color: tc.muted, fontWeight: "500" }}>
+              {progressLeft}
+            </Text>
+            <Text style={{ fontSize: 14, color: accent, fontWeight: "700" }}>
+              {nextTierName ? `↑ ${nextTierName}` : "✦ Cao nhất"}
+            </Text>
+          </View>
         </View>
       </LinearGradient>
     </View>
