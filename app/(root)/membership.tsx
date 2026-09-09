@@ -638,9 +638,10 @@ export function RedesignedMembershipBanner({
   const progressColors = PROGRESS_COLORS[tier.name] ?? ["#D0E8F8", "#80B0CC"];
   const tc = TIER_TEXT[tier.name] ?? TIER_TEXT["Bạc"];
   const cardWidth = SW - 48;
-  // Chip + điểm tích lũy giờ gộp chung 1 hàng ngang (không còn xếp dọc 3 tầng
-  // chip/label/số) nên đủ chỗ để quay lại tỉ lệ gần thẻ tín dụng thật hơn.
-  const cardHeight = Math.round(cardWidth * 0.58);
+  // Chip + điểm tích lũy tách 2 đầu (chip trái, label/số xếp dọc bên phải) —
+  // cụm bên phải cao hơn chip (label 12 + số 34) nên cần nhỉnh hơn 0.58 một
+  // chút để không lặp lại lỗi tràn/đè chữ đã gặp ở các bố cục trước.
+  const cardHeight = Math.round(cardWidth * 0.62);
 
   return (
     <View
@@ -702,21 +703,21 @@ export function RedesignedMembershipBanner({
           </View>
         </View>
 
-        {/* ── Chip + Points — chip trái, nhãn+số điểm cùng 1 hàng ngang bên phải,
-            gộp chỗ chip/label/số từng xếp dọc 3 tầng thành 1 hàng duy nhất ── */}
-        {/* marginTop cố định thay vì phụ thuộc justifyContent: space-between của
-            cha — trên 1 số kích thước màn hình space-between từng ép khối này
-            sát lên Header, đè "0"/số điểm lên logo. */}
+        {/* ── Chip + Points — chip cố định bên trái, nhãn+số điểm (xếp dọc, label
+            trên/số dưới) dán sát bên phải, khoảng giữa để trống. Dùng
+            justifyContent: space-between vì 2 bên là nội dung kích thước cố
+            định (không có phần tử flex:1 nào) — an toàn hơn cách share chỗ
+            trống bằng flex, không tái diễn lỗi bị ép/đè ở các bố cục trước. ── */}
         <View
           style={{
             flexDirection: "row",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: 14,
             marginTop: 16,
           }}
         >
           <CardChip tint={tc.main} />
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+          <View style={{ alignItems: "flex-end" }}>
             <Text
               style={{
                 fontSize: 12,
@@ -732,6 +733,7 @@ export function RedesignedMembershipBanner({
                 fontSize: 34,
                 color: tc.main,
                 fontWeight: "800",
+                marginTop: 2,
                 letterSpacing: 1,
                 fontVariant: ["tabular-nums"],
               }}
