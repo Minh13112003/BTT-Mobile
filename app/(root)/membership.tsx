@@ -525,24 +525,24 @@ const TIER_TEXT: Record<string, { main: string; muted: string; sub: string }> = 
   Ruby:       { main: "#FFE8EC", muted: "rgba(255,184,196,0.75)", sub: "rgba(255,152,168,0.40)" },
 };
 
-/** Logo hoa BTT (không chữ) + chữ "BTT" cạnh nhau — góc trên trái, như logo ngân hàng in trên thẻ thật. */
+/** Logo hoa BTT (không chữ) + tên đầy đủ "BenThanh Tourist" cạnh nhau — góc trên trái, như logo ngân hàng in trên thẻ thật. */
 function CardBrandMark({ tint }: { tint: string }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
       <Image
         source={require("@/assets/images/Logo_BTT-2024.png")}
-        style={{ width: 22, height: 22 }}
+        style={{ width: 36, height: 36 }}
         resizeMode="contain"
       />
       <Text
         style={{
-          fontSize: 16,
+          fontSize: 12.5,
           color: tint,
           fontWeight: "800",
-          letterSpacing: 2,
+          letterSpacing: 0.2,
         }}
       >
-        BTT
+        BenThanh Tourist
       </Text>
     </View>
   );
