@@ -638,7 +638,9 @@ export function RedesignedMembershipBanner({
   const progressColors = PROGRESS_COLORS[tier.name] ?? ["#D0E8F8", "#80B0CC"];
   const tc = TIER_TEXT[tier.name] ?? TIER_TEXT["Bạc"];
   const cardWidth = SW - 48;
-  const cardHeight = Math.round(cardWidth * 0.62);
+  // Tỉ lệ thấp hơn thẻ tín dụng thật (~1.6:1) một chút để đủ chỗ thở cho 6 tầng
+  // nội dung trong footer (chủ thẻ/hạng kế tiếp/progress) mà không bị chật.
+  const cardHeight = Math.round(cardWidth * 0.58);
 
   return (
     <View
@@ -706,7 +708,7 @@ export function RedesignedMembershipBanner({
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 color: tc.muted,
                 fontWeight: "700",
                 letterSpacing: 1,
@@ -737,7 +739,7 @@ export function RedesignedMembershipBanner({
             style={{
               height: 1,
               backgroundColor: tc.sub,
-              marginBottom: 12,
+              marginBottom: 10,
             }}
           />
           <View
@@ -750,7 +752,7 @@ export function RedesignedMembershipBanner({
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: 12,
                   color: tc.muted,
                   fontWeight: "700",
                   letterSpacing: 1,
@@ -776,7 +778,7 @@ export function RedesignedMembershipBanner({
               <View style={{ alignItems: "flex-end" }}>
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: 12,
                     color: tc.muted,
                     fontWeight: "700",
                     letterSpacing: 1,
@@ -809,7 +811,7 @@ export function RedesignedMembershipBanner({
               backgroundColor: tc.sub,
               borderRadius: 3,
               overflow: "hidden",
-              marginTop: 10,
+              marginTop: 8,
             }}
           >
             <LinearGradient
@@ -824,7 +826,7 @@ export function RedesignedMembershipBanner({
               fontSize: 14,
               color: tc.muted,
               fontWeight: "500",
-              marginTop: 6,
+              marginTop: 5,
             }}
           >
             {progressLeft}
