@@ -2,7 +2,8 @@ import * as SecureStore from "expo-secure-store";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { getMe } from "@/services/user";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+// [TẮT TẠM — expo-notifications] Gỡ package tạm thời, báo lại khi cần deploy bản có push notification.
+// import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const storage = {
   get: (key: string) =>
@@ -116,8 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isLoggedIn, refreshPoints]);
 
-  // Đăng ký push notification token khi đăng nhập
-  usePushNotifications(isLoggedIn);
+  // [TẮT TẠM — expo-notifications] Đăng ký push notification token khi đăng nhập.
+  // usePushNotifications(isLoggedIn);
 
   if (isLoading) return null;
 

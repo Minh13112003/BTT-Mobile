@@ -2,8 +2,9 @@ import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { formatPrice } from "@/helper/format";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 /** Sticky bottom bar showing the price and the primary "Đặt tour" action. */
 export function BookingBar({
@@ -49,18 +50,7 @@ export function BookingBar({
           </Text>
         </Text>
       </View>
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.85}
-        className="bg-[#D0021B] active:bg-[#A80016] rounded-2xl px-5 py-3.5"
-      >
-        <Text
-          className="text-white font-black"
-          style={{ fontSize: FONT_SIZE.card }}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
+      <PrimaryButton label={label} onPress={onPress} />
     </View>
   );
 }

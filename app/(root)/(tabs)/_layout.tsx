@@ -67,15 +67,18 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const inactive = isDark ? "#6B7280" : "#9CA3AF";
 
   return (
-    <View onTouchStart={() => setHidden(false)}>
+    <View onTouchStart={() => setHidden(false)} style={{ overflow: "visible", zIndex: 10 }}>
       <Animated.View
         style={{
           opacity: contentOpacity,
+          overflow: "visible",
           flexDirection: "row",
           backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: isDark ? "#2D3748" : "#EEF0F5",
-          paddingTop: 10,
+          // 14 (không phải 10): chừa chỗ cho badge thông báo nhô lên trên đỉnh icon,
+          // để viền trên của thanh tab không còn cắt/đè vào số.
+          paddingTop: 14,
           paddingBottom: Math.max(insets.bottom, 12),
         }}
       >
@@ -123,7 +126,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
                 justifyContent: "center",
               }}
             >
-              <View style={{ position: "relative" }}>
+              <View style={{ position: "relative", overflow: "visible", zIndex: 20 }}>
                 <Ionicons
                   name={focused ? icon.on : icon.off}
                   size={23}
@@ -133,8 +136,11 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
                   <View
                     style={{
                       position: "absolute",
-                      top: -5,
-                      right: -8,
+                      top: -9,
+                      right: -10,
+                      // Luôn vẽ TRÊN thanh tab và viền của nó (iOS: zIndex, Android: elevation).
+                      zIndex: 30,
+                      elevation: 6,
                       backgroundColor: ACTIVE,
                       borderRadius: RADIUS.pill,
                       minWidth: 18,

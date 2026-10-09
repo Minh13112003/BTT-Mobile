@@ -17,6 +17,7 @@ import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { useTourDetail } from "@/hooks/useTourDetail";
 import { Departure } from "@/services/departure";
+import { addFavorite, isFavorited as checkIsFavorited, removeFavorite } from "@/services/favorite";
 import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
@@ -105,6 +106,51 @@ export default function TourDetailScreen() {
     null,
   );
 
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [togglingFavorite, setTogglingFavorite] = useState(false);
+
+  // Đồng bộ trạng thái trái tim với server khi mở trang (mỗi tour có 1 id riêng).
+  useEffect(() => {
+    if (!tour?.id) return;
+    let cancelled = false;
+    checkIsFavorited(tour.id)
+      .then((res) => {
+        if (!cancelled) setIsFavorited(res.data.isFavorited);
+      })
+      .catch(() => {
+        // Chưa đăng nhập hoặc lỗi mạng — giữ mặc định chưa tim, không chặn trang.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tour?.id]);
+
+  const handleToggleFavorite = async () => {
+    if (!tour || togglingFavorite) return;
+    setTogglingFavorite(true);
+    const nextFavorited = !isFavorited;
+    setIsFavorited(nextFavorited); // optimistic
+    try {
+      if (nextFavorited) {
+        const nearest = getNearestDeparture(tour.departures ?? []);
+        await addFavorite({
+          tourKey: tour.id,
+          tourName: tour.name,
+          tourImage: tour.imageUrl?.[0],
+          durationText: tour.duration,
+          unitPrice: nearest?.price,
+          departureDate: nearest?.departureDate,
+        });
+      } else {
+        await removeFavorite(tour.id);
+      }
+    } catch {
+      setIsFavorited(!nextFavorited); // revert nếu API lỗi
+    } finally {
+      setTogglingFavorite(false);
+    }
+  };
+
   useEffect(() => {
     if (tour && tour.departures && tour.departures.length > 0) {
       const searchDateMode = params.searchDateMode;
@@ -160,7 +206,7 @@ export default function TourDetailScreen() {
         id: tour.id,
         name: tour.name,
         imageUrl: tour.imageUrl[0] ?? "",
-        tourCode: tour.code ?? "",
+        tourCode: selectedDeparture.code ?? tour.code ?? "",
         price: String(selectedDeparture.price),
         duration: tour.duration,
         rating: String(tour.rating),
@@ -263,6 +309,8 @@ export default function TourDetailScreen() {
           tour={tour}
           onBack={() => router.back()}
           onPressImage={(url) => setZoomImageUrl(url)}
+          isFavorited={isFavorited}
+          onToggleFavorite={handleToggleFavorite}
         />
 
         <View className="px-4 -mt-2">
@@ -274,14 +322,12 @@ export default function TourDetailScreen() {
           </Text>
 
           <View className="flex-row items-center mt-2">
-            {tour.code ? (
-              <>
-                <Text className="text-slate-400" style={{ fontSize: FONT_SIZE.xs }}>
-                  Mã: {tour.code}
-                </Text>
-                <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
-              </>
-            ) : null}
+            <Text className="text-slate-400" style={{ fontSize: FONT_SIZE.xs }}>
+              {selectedDeparture?.code
+                ? `Mã: ${selectedDeparture.code}`
+                : "Vui lòng chọn ngày khởi hành để xem mã tour"}
+            </Text>
+            <View className="w-1 h-1 rounded-full bg-slate-400 mx-2" />
             <Text className="text-slate-400" style={{ fontSize: FONT_SIZE.xs }}>
               {tour.hasVat ? "Đã gồm VAT" : "Chưa gồm VAT"}
             </Text>
@@ -383,7 +429,7 @@ export default function TourDetailScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 130,
+            bottom: 194,
             right: 20,
             width: 50,
             height: 50,
@@ -403,7 +449,7 @@ export default function TourDetailScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton baseBottom={130} liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton baseBottom={130} />
 
       <CustomAlert
         visible={alertVisible}

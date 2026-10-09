@@ -1,13 +1,13 @@
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -345,33 +345,14 @@ export default function ResetPasswordScreen() {
             )}
 
             {/* Submit */}
-            <TouchableOpacity
-              onPress={handleReset}
-              disabled={loading}
-              activeOpacity={0.85}
-              style={{
-                height: 54,
-                borderRadius: 14,
-                backgroundColor: isDark ? "#374151" : "#D0021B",
-                alignItems: "center",
-                justifyContent: "center",
-                marginTop: 8,
-                opacity: loading ? 0.7 : 1,
-                shadowColor: "#D0021B",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.3,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
-                  Đặt lại mật khẩu
-                </Text>
-              )}
-            </TouchableOpacity>
+            <View style={{ marginTop: 8 }}>
+              <PrimaryButton
+                label="Đặt lại mật khẩu"
+                onPress={handleReset}
+                loading={loading}
+                fullWidth
+              />
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

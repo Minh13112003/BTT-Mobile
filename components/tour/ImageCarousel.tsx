@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   View,
   ViewToken,
 } from "react-native";
+
+import { TourImage } from "@/components/tour/TourImage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -97,11 +98,7 @@ export function ImageCarousel({
           index,
         })}
         renderItem={({ item }) => (
-          <Image
-            source={{ uri: item }}
-            style={{ width: itemWidth, height }}
-            resizeMode="cover"
-          />
+          <TourImage uri={item} style={{ width: itemWidth, height }} />
         )}
       />
 

@@ -771,7 +771,7 @@ export default function HomeScreen() {
                         params: { id: item.id },
                       })
                     }
-                    className={`w-64 rounded-2xl border shadow-sm mr-3 overflow-hidden mb-2 ${
+                    className={`w-72 rounded-2xl border shadow-sm mr-3 overflow-hidden mb-2 ${
                       isDark
                         ? "bg-slate-800/90 border-slate-700/50 shadow-black/40"
                         : "bg-white border-slate-100"
@@ -792,8 +792,11 @@ export default function HomeScreen() {
                       >
                         {item.title}
                       </Text>
-                      <View className="flex-row items-center justify-between mt-3">
-                        <Text className="text-slate-400 font-semibold" style={{ fontSize: FONT_SIZE.card }}>
+                      <View className="flex-row items-center justify-between mt-3" style={{ gap: 12 }}>
+                        <Text
+                          className="text-slate-400 font-semibold"
+                          style={{ fontSize: FONT_SIZE.card }}
+                        >
                           {item.date}
                         </Text>
                         <Text
@@ -857,7 +860,7 @@ export default function HomeScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -881,7 +884,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }

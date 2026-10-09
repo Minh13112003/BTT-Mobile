@@ -12,21 +12,19 @@ import {
   SearchMode,
   regionsForMode,
 } from "@/constants/tourFilters";
-import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
+import { useCollapsibleHeader } from "@/hooks/useCollapsibleHeader";
 import { useTourSearch } from "@/hooks/useTourSearch";
 import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   Text,
@@ -80,7 +78,6 @@ export default function SearchScreen() {
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
   const insets = useSafeAreaInsets();
-  const { setHidden } = useScrollVisibility();
 
   // Pre-filter from the Home "Xem tất cả" buttons / search box.
   const params = useLocalSearchParams<{
@@ -130,59 +127,11 @@ export default function SearchScreen() {
   // it animates `transform` (not `height`), it can use the native driver — so the
   // collapse stays smooth even while the list is flinging. The list is padded by
   // the measured chrome height so nothing is hidden and no gap is left behind.
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const headerOffset = useRef(new Animated.Value(0)).current;
   const [chromeH, setChromeH] = useState(0);
-  const clamp = chromeH > 0 ? chromeH : 1;
-
-  // Tab-bar dim still follows scroll direction (opacity only — no layout work).
-  const lastY = useRef(0);
-  const onScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: true,
-      listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const y = e.nativeEvent.contentOffset.y;
-        const dy = y - lastY.current;
-        lastY.current = y;
-        setShowBackToTop(y > 300);
-        if (y <= 8) {
-          setHidden(false);
-          Animated.timing(headerOffset, {
-            toValue: 0,
-            duration: 150,
-            useNativeDriver: true,
-          }).start();
-        } else if (dy > 8) {
-          setHidden(true);
-          Animated.timing(headerOffset, {
-            toValue: -clamp,
-            duration: 150,
-            useNativeDriver: true,
-          }).start();
-        } else if (dy < -8) {
-          setHidden(false);
-          Animated.timing(headerOffset, {
-            toValue: 0,
-            duration: 150,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    },
-  );
-
-  const headerTranslateY = headerOffset;
-
-  // Reset to a clean, fully-visible state whenever the tab regains focus.
-  useFocusEffect(
-    useCallback(() => {
-      scrollY.setValue(0);
-      headerOffset.setValue(0);
-      lastY.current = 0;
-      setHidden(false);
-      return () => setHidden(false);
-    }, [scrollY, headerOffset, setHidden]),
+  const handleScrollY = useCallback((y: number) => setShowBackToTop(y > 300), []);
+  const { translateY: headerTranslateY, scrollProps } = useCollapsibleHeader(
+    chromeH,
+    handleScrollY,
   );
 
   // SubFilterBar slide-down (height 0 -> 56). Only runs on mode change (never on
@@ -290,8 +239,7 @@ export default function SearchScreen() {
               paddingBottom: 24,
             }}
             keyboardShouldPersistTaps="handled"
-            onScroll={onScroll}
-            scrollEventThrottle={16}
+            {...scrollProps}
             removeClippedSubviews
             initialNumToRender={6}
             maxToRenderPerBatch={8}
@@ -511,7 +459,7 @@ export default function SearchScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -535,7 +483,7 @@ export default function SearchScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }

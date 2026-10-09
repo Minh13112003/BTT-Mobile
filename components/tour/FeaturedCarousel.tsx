@@ -1,4 +1,4 @@
-import { TourCardCompact } from "@/components/tour/TourCardCompact";
+import { TourCard } from "@/components/tour/TourCard";
 import { BRAND } from "@/constants/theme";
 import { TourItem } from "@/services/tour";
 import React, { useEffect, useRef, useState } from "react";
@@ -65,12 +65,11 @@ export function FeaturedCarousel({
           setIndex(Math.round(x / (CARD_W + GAP)));
         }}
         renderItem={({ item }) => (
-          <TourCardCompact
-            tour={item}
-            width={CARD_W}
-            featured
-            onPress={() => onPressTour(item)}
-          />
+          // TourCard has a built-in mb-5 for the vertical list; zero it out here
+          // so it doesn't stack with the dot indicator's own top margin below.
+          <View className="mb-[-20px]">
+            <TourCard tour={item} width={CARD_W} onPress={() => onPressTour(item)} />
+          </View>
         )}
       />
 

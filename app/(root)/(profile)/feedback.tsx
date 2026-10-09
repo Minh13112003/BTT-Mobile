@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { postFeedback } from "@/services/feedback";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useTheme } from "@/context/Theme_Context";
 
 export default function FeedbackScreen() {
@@ -225,24 +225,14 @@ export default function FeedbackScreen() {
               </View>
 
               {/* Nút gửi */}
-              <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={sending}
-                activeOpacity={0.8}
-                className={`rounded-2xl h-14 items-center justify-center mt-2 shadow-md ${
-                  isDark
-                    ? "bg-slate-700 border border-slate-600 shadow-black/20"
-                    : "bg-[#D0021B] shadow-red-500/20"
-                } ${sending ? "opacity-70" : isDark ? "active:bg-slate-600" : "active:bg-red-600"}`}
-              >
-                {sending ? (
-                  <ActivityIndicator color={isDark ? "#93C5FD" : "#FFFFFF"} size="small" />
-                ) : (
-                  <Text className="text-white font-bold tracking-wide" style={{ fontSize: FONT_SIZE.xs }}>
-                    Gửi góp ý ngay
-                  </Text>
-                )}
-              </TouchableOpacity>
+              <View style={{ marginTop: 8 }}>
+                <PrimaryButton
+                  label="Gửi góp ý ngay"
+                  onPress={handleSubmit}
+                  loading={sending}
+                  fullWidth
+                />
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

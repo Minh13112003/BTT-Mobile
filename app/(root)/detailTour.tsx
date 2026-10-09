@@ -1076,7 +1076,7 @@ export default function DetailTourScreen() {
             }}
             style={{
               position: "absolute",
-              bottom: 30,
+              bottom: 94,
               right: 20,
               width: 50,
               height: 50,
@@ -1096,7 +1096,7 @@ export default function DetailTourScreen() {
           </TouchableOpacity>
         )}
 
-        <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+        <ZaloFloatingButton />
       </SafeAreaView>
     </LinearGradient>
   );

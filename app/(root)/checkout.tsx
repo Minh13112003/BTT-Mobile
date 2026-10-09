@@ -1,17 +1,17 @@
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { booking, PaymentMethod } from "@/services/booking";
-import { getVouchers } from "@/services/voucher";
+import { consumePendingVoucherSelection } from "@/services/voucherSelection";
 import { getPinStatus, verifyPin } from "@/services/pin";
 import PINInput from "@/components/PINInput";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -137,12 +137,9 @@ export default function CheckoutScreen() {
     null,
   );
   const [notice, setNotice] = useState("");
-  const [vouchers, setVouchers] = useState<ExtendedVoucher[]>([]);
-  const [loadingVouchers, setLoadingVouchers] = useState(false);
   const [selectedVoucher, setSelectedVoucher] =
     useState<ExtendedVoucher | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [voucherCode, setVoucherCode] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -169,27 +166,15 @@ export default function CheckoutScreen() {
     setAlertVisible(true);
   };
 
-  // Load vouchers when component mounts
-  useEffect(() => {
-    const fetchVouchers = async () => {
-      try {
-        setLoadingVouchers(true);
-        // Call the service getVouchers
-        const res = await getVouchers(1, 50);
-        if (res) {
-          const voucherData = Array.isArray(res.data?.items)
-            ? res.data.items
-            : [];
-          setVouchers(voucherData);
-        }
-      } catch (error) {
-        console.error("Lỗi tải vouchers trong checkout:", error);
-      } finally {
-        setLoadingVouchers(false);
+  // Nhận voucher chọn từ voucher-picker khi quay lại màn checkout (xem services/voucherSelection.ts).
+  useFocusEffect(
+    useCallback(() => {
+      const picked = consumePendingVoucherSelection<ExtendedVoucher>();
+      if (picked !== undefined) {
+        setSelectedVoucher(picked);
       }
-    };
-    fetchVouchers();
-  }, []);
+    }, []),
+  );
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -258,15 +243,6 @@ export default function CheckoutScreen() {
 
   const discountAmount = calculateDiscount(originalPrice, selectedVoucher);
   const finalPrice = Math.max(0, originalPrice - discountAmount);
-
-  const handleApplyVoucher = (voucher: ExtendedVoucher) => {
-    if (selectedVoucher?.id === voucher.id) {
-      // Toggle off if already selected
-      setSelectedVoucher(null);
-    } else {
-      setSelectedVoucher(voucher);
-    }
-  };
 
   const handleBookingSubmit = async () => {
     const hasDeparture = isLaravelSource ? !!departureKey : !!departureId;
@@ -719,185 +695,64 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          {vouchers && (
-            <View className="mt-5 border-t border-slate-100/50 pt-4">
-              {/* Input Voucher */}
-              <View className="mb-5">
-                <Text
-                  className={`font-bold mb-2 ${
-                    isDark ? "text-slate-300" : "text-slate-700"
-                  }`}
-                  style={{ fontSize: FONT_SIZE.xs }}
-                >
-                  Nhập mã ưu đãi
-                </Text>
-
-                <View className="flex-row items-center">
-                  <TextInput
-                    placeholder="Ví dụ: SUMMER2026"
-                    placeholderTextColor={isDark ? "#64748B" : "#94A3B8"}
-                    value={voucherCode}
-                    onChangeText={setVoucherCode}
-                    autoCapitalize="characters"
-                    style={{ fontSize: FONT_SIZE.xs }}
-                    className={`flex-1 rounded-xl px-4 py-3 border ${
-                      isDark
-                        ? "bg-slate-900 border-slate-700 text-white"
-                        : "bg-white border-slate-200 text-slate-800"
-                    }`}
-                  />
-
-                  <TouchableOpacity
-                    className="ml-2 bg-[#D0021B] rounded-xl px-4 py-3"
-                    onPress={() => {
-                      const voucher = vouchers.find(
-                        (v) =>
-                          v.code.trim().toLowerCase() ===
-                          voucherCode.trim().toLowerCase(),
-                      );
-
-                      if (!voucher) {
-                        triggerAlert(
-                          "Thông báo",
-                          "Mã voucher không tồn tại hoặc không khả dụng.",
-                          "error"
-                        );
-                        return;
-                      }
-
-                      handleApplyVoucher(voucher);
-                    }}
-                  >
-                    <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>Áp dụng</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text
-                  className={`mt-2 ${
-                    isDark ? "text-slate-500" : "text-slate-400"
-                  }`}
-                  style={{ fontSize: FONT_SIZE.xs }}
-                >
-                  Hoặc chọn một voucher bên dưới
-                </Text>
+          {/* Voucher — gọn kiểu Grab, bấm mở trang chọn voucher riêng */}
+          <View className="mt-5 border-t border-slate-100/50 pt-4">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push({
+                  pathname: "/(root)/voucher-picker" as any,
+                  params: selectedVoucher ? { selectedId: selectedVoucher.id } : {},
+                })
+              }
+              className={`flex-row items-center rounded-2xl p-4 border ${
+                isDark
+                  ? "bg-slate-900/40 border-slate-750"
+                  : "bg-slate-50 border-slate-200/60"
+              }`}
+            >
+              <View
+                className={`w-10 h-10 rounded-xl items-center justify-center ${
+                  isDark
+                    ? "bg-slate-800 border border-slate-700"
+                    : "bg-[#D0021B] shadow-sm shadow-red-500/10"
+                }`}
+              >
+                <Ionicons name="gift" size={20} color={isDark ? "#93C5FD" : "#FFFFFF"} />
               </View>
 
-              {/* Voucher List */}
-              {loadingVouchers ? (
-                <ActivityIndicator
-                  size="small"
-                  color={isDark ? "#94A3B8" : "#D0021B"}
-                  className="py-4"
-                />
-              ) : vouchers.length > 0 ? (
-                vouchers.map((item) => {
-                  const isApplied = selectedVoucher?.id === item.id;
-
-                  return (
-                    <View
-                      key={item.id}
-                      className={`rounded-2xl p-4 mb-4 border ${
-                        isDark
-                          ? "bg-slate-900/40 border-slate-750"
-                          : "bg-slate-50 border-slate-200/60"
-                      }`}
-                    >
-                      <View className="flex-row items-center">
-                        <View
-                          className={`w-10 h-10 rounded-xl items-center justify-center ${
-                            isDark
-                              ? "bg-slate-800 border border-slate-700"
-                              : "bg-[#D0021B] shadow-sm shadow-red-500/10"
-                          }`}
-                        >
-                          <Ionicons
-                            name="gift"
-                            size={20}
-                            color={isDark ? "#93C5FD" : "#FFFFFF"}
-                          />
-                        </View>
-
-                        <View className="ml-3.5 flex-1">
-                          <Text
-                            className={`font-black uppercase tracking-wider ${
-                              isDark ? "text-blue-400" : "text-[#D0021B]"
-                            }`}
-                            style={{ fontSize: FONT_SIZE.xs }}
-                          >
-                            {item.subtitle}
-                          </Text>
-
-                          <Text
-                            className={`font-black mt-0.5 ${
-                              isDark ? "text-slate-200" : "text-slate-800"
-                            }`}
-                            style={{ fontSize: FONT_SIZE.xs }}
-                          >
-                            {item.title}
-                          </Text>
-
-                          <Text className="font-semibold text-slate-400 mt-0.5" style={{ fontSize: FONT_SIZE.card }}>
-                            {item.expiry}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <Text
-                        className={`mt-3 leading-6 ${
-                          isDark ? "text-slate-400" : "text-slate-500"
-                        }`}
-                        style={{ fontSize: FONT_SIZE.xs }}
-                      >
-                        {item.description}
-                      </Text>
-
-                      <View
-                        className={`h-[0.5px] my-3 ${
-                          isDark ? "bg-slate-800" : "bg-slate-200/50"
-                        }`}
-                      />
-
-                      <View className="flex-row justify-end items-center">
-                        {isApplied && (
-                          <Text className="text-green-600 font-semibold mr-3" style={{ fontSize: FONT_SIZE.xs }}>
-                            Đang sử dụng
-                          </Text>
-                        )}
-
-                        <TouchableOpacity
-                          onPress={() => {
-                            setVoucherCode(item.code);
-                            handleApplyVoucher(item);
-                          }}
-                          activeOpacity={0.7}
-                          className={`rounded-lg px-3.5 py-1.5 ${
-                            isApplied
-                              ? "bg-green-600 active:bg-green-700"
-                              : isDark
-                                ? "bg-slate-700 active:bg-slate-650 border border-slate-600"
-                                : "bg-[#D0021B] active:bg-[#A80016]"
-                          }`}
-                        >
-                          <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
-                            {isApplied ? "Đã áp dụng" : "Áp dụng"}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })
-              ) : (
+              <View className="ml-3.5 flex-1">
                 <Text
-                  className={`text-center py-4 ${
-                    isDark ? "text-slate-400" : "text-slate-500"
-                  }`}
+                  className={`font-bold ${isDark ? "text-slate-300" : "text-slate-700"}`}
                   style={{ fontSize: FONT_SIZE.xs }}
                 >
-                  Không tìm thấy voucher nào khả dụng
+                  Voucher
                 </Text>
-              )}
-            </View>
-          )}
+                {selectedVoucher ? (
+                  <Text
+                    className={`font-black mt-0.5 ${isDark ? "text-blue-400" : "text-[#D0021B]"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
+                    numberOfLines={1}
+                  >
+                    {selectedVoucher.title}
+                  </Text>
+                ) : (
+                  <Text
+                    className={isDark ? "text-slate-500 mt-0.5" : "text-slate-400 mt-0.5"}
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Chọn voucher ưu đãi
+                  </Text>
+                )}
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={isDark ? "#64748B" : "#94A3B8"}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* 4. NOTICE/REMARKS FIELD */}
           <View
@@ -1117,27 +972,12 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity
-            disabled={submitting}
+          <PrimaryButton
+            label="Đặt tour ngay"
             onPress={handleBookingSubmit}
-            activeOpacity={0.85}
-            className={`rounded-2xl px-5 py-3.5 flex-row items-center justify-center ${
-              isDark
-                ? "bg-slate-700 active:bg-slate-650 border border-slate-600"
-                : "bg-[#D0021B] active:bg-[#A80016]"
-            }`}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <>
-                <Text className="text-white font-black uppercase tracking-wide mr-1.5" style={{ fontSize: FONT_SIZE.card }}>
-                  Đặt tour ngay
-                </Text>
-                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-              </>
-            )}
-          </TouchableOpacity>
+            loading={submitting}
+            trailingIcon={<Ionicons name="arrow-forward" size={16} color="#FFFFFF" />}
+          />
         </View>
       </SafeAreaView>
 

@@ -1,13 +1,13 @@
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -310,33 +310,13 @@ export default function ForgotPasswordScreen() {
 
             {/* Send OTP button (only shown before OTP is sent) */}
             {!otpSent && (
-              <TouchableOpacity
+              <PrimaryButton
+                label="Gửi mã OTP"
                 onPress={handleSendOtp}
-                disabled={sending || !isPhoneValid}
-                activeOpacity={0.85}
-                style={{
-                  height: 54,
-                  borderRadius: 14,
-                  backgroundColor:
-                    isPhoneValid ? (isDark ? "#374151" : "#D0021B") : (isDark ? "#2D3748" : "#E0A0A0"),
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: sending ? 0.75 : 1,
-                  shadowColor: "#D0021B",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isPhoneValid ? 0.25 : 0,
-                  shadowRadius: 12,
-                  elevation: isPhoneValid ? 4 : 0,
-                }}
-              >
-                {sending ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
-                    Gửi mã OTP
-                  </Text>
-                )}
-              </TouchableOpacity>
+                loading={sending}
+                disabled={!isPhoneValid}
+                fullWidth
+              />
             )}
 
             {/* OTP section */}
@@ -441,33 +421,13 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 {/* Verify button */}
-                <TouchableOpacity
+                <PrimaryButton
+                  label="Xác nhận OTP"
                   onPress={handleVerifyOtp}
-                  disabled={verifying || !isOtpFull}
-                  activeOpacity={0.85}
-                  style={{
-                    height: 54,
-                    borderRadius: 14,
-                    backgroundColor:
-                      isOtpFull ? (isDark ? "#374151" : "#D0021B") : (isDark ? "#2D3748" : "#E0A0A0"),
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: verifying ? 0.75 : 1,
-                    shadowColor: "#D0021B",
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: isOtpFull ? 0.25 : 0,
-                    shadowRadius: 12,
-                    elevation: isOtpFull ? 4 : 0,
-                  }}
-                >
-                  {verifying ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: "700", color: "#FFFFFF" }}>
-                      Xác nhận OTP
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                  loading={verifying}
+                  disabled={!isOtpFull}
+                  fullWidth
+                />
               </>
             )}
 

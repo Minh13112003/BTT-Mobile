@@ -16,7 +16,8 @@ import {
 } from "@/services/notification";
 import { getTransactionHistory } from "@/services/booking";
 import { Ionicons } from "@expo/vector-icons";
-import Constants from "expo-constants";
+// [TẮT TẠM — expo-notifications] Gỡ package tạm thời, báo lại khi cần deploy bản có push notification.
+// import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -25,7 +26,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -99,7 +99,8 @@ export default function NotificationsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
-  const notifListenerRef = useRef<{ remove: () => void } | null>(null);
+  // [TẮT TẠM — expo-notifications] Gỡ package tạm thời, báo lại khi cần deploy bản có push notification.
+  // const notifListenerRef = useRef<{ remove: () => void } | null>(null);
 
   const fetchPage = useCallback(
     async (p: number, replace: boolean) => {
@@ -125,31 +126,27 @@ export default function NotificationsScreen() {
     fetchPage(1, true).finally(() => setLoading(false));
   }, [fetchPage, refreshUnread]);
 
-  // Tự reload list khi nhận notification mới qua push (foreground listener)
-  useEffect(() => {
-    // Expo Go + Android: expo-notifications tự đăng ký 1 push token listener
-    // ngay lúc module được import (side-effect ở DevicePushTokenAutoRegistration.fx.js
-    // bên trong package) — chỉ cần static/dynamic import module này là đã crash
-    // app trên Expo Go Android. Dùng dynamic import + điều kiện chặn trước để
-    // module không bao giờ được load ở tổ hợp này. Xem giải thích đầy đủ ở
-    // hooks/usePushNotifications.ts.
-    const isExpoGoAndroid =
-      Constants.appOwnership === "expo" && Platform.OS === "android";
-    if (isExpoGoAndroid) return;
-
-    let cancelled = false;
-    import("expo-notifications").then((Notifications) => {
-      if (cancelled) return;
-      notifListenerRef.current = Notifications.addNotificationReceivedListener(() => {
-        fetchPage(1, true);
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      notifListenerRef.current?.remove();
-    };
-  }, [fetchPage]);
+  // [TẮT TẠM — expo-notifications] Tự reload list khi nhận notification mới qua
+  // push (foreground listener). Gỡ package tạm thời, báo lại khi cần deploy bản
+  // có push notification.
+  // useEffect(() => {
+  //   const isExpoGoAndroid =
+  //     Constants.appOwnership === "expo" && Platform.OS === "android";
+  //   if (isExpoGoAndroid) return;
+  //
+  //   let cancelled = false;
+  //   import("expo-notifications").then((Notifications) => {
+  //     if (cancelled) return;
+  //     notifListenerRef.current = Notifications.addNotificationReceivedListener(() => {
+  //       fetchPage(1, true);
+  //     });
+  //   });
+  //
+  //   return () => {
+  //     cancelled = true;
+  //     notifListenerRef.current?.remove();
+  //   };
+  // }, [fetchPage]);
 
   // Khi unreadCount tăng (polling phát hiện notification mới) → reload list
   const prevUnreadRef = useRef(unreadCount);
@@ -442,7 +439,7 @@ export default function NotificationsScreen() {
       <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
         {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
         <StatusBar style="light" />
-        <Header title="Thông báo" showActions={false} />
+        <Header title="BENTHANH TOURIST" showActions={true} />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons
             name="notifications-off-outline"
@@ -470,7 +467,7 @@ export default function NotificationsScreen() {
     <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
       {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
       <StatusBar style="light" />
-      <Header title="Thông báo" showActions={false} />
+      <Header title="BENTHANH TOURIST" showActions={true} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
         {/* Toolbar: unread count + mark all */}
@@ -608,7 +605,7 @@ export default function NotificationsScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -632,7 +629,7 @@ export default function NotificationsScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }

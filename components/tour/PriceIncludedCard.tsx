@@ -28,10 +28,20 @@ export function PriceIncludedCard({ priceIncluded, priceNotIncluded }: Props) {
   const isDark = theme === "dark";
   const { width } = useWindowDimensions();
 
-  const includedItems = priceIncluded?.trim() ? splitTopLevelListItems(priceIncluded) : [];
+  const rawIncludedItems = priceIncluded?.trim() ? splitTopLevelListItems(priceIncluded) : [];
   const notIncludedItems = priceNotIncluded?.trim()
     ? splitTopLevelListItems(priceNotIncluded)
     : [];
+
+  // VAT thường nằm ở cuối danh sách "bao gồm" nên duyệt ngược từ cuối lên cho nhanh.
+  // Chuẩn hoá nguyên dòng đó thành "Bao gồm VAT" thay vì giữ chi tiết % / điều kiện gốc.
+  const includedItems = [...rawIncludedItems];
+  for (let i = includedItems.length - 1; i >= 0; i--) {
+    if (/vat/i.test(includedItems[i])) {
+      includedItems[i] = "Bao gồm VAT";
+      break;
+    }
+  }
 
   if (includedItems.length === 0 && notIncludedItems.length === 0) return null;
 

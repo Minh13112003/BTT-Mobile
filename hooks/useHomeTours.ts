@@ -3,6 +3,7 @@ import {
   getTourListMapped,
   TourItem,
 } from "@/services/tour";
+import { firstTourImage, prefetchImages } from "@/utils/prefetchImages";
 import { useCallback, useEffect, useState } from "react";
 
 /**
@@ -41,6 +42,13 @@ export function useHomeTours() {
       hot: results[0].status === "fulfilled" ? results[0].value : [],
       upcoming: results[1].status === "fulfilled" ? results[1].value.items : [],
     };
+    // Chờ ảnh của các tour hiển thị đầu tiên (carousel hot + vài tour sắp khởi hành)
+    // tải xong vào cache — tối đa 2,5s — rồi mới hiện danh sách. Nếu không, thông tin
+    // tour hiện trước còn ảnh (từ benthanhtourist.com, chậm hơn API) hiện trống một lúc.
+    await prefetchImages(
+      [...next.hot.slice(0, 4), ...next.upcoming.slice(0, 3)].map(firstTourImage),
+    );
+
     cachedSections = next;
     setSections(next);
     setLoading(false);

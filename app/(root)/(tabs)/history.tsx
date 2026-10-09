@@ -1,18 +1,19 @@
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { FavoritesList } from "@/components/FavoritesList";
 import { FONT_SIZE } from "@/constants/typography";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette, getShadow } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
-import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
+import { useCollapsibleHeader } from "@/hooks/useCollapsibleHeader";
 import { formatDateTime } from "@/helper/datetime_helper";
 import { getTransactionHistory } from "@/services/booking";
 import { TourItem } from "@/services/tour";
 import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -20,8 +21,6 @@ import {
   ActivityIndicator,
   FlatList,
   ImageBackground,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   Text,
@@ -98,7 +97,7 @@ export default function HistoryScreen() {
   const router = useRouter();
   useAuth();
   const insets = useSafeAreaInsets();
-  const { setHidden } = useScrollVisibility();
+  const [activeTab, setActiveTab] = useState<"history" | "favorites">("history");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -111,41 +110,16 @@ export default function HistoryScreen() {
   const flatListRef = useRef<FlatList<OrderItem>>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  // Collapsing header
-  const headerOffset = useRef(new Animated.Value(0)).current;
-  const lastY = useRef(0);
-
-  const onScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: new Animated.Value(0) } } }],
-    {
-      useNativeDriver: false,
-      listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const y = e.nativeEvent.contentOffset.y;
-        const dy = y - lastY.current;
-        lastY.current = y;
-        setShowBackToTop(y > 300);
-        if (y <= 8) {
-          setHidden(false);
-          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
-        } else if (dy > 8) {
-          setHidden(true);
-          Animated.timing(headerOffset, { toValue: -chromeH, duration: 150, useNativeDriver: true }).start();
-        } else if (dy < -8) {
-          setHidden(false);
-          Animated.timing(headerOffset, { toValue: 0, duration: 150, useNativeDriver: true }).start();
-        }
-      },
-    },
+  const handleScrollY = useCallback((y: number) => setShowBackToTop(y > 300), []);
+  const { translateY: headerTranslateY, scrollProps, reveal } = useCollapsibleHeader(
+    chromeH,
+    handleScrollY,
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      headerOffset.setValue(0);
-      lastY.current = 0;
-      setHidden(false);
-      return () => setHidden(false);
-    }, [headerOffset, setHidden]),
-  );
+  // Danh sách Yêu thích không gắn scroll → luôn hiện lại header khi đổi tab con.
+  useEffect(() => {
+    reveal();
+  }, [activeTab, reveal]);
 
   const filteredOrders = orders.filter((item) => {
     if (selectedStatus === "Tất cả") return true;
@@ -222,7 +196,9 @@ export default function HistoryScreen() {
       <View style={{ height: insets.top, backgroundColor: isDark ? "#1E222B" : "#D0021B", zIndex: 20 }} />
 
       <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
-        {loading && !refreshing ? (
+        {activeTab === "favorites" ? (
+          <FavoritesList headerHeight={chromeH} />
+        ) : loading && !refreshing ? (
           <View className="flex-1 justify-center items-center" style={{ paddingTop: chromeH }}>
             <ActivityIndicator size="large" color={palette.spinner} />
             <Text className={`font-medium mt-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}
@@ -231,7 +207,7 @@ export default function HistoryScreen() {
             </Text>
           </View>
         ) : (
-          <FlatList
+          <Animated.FlatList
             ref={flatListRef}
             data={filteredOrders}
             keyExtractor={(item) => item.id}
@@ -241,8 +217,7 @@ export default function HistoryScreen() {
               paddingTop: chromeH + 10,
               paddingBottom: 24,
             }}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
+            {...scrollProps}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -468,7 +443,7 @@ export default function HistoryScreen() {
           left: 0,
           right: 0,
           zIndex: 10,
-          transform: [{ translateY: headerOffset }],
+          transform: [{ translateY: headerTranslateY }],
           backgroundColor: palette.gradient[0],
         }}
       >
@@ -479,61 +454,101 @@ export default function HistoryScreen() {
             className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
             style={{ fontSize: 22 }}
           >
-            Lịch sử đặt tour
+            {activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
           </Text>
           <Text
             className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-400"}`}
             style={{ fontSize: 16 }}
           >
-            {pendingCount > 0
-              ? `${pendingCount} đơn hàng đang xử lý`
-              : `${orders.length} đơn hàng`}
+            {activeTab === "history"
+              ? pendingCount > 0
+                ? `${pendingCount} đơn hàng đang xử lý`
+                : `${orders.length} đơn hàng`
+              : "Tour bạn đã lưu lại"}
           </Text>
         </View>
 
-        {/* Horizontal filter chips */}
-        <View style={{ paddingTop: 8, paddingBottom: 8 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+        {/* Tab switch: Lịch sử / Yêu thích */}
+        <View className="px-5 pt-3">
+          <View
+            className={`flex-row rounded-full p-1 ${isDark ? "bg-[#1E222B]" : "bg-slate-100"}`}
           >
-            {STATUS_OPTIONS.map((status) => {
-              const isActive = selectedStatus === status;
+            {(
+              [
+                { key: "history", label: "Lịch sử" },
+                { key: "favorites", label: "Yêu thích" },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeTab === tab.key;
               return (
                 <TouchableOpacity
-                  key={status}
-                  onPress={() => setSelectedStatus(status)}
-                  className={`px-[18px] py-3 rounded-full ${
-                    isActive
-                      ? "bg-[#D0021B]"
-                      : isDark
-                        ? "bg-[#1E222B] border border-slate-700"
-                        : "bg-white"
-                  }`}
-                  style={[
-                    { minHeight: 44, justifyContent: "center" },
-                    isActive || isDark ? undefined : getShadow(isDark, "sm"),
-                  ]}
+                  key={tab.key}
+                  onPress={() => setActiveTab(tab.key)}
                   activeOpacity={0.8}
+                  className={`flex-1 items-center justify-center rounded-full py-2.5 ${
+                    isActive ? "bg-[#D0021B]" : ""
+                  }`}
+                  style={{ minHeight: 44 }}
                 >
                   <Text
-                    style={{ fontSize: 20 }}
                     className={`font-bold ${
-                      isActive
-                        ? "text-white"
-                        : isDark
-                          ? "text-slate-300"
-                          : "text-slate-600"
+                      isActive ? "text-white" : isDark ? "text-slate-300" : "text-slate-500"
                     }`}
+                    style={{ fontSize: FONT_SIZE.xs }}
                   >
-                    {status}
+                    {tab.label}
                   </Text>
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
         </View>
+
+        {/* Horizontal filter chips — chỉ áp dụng cho tab Lịch sử */}
+        {activeTab === "history" && (
+          <View style={{ paddingTop: 8, paddingBottom: 8 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+            >
+              {STATUS_OPTIONS.map((status) => {
+                const isActive = selectedStatus === status;
+                return (
+                  <TouchableOpacity
+                    key={status}
+                    onPress={() => setSelectedStatus(status)}
+                    className={`px-[18px] py-3 rounded-full ${
+                      isActive
+                        ? "bg-[#D0021B]"
+                        : isDark
+                          ? "bg-[#1E222B] border border-slate-700"
+                          : "bg-white"
+                    }`}
+                    style={[
+                      { minHeight: 44, justifyContent: "center" },
+                      isActive || isDark ? undefined : getShadow(isDark, "sm"),
+                    ]}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{ fontSize: 20 }}
+                      className={`font-bold ${
+                        isActive
+                          ? "text-white"
+                          : isDark
+                            ? "text-slate-300"
+                            : "text-slate-600"
+                      }`}
+                    >
+                      {status}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
       </Animated.View>
 
       {/* Back to Top Button */}
@@ -545,7 +560,7 @@ export default function HistoryScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -569,7 +584,7 @@ export default function HistoryScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }

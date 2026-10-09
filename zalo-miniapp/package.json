@@ -1,0 +1,45 @@
+{
+  "name": "benthanh-tourist-zalo-miniapp",
+  "private": true,
+  "version": "1.0.0",
+  "description": "BenThanh Tourist — Zalo Mini App",
+  "browserslist": [
+    "Android >= 5",
+    "IOS >= 9.3",
+    "Edge >= 15",
+    "Safari >= 9.1",
+    "Chrome >= 49",
+    "Firefox >= 31",
+    "Samsung >= 5"
+  ],
+  "scripts": {
+    "start": "zmp start --port 5181",
+    "start:zalo": "zmp start -D",
+    "deploy": "zmp deploy",
+    "build:css": "postcss src/css/tailwind.css -o src/css/styles.css"
+  },
+  "dependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "axios": "^1.7.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.23.0",
+    "zmp-sdk": "^2.37.0",
+    "zmp-ui": "^1.11.14"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^10.1.0",
+    "postcss-preset-env": "^9.5.14",
+    "sass": "^1.77.2",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.21",
+    "zmp-cli": "^4.0.3",
+    "zmp-vite-plugin": "^1.1.6"
+  }
+}

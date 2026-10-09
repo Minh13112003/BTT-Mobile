@@ -1,3 +1,8 @@
+// [TẮT TẠM — expo-notifications] Package đã gỡ khỏi package.json, toàn bộ nội
+// dung file comment lại. Báo lại khi cần deploy bản có push notification để
+// cài lại package (`npx expo install expo-notifications`) và bật lại hook này
+// cùng nơi gọi nó (context/Auth_Context.tsx, app/(root)/(tabs)/notifications.tsx).
+/*
 import { useEffect, useRef } from "react";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
@@ -99,3 +104,4 @@ export function usePushNotifications(isLoggedIn: boolean) {
     };
   }, [isLoggedIn, refreshUnread]);
 }
+*/

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Font thương hiệu — khớp Rubik dùng trong app React Native. index.html đã
+   load sẵn @font-face qua Google Fonts, nhưng Tailwind preflight không tự
+   áp dụng cho body nên phải set tường minh ở đây. */
+body {
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}

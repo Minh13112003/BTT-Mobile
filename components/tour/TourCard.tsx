@@ -6,9 +6,17 @@ import { TourItem } from "@/services/tour";
 import { getNearestDeparture, formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { TourImage } from "@/components/tour/TourImage";
 
-/** Tour list card — reused by Home and Search. Tapping opens the detail screen. */
+/**
+ * Tour list card — reused by Home, Search, and the Home featured carousel.
+ * Tapping opens the detail screen. `width` is optional: omit it for the
+ * default full-width vertical list layout, or pass a fixed value to use the
+ * card inside a horizontal carousel (see FeaturedCarousel).
+ */
 export function TourCard({
   tour,
   onPress,
@@ -16,6 +24,7 @@ export function TourCard({
   specificDate,
   startDate,
   endDate,
+  width,
 }: {
   tour: TourItem;
   onPress: () => void;
@@ -23,6 +32,7 @@ export function TourCard({
   specificDate?: string;
   startDate?: string;
   endDate?: string;
+  width?: number;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -64,16 +74,19 @@ export function TourCard({
       className={`mb-5 border overflow-hidden ${
         isDark
           ? "bg-slate-800/90 border-slate-700/50"
-          : "bg-white border-slate-100"
+          : "bg-white border-[#D0021B]/10"
       }`}
-      style={{ borderRadius: RADIUS.xl, ...getShadow(isDark, "sm") }}
+      style={{
+        borderRadius: RADIUS.xl,
+        ...getShadow(isDark, "sm"),
+        ...(width != null ? { width } : null),
+      }}
     >
       {/* Tour Image with Rating badge */}
       <View className="relative h-44 w-full bg-slate-900/10">
-        <Image
-          source={{ uri: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl }}
-          className="w-full h-full"
-          resizeMode="cover"
+        <TourImage
+          uri={Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl}
+          style={{ width: "100%", height: "100%" }}
         />
         <View
           className={`absolute top-3 right-3 rounded-full px-2.5 py-1 flex-row items-center shadow-sm ${
@@ -102,75 +115,79 @@ export function TourCard({
       </View>
 
       {/* Tour Details */}
-      <View className="p-4">
-        <Text
-          style={{ fontSize: FONT_SIZE.xl }}
-          className={`font-black leading-8 ${
-            isDark ? "text-slate-100" : "text-slate-800"
-          }`}
-          numberOfLines={2}
-        >
-          {tour.name}
-        </Text>
-
-        {/* Nearest departure + price */}
-        <View className="mt-2.5">
-          <View className="flex-row items-center">
-            <Text style={{ fontSize: FONT_SIZE.xs }}>📅</Text>
-            <Text
-              style={{ fontSize: FONT_SIZE.xs }}
-              className={`ml-1.5 font-semibold ${
-                isDark ? "text-slate-300" : "text-slate-600"
-              }`}
-            >
-              {displayDate
-                ? `Khởi hành: ${formatDepartureDate(displayDate)}`
-                : "Liên hệ để biết lịch khởi hành"}
-            </Text>
-          </View>
-          <View className="flex-row items-center mt-1">
-            <Text style={{ fontSize: FONT_SIZE.xs }}>💰</Text>
-            <Text
-              style={{ fontSize: FONT_SIZE.xs }}
-              className={`ml-1.5 font-bold ${
-                isDark ? "text-slate-200" : "text-[#D0021B]"
-              }`}
-            >
-              Từ {formatPrice(displayPrice)}
-            </Text>
-          </View>
-          <View className="flex-row items-center mt-1">
-            <Text style={{ fontSize: FONT_SIZE.xs }}>🕒</Text>
-            <Text
-              style={{ fontSize: FONT_SIZE.xs }}
-              className={`ml-1.5 font-semibold ${
-                isDark ? "text-slate-300" : "text-slate-600"
-              }`}
-            >
-              {tour.duration}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          className={`flex-row items-center justify-end mt-4 pt-3 border-t ${
-            isDark ? "border-slate-700/60" : "border-slate-100"
-          }`}
-        >
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={onPress}
-            className={`rounded-xl px-5 py-3 items-center justify-center ${
-              isDark
-                ? "bg-slate-700 border border-slate-600 active:bg-slate-600"
-                : "bg-[#D0021B] active:bg-[#A80016]"
-            }`}
-            style={{ minHeight: 44 }}
+      <View style={{ position: "relative" }}>
+        {!isDark && (
+          <Svg
+            width="100%"
+            height={170}
+            viewBox="0 0 380 170"
+            preserveAspectRatio="none"
+            style={{ position: "absolute", top: 0, left: 0, right: 0 }}
           >
-            <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xs }}>
-              Xem chi tiết
-            </Text>
-          </TouchableOpacity>
+            <Path
+              d="M0,170 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,170 Z"
+              fill="#D0021B"
+              fillOpacity={0.22}
+            />
+          </Svg>
+        )}
+        <View className="p-4">
+          <Text
+            style={{ fontSize: FONT_SIZE.xl }}
+            className={`font-black leading-8 ${
+              isDark ? "text-slate-100" : "text-slate-800"
+            }`}
+            numberOfLines={2}
+          >
+            {tour.name}
+          </Text>
+
+          {/* Nearest departure + price */}
+          <View className="mt-2.5">
+            <View className="flex-row items-center">
+              <Text style={{ fontSize: FONT_SIZE.xs }}>📅</Text>
+              <Text
+                style={{ fontSize: FONT_SIZE.xs }}
+                className={`ml-1.5 font-semibold ${
+                  isDark ? "text-slate-300" : "text-slate-600"
+                }`}
+              >
+                {displayDate
+                  ? `Khởi hành: ${formatDepartureDate(displayDate)}`
+                  : "Liên hệ để biết lịch khởi hành"}
+              </Text>
+            </View>
+            <View className="flex-row items-center mt-1">
+              <Text style={{ fontSize: FONT_SIZE.xs }}>💰</Text>
+              <Text
+                style={{ fontSize: FONT_SIZE.xs }}
+                className={`ml-1.5 font-bold ${
+                  isDark ? "text-slate-200" : "text-[#D0021B]"
+                }`}
+              >
+                Từ {formatPrice(displayPrice)}
+              </Text>
+            </View>
+            <View className="flex-row items-center mt-1">
+              <Text style={{ fontSize: FONT_SIZE.xs }}>🕒</Text>
+              <Text
+                style={{ fontSize: FONT_SIZE.xs }}
+                className={`ml-1.5 font-semibold ${
+                  isDark ? "text-slate-300" : "text-slate-600"
+                }`}
+              >
+                {tour.duration}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            className={`flex-row items-center justify-end mt-4 pt-3 border-t ${
+              isDark ? "border-slate-700/60" : "border-slate-100"
+            }`}
+          >
+            <PrimaryButton label="Xem chi tiết" onPress={onPress} />
+          </View>
         </View>
       </View>
     </TouchableOpacity>

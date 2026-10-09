@@ -394,29 +394,42 @@ export function getTourItem(tourKey: string) {
 }
 
 /**
- * Map `tour_days[]` (nhiều đợt khởi hành thật) sang {@link Departure}[]. Nếu tour
- * không có `tour_days` (chỉ 1 lịch cố định), dựng 1 departure duy nhất từ field
- * top-level `departure_date`/`price`/`stock_qty`.
+ * Map `tour_days[]` (nhiều đợt khởi hành thật) sang {@link Departure}[]. Luôn gộp
+ * thêm đợt top-level (`departure_date`/`code`/`price`/`stock_qty`) nếu nó chưa có
+ * mặt trong `tour_days[]` — dữ liệu Laravel thực tế cho thấy 2 nguồn này có thể lệch
+ * nhau (top-level là 1 đợt vẫn `is_available`, nhưng không xuất hiện trong
+ * `tour_days[]`), nên bỏ qua đợt top-level sẽ làm mất 1 lựa chọn ngày hợp lệ.
  */
 function mapTourDaysToDepartures(detail: TourItemDetailLaravel): Departure[] {
-  if (detail.tour_days?.length) {
-    return detail.tour_days.map((d) => ({
-      id: d.id,
-      tourId: detail.id,
-      departureDate: d.departure_date,
-      price: d.price,
-      availableSeats: d.stock_qty,
-    }));
+  const fromTourDays: Departure[] = (detail.tour_days ?? []).map((d) => ({
+    id: d.id,
+    tourId: detail.id,
+    departureDate: d.departure_date,
+    price: d.price,
+    availableSeats: d.stock_qty,
+    code: d.code,
+  }));
+
+  const hasTopLevelDate = fromTourDays.some(
+    (d) => d.departureDate === detail.departure_date,
+  );
+
+  if (!detail.departure_date || hasTopLevelDate) {
+    return fromTourDays;
   }
-  return [
-    {
-      id: detail.id,
-      tourId: detail.id,
-      departureDate: detail.departure_date,
-      price: detail.price,
-      availableSeats: detail.stock_qty,
-    },
-  ];
+
+  const topLevel: Departure = {
+    id: detail.id,
+    tourId: detail.id,
+    departureDate: detail.departure_date,
+    price: detail.price,
+    availableSeats: detail.stock_qty,
+    code: detail.code,
+  };
+
+  return [topLevel, ...fromTourDays].sort(
+    (a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime(),
+  );
 }
 
 /** Map response chi tiết Laravel sang {@link TourDetail} — UI (TourHero, TripInfoCard...) dùng chung interface. */
@@ -430,7 +443,10 @@ function mapTourItemDetailLaravelToTourDetail(detail: TourItemDetailLaravel): To
     duration: `${detail.days} ngày ${detail.nights} đêm`,
     rating: 0,
     reviewsCount: 0,
-    hasVat: false,
+    // Laravel không trả field has_vat riêng — suy ra từ việc "Dịch vụ bao gồm"
+    // có nhắc tới VAT hay không (xem PriceIncludedCard, nơi dòng đó được chuẩn hoá
+    // thành "Bao gồm VAT").
+    hasVat: /vat/i.test(detail.tour_price_included ?? ""),
     departureFrom: detail.departure_place,
     departures: mapTourDaysToDepartures(detail),
     htmlPlans: detail.plans,

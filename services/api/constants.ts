@@ -82,3 +82,9 @@ export const URL_PinStatus = `${API_BASE_URL}/api/v1/users/me/pin-status`;
 export const URL_SetPin = `${API_BASE_URL}/api/v1/users/me/pin`;
 export const URL_VerifyPin = `${API_BASE_URL}/api/v1/users/me/pin/verify`;
 export const URL_ChangePin = `${API_BASE_URL}/api/v1/users/me/pin`;
+
+//Favorite APIs
+export const URL_GetMyFavorites = `${API_BASE_URL}/api/v1/favorites/me`;
+export const URL_IsFavorited = `${API_BASE_URL}/api/v1/favorites/`; // + tourKey
+export const URL_AddFavorite = `${API_BASE_URL}/api/v1/favorites`;
+export const URL_RemoveFavorite = `${API_BASE_URL}/api/v1/favorites/`; // + tourKey

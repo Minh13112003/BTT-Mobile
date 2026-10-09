@@ -11,6 +11,7 @@ import {
   PaginatedMeta,
   TourItem,
 } from "@/services/tour";
+import { firstTourImage, prefetchImages } from "@/utils/prefetchImages";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "./useDebounce";
 
@@ -261,7 +262,10 @@ export function useTourSearch(init?: UseTourSearchInit) {
     setLoading(true);
     setPage(1);
     fetchPage(1)
-      .then((r) => {
+      .then(async (r) => {
+        // Chờ ảnh vài tour đầu tải xong (tối đa 2s) rồi mới hiện list — tránh hiện
+        // thông tin tour trước, ảnh trống. Xem utils/prefetchImages.ts.
+        await prefetchImages(r.items.slice(0, 4).map(firstTourImage), 2000);
         if (id !== reqId.current) return;
         setResults(r.items);
         setMeta(r.meta);

@@ -1,0 +1,99 @@
+// CSS variables port 1:1 từ constants/theme.ts (BRAND + getPalette) của app React
+// Native. Bộ biến mặc định (light) và bộ biến trong html.dark tồn tại song song;
+// ThemeContext gắn class "dark" lên <html> để chọn bộ nào có hiệu lực — KHÔNG
+// dùng prefers-color-scheme vì app RN gốc để user tự chọn theme thủ công, không
+// theo theme hệ thống.
+:root {
+  --zmp-primary-color: #d0021b;
+  --zmp-secondary-color: #a80016;
+
+  --brand-red: #d0021b;
+  --brand-red-active: #a80016;
+  --brand-gold: #e8a020;
+  --brand-green: #16a34a;
+  --brand-amber: #f59e0b;
+
+  --pal-screen-bg: #f5f6fa;
+  --pal-surface: #ffffff;
+  --pal-surface-alt: #f1f5f9;
+  --pal-border: #e2e8f0;
+  --pal-text-primary: #1a1a2e;
+  --pal-text-secondary: #6b7280;
+  --pal-text-muted: #9ca3af;
+  --pal-danger: #ef4444;
+  --pal-icon: #d0021b;
+  --pal-icon-muted: #9ca3af;
+}
+
+html.dark {
+  --pal-screen-bg: #111318;
+  --pal-surface: #1e222b;
+  --pal-surface-alt: #252a35;
+  --pal-border: #334155;
+  --pal-text-primary: #f1f5f9;
+  --pal-text-secondary: #94a3b8;
+  --pal-text-muted: #64748b;
+  --pal-danger: #f87171;
+  --pal-icon: #93c5fd;
+  --pal-icon-muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--pal-screen-bg);
+  color: var(--pal-text-primary);
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Vùng chạm tối thiểu 44x44 — đồng bộ guardrail "tăng vùng chạm" đã áp cho app RN. */
+button,
+a[role="button"] {
+  min-height: 44px;
+}
+
+img {
+  max-width: 100%;
+}
+
+// Rung lắc định kỳ cho ZaloFloatingButton — port từ Animated.loop(delay 3s +
+// sequence xoay -10deg/10deg) bên RN sang CSS keyframes, nhẹ hơn JS animation.
+@keyframes zalo-btn-shake {
+  0%, 60% { transform: rotate(0deg); }
+  67% { transform: rotate(10deg); }
+  73% { transform: rotate(-10deg); }
+  79% { transform: rotate(10deg); }
+  85% { transform: rotate(-10deg); }
+  91%, 100% { transform: rotate(0deg); }
+}
+.zalo-floating-btn {
+  animation: zalo-btn-shake 4s ease-in-out infinite;
+}
+
+// Spinner nhỏ màu trắng cho PrimaryButton (thay ActivityIndicator size="small"
+// bên RN) — Spinner của zmp-ui quá to so với chiều cao nút 44px.
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: btn-spin 0.7s linear infinite;
+}

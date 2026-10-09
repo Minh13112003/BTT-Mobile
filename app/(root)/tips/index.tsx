@@ -339,7 +339,7 @@ export default function TipsScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -359,7 +359,7 @@ export default function TipsScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }

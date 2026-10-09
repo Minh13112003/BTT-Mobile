@@ -13,6 +13,8 @@ export interface Departure {
   price: number;
   availableSeats: number;
   totalSeats?: number;
+  /** Mã tour riêng của đợt khởi hành này (Laravel `tour_days[].code`) — đổi theo ngày chọn. */
+  code?: string;
 }
 
 /** Raw list of departures for a tour (unsorted, may include past dates). */

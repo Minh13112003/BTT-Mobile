@@ -15,10 +15,12 @@ Reusable UI components.
 - `CustomToast.tsx` — Toast notification
 - `Header.tsx` / `Footer.tsx` — Layout wrapper
 - `PINInput.tsx` — Input PIN 6 số
+- `PhoneKeypad.tsx` — Bàn phím số tự vẽ (cùng kiểu phím PINInput) có nút "Xong", panel bám đáy màn hình (không phải Modal). Dùng cho ô SĐT ở `login.tsx` thay bàn phím hệ thống; ô mật khẩu vẫn dùng bàn phím hệ thống + thanh "Xong" (`InputAccessoryView`, chỉ iOS). Màn cha phải chừa `paddingBottom` = chiều cao bàn phím (`onHeightChange`) để cuộn được
 - `ZaloFloatingButton.tsx` — Nút nổi liên hệ Zalo (mờ, rung lắc định kỳ, confirm trước khi mở link nhóm Zalo). Gắn ở **toàn bộ màn hình trừ login, setup-pin, change-pin** (2 màn PIN bị bàn phím custom chiếm hết chỗ). Props: `liftBy` (đẩy lên tránh đè nút "lên đầu trang"), `baseBottom` (đổi vị trí gốc khi màn có thanh CTA dính đáy như checkout/tour detail). Size 50x50, borderRadius 25
 - `SearchBar.tsx` — Ô tìm kiếm
 - `MembershipBanner.tsx` — Banner thẻ thành viên
 - `tour/` — Components riêng cho tour: `TourCard`, `TourHero`, `BookingBar`, `ItineraryTimeline`, `TermsAccordion`, `DeparturePicker`, `DatePickerCalendar`, `FeaturedCarousel`, ...
+- `tour/TourImage.tsx` — **Bắt buộc** dùng thay `<Image>` RN cho ảnh tour từ API (expo-image: spinner khi chờ, fade-in, cache memory+disk, tự retry 2 lần khi lỗi). Đã dùng ở `TourCard`, `ImageCarousel`
 - `ui/` — Primitive UI: `Accordion`, `Card`, `SectionTitle`
 
 ### `context/`
@@ -37,6 +39,7 @@ Custom hooks tách logic khỏi component.
 - `useTourSearch.ts` — Search + filter tours
 - `usePushNotifications.ts` — Đăng ký Firebase messaging, xử lý foreground/background
 - `useDebounce.ts` — Debounce giá trị (dùng trong search)
+- `useCollapsibleHeader.ts` — Header nổi trượt theo ngón tay (native `diffClamp`), thả tay thì snap về hiện/ẩn hẳn. Trả `{ translateY, scrollProps, reveal }`; list phải là `Animated.FlatList` và spread `{...scrollProps}`. Dùng ở `search.tsx`, `history.tsx` — **không** viết lại kiểu bật/tắt theo `dy > 8` (gây header nhảy giật)
 
 ### `services/`
 Tất cả call API. Không gọi axios trong component.
@@ -61,6 +64,7 @@ Pure functions xử lý dữ liệu.
 ### `utils/`
 Utilities hạ tầng.
 
+- `prefetchImages.ts` — `prefetchImages(urls, timeoutMs)`: tải trước ảnh vào cache và chờ tối đa N ms, không bao giờ throw. Gọi trong hook list tour (`useHomeTours`, `useTourSearch`) trước khi `setState` để ảnh có sẵn khi list hiện ra
 - `storage.ts` — Wrapper `SecureStore` (iOS/Android) + `localStorage` (Web). Lưu: `accessToken`, `refreshToken`, `user`, `theme_preference`
 
 ## Quy ước đặt tên

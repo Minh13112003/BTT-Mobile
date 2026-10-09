@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "BenThanh Tourist",
+    "headerColor": "#D0021B",
+    "textColor": "white",
+    "statusBarColor": "#D0021B",
+    "leftButton": "none"
+  },
+  "debug": false,
+  "listCSS": [],
+  "listSyncJS": [],
+  "listAsyncJS": [],
+  "pages": [],
+  "template": {
+    "name": "benthanh-tourist",
+    "primaryColor": "#D0021B"
+  }
+}

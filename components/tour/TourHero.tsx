@@ -14,10 +14,12 @@ function CircleBtn({
   icon,
   onPress,
   isDark,
+  iconColor,
 }: {
   icon: IconName;
   onPress?: () => void;
   isDark: boolean;
+  iconColor?: string;
 }) {
   return (
     <TouchableOpacity
@@ -30,7 +32,7 @@ function CircleBtn({
         borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.08)",
       }}
     >
-      <Ionicons name={icon} size={19} color={isDark ? "#FFFFFF" : "#0F172A"} />
+      <Ionicons name={icon} size={19} color={iconColor ?? (isDark ? "#FFFFFF" : "#0F172A")} />
     </TouchableOpacity>
   );
 }
@@ -41,11 +43,15 @@ export function TourHero({
   onBack,
   onPressImage,
   hideActions = false,
+  isFavorited = false,
+  onToggleFavorite,
 }: {
   tour: TourDetail;
   onBack: () => void;
   onPressImage?: (url: string) => void;
   hideActions?: boolean;
+  isFavorited?: boolean;
+  onToggleFavorite?: () => void;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -82,7 +88,12 @@ export function TourHero({
         <CircleBtn icon="chevron-back" onPress={onBack} isDark={isDark} />
         {!hideActions && (
           <View className="flex-row gap-2">
-            <CircleBtn icon="heart-outline" isDark={isDark} />
+            <CircleBtn
+              icon={isFavorited ? "heart" : "heart-outline"}
+              iconColor={isFavorited ? "#D0021B" : undefined}
+              onPress={onToggleFavorite}
+              isDark={isDark}
+            />
             <CircleBtn icon="share-social-outline" isDark={isDark} />
           </View>
         )}

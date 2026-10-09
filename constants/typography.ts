@@ -7,6 +7,7 @@
  */
 export const FONT_SIZES_NORMAL = {
   card: 16,
+  xxs: 16,
   xs: 18,
   sm: 19,
   md: 20,

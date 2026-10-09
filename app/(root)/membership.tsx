@@ -313,7 +313,7 @@ export default function MembershipScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 30,
+            bottom: 94,
             right: 20,
             width: 50,
             height: 50,
@@ -333,7 +333,7 @@ export default function MembershipScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton liftBy={showBackToTop ? 60 : 0} />
+      <ZaloFloatingButton />
     </View>
   );
 }
@@ -717,7 +717,7 @@ export function RedesignedMembershipBanner({
           }}
         >
           <CardChip tint={tc.main} />
-          <View style={{ alignItems: "flex-end" }}>
+          <View style={{ alignItems: "flex-end", flexShrink: 1, marginLeft: 12 }}>
             <Text
               style={{
                 fontSize: 12,
@@ -725,6 +725,9 @@ export function RedesignedMembershipBanner({
                 fontWeight: "700",
                 letterSpacing: 1,
               }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               ĐIỂM TÍCH LŨY
             </Text>
@@ -736,9 +739,12 @@ export function RedesignedMembershipBanner({
                 marginTop: 2,
                 letterSpacing: 1,
                 fontVariant: ["tabular-nums"],
+                alignSelf: "stretch",
+                textAlign: "right",
               }}
               numberOfLines={1}
               adjustsFontSizeToFit
+              minimumFontScale={0.4}
             >
               {pointsStr}
             </Text>
