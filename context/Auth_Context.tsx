@@ -34,6 +34,11 @@ export interface User {
   rewardPoints?: number;
   avatarUrl?: string | null;
   phonenumber?: string;
+  dateOfBirth?: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  nationalId?: string | null;
+  passportNumber?: string | null;
+  passportExpiry?: string | null;
 }
 
 interface AuthContextType {

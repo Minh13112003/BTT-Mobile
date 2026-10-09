@@ -34,7 +34,7 @@ App du lịch mobile cho công ty **BenThanh Tourist**.
 | Tài khoản | `app/(root)/(tabs)/profile.tsx` | User profile + logout |
 | Chi tiết booking | `app/(root)/detailTour.tsx` | Lịch trình, điều khoản, đánh giá (COMPLETED) |
 | Thanh toán | `app/(root)/checkout.tsx` | Ngày, phòng, voucher, xác nhận |
-| Thông tin cá nhân | `app/(root)/(profile)/selfprofile.tsx` | Hồ sơ, đổi mật khẩu, avatar |
+| Thông tin cá nhân | `app/(root)/(profile)/selfprofile.tsx` | Họ tên, ngày sinh, giới tính, email, CCCD, hộ chiếu, avatar (đổi mật khẩu/PIN ở `security.tsx`) |
 | PIN | `app/(root)/(profile)/setup-pin.tsx` / `change-pin.tsx` | Tạo / đổi PIN 6 số |
 
 ## Provider stack (app/(root)/_layout.tsx)

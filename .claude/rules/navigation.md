@@ -28,6 +28,10 @@ app/
       change-pin.tsx           # "/(profile)/change-pin"
       vouchers.tsx             # "/(profile)/vouchers"
       feedback.tsx             # "/(profile)/feedback"
+      security.tsx             # "/(profile)/security" — Mật khẩu & mã PIN (đổi mật khẩu, tạo/đổi PIN)
+      faq.tsx                  # "/(profile)/faq" — Câu hỏi thường gặp
+      about.tsx                # "/(profile)/about" — Về BenThanh Tourist (giới thiệu, liên hệ, văn phòng)
+      terms.tsx                # "/(profile)/terms" — Điều khoản & chính sách (2 tab, Accordion từng điều)
       referral.tsx             # "/(profile)/referral"
       registercustomer.tsx     # "/(profile)/registercustomer"
     (tabs)/

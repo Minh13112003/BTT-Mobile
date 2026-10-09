@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import TabHeader from "@/components/TabHeader";
 import { Footer } from "@/components/Footer";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette, RADIUS, getShadow } from "@/constants/theme";
@@ -439,7 +439,7 @@ export default function NotificationsScreen() {
       <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
         {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
         <StatusBar style="light" />
-        <Header title="BENTHANH TOURIST" showActions={true} />
+        <TabHeader title="Thông báo" subtitle="Đăng nhập để xem thông báo" />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons
             name="notifications-off-outline"
@@ -467,53 +467,33 @@ export default function NotificationsScreen() {
     <View className={`flex-1 ${isDark ? "bg-[#111318]" : "bg-[#F1F5F9]"}`}>
       {/* Màu vùng status bar do <Header safeArea> tự phủ (SafeAreaView + palette.brand) — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
       <StatusBar style="light" />
-      <Header title="BENTHANH TOURIST" showActions={true} />
-
-      <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
-        {/* Toolbar: unread count + mark all */}
-        <View
-          className={`flex-row items-center justify-between px-4 py-3 border-b ${
-            isDark ? "border-slate-800" : "border-slate-100"
-          }`}
-        >
-          <Text
-            className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}
-            style={{ fontSize: FONT_SIZE.card }}
-          >
-            {unreadCount > 0
-              ? `${unreadCount} chưa đọc`
-              : "Tất cả đã đọc"}
-          </Text>
-          {unreadCount > 0 && (
+      <TabHeader
+        title="Thông báo"
+        subtitle={unreadCount > 0 ? `Bạn có ${unreadCount} thông báo chưa đọc` : "Tất cả đã đọc"}
+        right={
+          unreadCount > 0 ? (
             <TouchableOpacity
               onPress={handleMarkAll}
               disabled={markingAll}
-              activeOpacity={0.7}
-              className="flex-row items-center"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.8}
+              className="flex-row items-center h-10 px-3.5 rounded-full border border-white/30 bg-white/15"
             >
               {markingAll ? (
-                <ActivityIndicator size="small" color="#D0021B" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons
-                    name="checkmark-done-outline"
-                    size={FONT_SIZE.card}
-                    color="#D0021B"
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text
-                    className="font-bold text-[#D0021B]"
-                    style={{ fontSize: FONT_SIZE.card }}
-                  >
-                    Đánh dấu tất cả đã đọc
+                  <Ionicons name="checkmark-done-outline" size={16} color="#FFFFFF" />
+                  <Text className="text-white font-bold ml-1.5" style={{ fontSize: FONT_SIZE.xxs }}>
+                    Đọc tất cả
                   </Text>
                 </>
               )}
             </TouchableOpacity>
-          )}
-        </View>
+          ) : null
+        }
+      />
 
+      <LinearGradient colors={palette.gradient} style={{ flex: 1 }}>
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={palette.spinner} />

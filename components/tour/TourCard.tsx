@@ -116,7 +116,7 @@ export function TourCard({
 
       {/* Tour Details */}
       <View style={{ position: "relative" }}>
-        {!isDark && (
+        {(
           <Svg
             width="100%"
             height={170}
@@ -126,8 +126,8 @@ export function TourCard({
           >
             <Path
               d="M0,170 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,170 Z"
-              fill="#D0021B"
-              fillOpacity={0.22}
+              fill={isDark ? "#64748B" : "#D0021B"}
+              fillOpacity={isDark ? 0.2 : 0.22}
             />
           </Svg>
         )}

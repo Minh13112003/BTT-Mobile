@@ -4,37 +4,26 @@ import {
   useScrollVisibility,
 } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
-import { getPalette, RADIUS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
-import React from "react";
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/** Per-route icon (filled when focused, outline otherwise) — matches the mockup. */
-const ICONS: Record<
-  string,
-  { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap }
-> = {
-  index: { on: "home", off: "home-outline" },
-  search: { on: "compass", off: "compass-outline" },
-  history: { on: "time", off: "time-outline" },
-  notifications: { on: "notifications", off: "notifications-outline" },
-  profile: { on: "person", off: "person-outline" },
+/** Icon theo route — cùng bộ với bản thiết kế thanh tab nổi. */
+const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  index: "home-outline",
+  search: "briefcase-outline",
+  history: "time-outline",
+  notifications: "notifications-outline",
+  profile: "person-outline",
 };
 
-/**
- * Type của prop `tabBar` lấy trực tiếp từ <Tabs> của expo-router (thay vì
- * import BottomTabBarProps từ @react-navigation/bottom-tabs) — SDK 57 dùng
- * BottomTabDescriptorMap riêng của expo-router, không còn tương thích 1-1 với
- * type gốc của @react-navigation, gây lỗi type nếu import rời.
- */
+const ACTIVE_RATIO = 2.1; // tab đang chọn rộng gấp 2.1 lần tab thường
+const GAP = 4;
+const PAD = 9;
+
 type TabBarProps = NonNullable<
   React.ComponentProps<typeof Tabs>["tabBar"]
 > extends (props: infer P) => React.ReactNode
@@ -42,9 +31,9 @@ type TabBarProps = NonNullable<
   : never;
 
 /**
- * Custom bottom nav styled after the redesign mockup: outline→filled icon on
- * focus, an active red dot under the label, and a silvery dim overlay while the
- * user scrolls (non-interactive so taps still reach the buttons).
+ * Thanh tab nổi dạng viên thuốc: tab đang chọn là viên đỏ bóng có nhãn, trượt
+ * mượt sang tab mới (animate bề rộng + độ mờ). Khi người dùng cuộn, thanh mờ đi
+ * nhẹ (ScrollVisibility) nhưng vẫn bấm được.
  */
 function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { hidden, setHidden } = useScrollVisibility();
@@ -52,46 +41,72 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotification();
-  const palette = getPalette(isDark);
-  const ACTIVE = palette.brand;
+
+  const count = state.routes.length;
+  const [innerW, setInnerW] = useState(0);
+  const progress = useRef(
+    state.routes.map((_, i) => new Animated.Value(i === state.index ? 1 : 0))
+  ).current;
+
+  useEffect(() => {
+    Animated.parallel(
+      progress.map((v, i) =>
+        Animated.timing(v, {
+          toValue: i === state.index ? 1 : 0,
+          duration: 280,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        })
+      )
+    ).start();
+  }, [state.index, progress]);
+
+  // innerW = chiều rộng khả dụng; chia theo (count - 1) + ACTIVE_RATIO đơn vị.
+  const unit = innerW > 0 ? (innerW - GAP * (count - 1)) / (count - 1 + ACTIVE_RATIO) : 0;
 
   const contentOpacity = hidden.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0.55],
-  });
-  const silverOpacity = hidden.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.5],
+    outputRange: [1, 0.6],
   });
 
-  const inactive = isDark ? "#6B7280" : "#9CA3AF";
+  const inactive = isDark ? "#9CA3AF" : "#6B6F7B";
+  const pageBg = isDark ? "#111318" : "#F5F6FA";
 
   return (
-    <View onTouchStart={() => setHidden(false)} style={{ overflow: "visible", zIndex: 10 }}>
+    <View
+      onTouchStart={() => setHidden(false)}
+      style={{
+        backgroundColor: pageBg,
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: Math.max(insets.bottom, 12),
+        zIndex: 10,
+      }}
+    >
       <Animated.View
+        onLayout={(e) => setInnerW(e.nativeEvent.layout.width - PAD * 2 - 2)}
         style={{
           opacity: contentOpacity,
-          overflow: "visible",
+          height: 72,
+          padding: PAD,
+          borderRadius: 28,
           flexDirection: "row",
-          backgroundColor: isDark ? "#1E222B" : "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: isDark ? "#2D3748" : "#EEF0F5",
-          // 14 (không phải 10): chừa chỗ cho badge thông báo nhô lên trên đỉnh icon,
-          // để viền trên của thanh tab không còn cắt/đè vào số.
-          paddingTop: 14,
-          paddingBottom: Math.max(insets.bottom, 12),
+          alignItems: "center",
+          backgroundColor: isDark ? "rgba(30,34,43,0.97)" : "rgba(255,255,255,0.97)",
+          borderWidth: 1,
+          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(26,26,46,0.06)",
+          shadowColor: "#1A1A2E",
+          shadowOpacity: isDark ? 0.4 : 0.16,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 10,
         }}
       >
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const label =
-            typeof options.title === "string" ? options.title : route.name;
+          const label = typeof options.title === "string" ? options.title : route.name;
           const focused = state.index === index;
-          const icon = ICONS[route.name] ?? {
-            on: "ellipse",
-            off: "ellipse-outline",
-          };
-          const color = focused ? ACTIVE : inactive;
+          const p = progress[index];
 
           const onPress = () => {
             const event = navigation.emit({
@@ -104,97 +119,128 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
             }
           };
 
-          const isNotif = route.name === "notifications";
           const badge =
-            isNotif && unreadCount > 0
+            route.name === "notifications" && unreadCount > 0
               ? unreadCount > 99
                 ? "99+"
                 : String(unreadCount)
               : null;
 
+          const width = unit
+            ? p.interpolate({ inputRange: [0, 1], outputRange: [unit, unit * ACTIVE_RATIO] })
+            : undefined;
+
           return (
-            <TouchableOpacity
+            <Animated.View
               key={route.key}
-              accessibilityRole="button"
-              accessibilityState={focused ? { selected: true } : {}}
-              onPress={onPress}
-              activeOpacity={0.7}
               style={{
-                flex: 1,
-                minHeight: 44,
-                alignItems: "center",
-                justifyContent: "center",
+                width,
+                flex: unit ? undefined : 1,
+                marginLeft: index === 0 ? 0 : GAP,
+                height: 54,
               }}
             >
-              <View style={{ position: "relative", overflow: "visible", zIndex: 20 }}>
-                <Ionicons
-                  name={focused ? icon.on : icon.off}
-                  size={23}
-                  color={color}
-                />
-                {badge && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -9,
-                      right: -10,
-                      // Luôn vẽ TRÊN thanh tab và viền của nó (iOS: zIndex, Android: elevation).
-                      zIndex: 30,
-                      elevation: 6,
-                      backgroundColor: ACTIVE,
-                      borderRadius: RADIUS.pill,
-                      minWidth: 18,
-                      height: 18,
-                      paddingHorizontal: 3,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityState={focused ? { selected: true } : {}}
+                onPress={onPress}
+                activeOpacity={0.8}
+                style={{ flex: 1, borderRadius: 20 }}
+              >
+                <Animated.View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    opacity: p,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.5)",
+                    shadowColor: "#D0021B",
+                    shadowOpacity: 0.35,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 5 },
+                    elevation: 4,
+                    backgroundColor: "#D0021B",
+                  }}
+                >
+                  <LinearGradient
+                    colors={
+                      isDark
+                        ? ["#C21E2E", "#9B0F1C", "#7A0A16"]
+                        : ["#F0323F", "#D0021B", "#B8001A"]
+                    }
+                    style={{ flex: 1, borderRadius: 19 }}
+                  />
+                </Animated.View>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <View style={{ position: "relative" }}>
+                    <Ionicons
+                      name={ICONS[route.name] ?? "ellipse-outline"}
+                      size={23}
+                      color={focused ? "#FFFFFF" : inactive}
+                    />
+                    {badge && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: -7,
+                          right: -9,
+                          minWidth: 18,
+                          height: 18,
+                          paddingHorizontal: 4,
+                          borderRadius: 9,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: focused ? "#FFFFFF" : "#D0021B",
+                          borderWidth: 1.5,
+                          borderColor: isDark ? "#1E222B" : "#FFFFFF",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "800",
+                            lineHeight: 14,
+                            color: focused ? "#D0021B" : "#FFFFFF",
+                          }}
+                        >
+                          {badge}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  {focused && (
+                    <Animated.Text
+                      numberOfLines={1}
                       style={{
+                        marginLeft: 7,
+                        fontSize: 14,
+                        fontWeight: "700",
                         color: "#FFFFFF",
-                        fontSize: 12,
-                        fontWeight: "900",
-                        lineHeight: 16,
+                        opacity: p,
                       }}
                     >
-                      {badge}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color,
-                  marginTop: 3,
-                }}
-              >
-                {label}
-              </Text>
-              {/* Active red dot indicator */}
-              <View
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: 2.5,
-                  marginTop: 3,
-                  backgroundColor: focused ? ACTIVE : "transparent",
-                }}
-              />
-            </TouchableOpacity>
+                      {label}
+                    </Animated.Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </Animated.View>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: "#C0C0C0", opacity: silverOpacity },
-        ]}
-      />
     </View>
   );
 }
@@ -204,7 +250,7 @@ export default function TabLayout() {
     <ScrollVisibilityProvider>
       <Tabs
         tabBar={(props) => <AnimatedTabBar {...props} />}
-        screenOptions={{ headerShown: false }}
+        screenOptions={{ headerShown: false, animation: "fade" }}
       >
         <Tabs.Screen name="index" options={{ title: "Tổng quan" }} />
         <Tabs.Screen name="search" options={{ title: "Du lịch" }} />

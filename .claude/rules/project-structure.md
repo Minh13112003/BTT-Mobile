@@ -18,6 +18,8 @@ Reusable UI components.
 - `PhoneKeypad.tsx` — Bàn phím số tự vẽ (cùng kiểu phím PINInput) có nút "Xong", panel bám đáy màn hình (không phải Modal). Dùng cho ô SĐT ở `login.tsx` thay bàn phím hệ thống; ô mật khẩu vẫn dùng bàn phím hệ thống + thanh "Xong" (`InputAccessoryView`, chỉ iOS). Màn cha phải chừa `paddingBottom` = chiều cao bàn phím (`onHeightChange`) để cuộn được
 - `ZaloFloatingButton.tsx` — Nút nổi liên hệ Zalo (mờ, rung lắc định kỳ, confirm trước khi mở link nhóm Zalo). Gắn ở **toàn bộ màn hình trừ login, setup-pin, change-pin** (2 màn PIN bị bàn phím custom chiếm hết chỗ). Props: `liftBy` (đẩy lên tránh đè nút "lên đầu trang"), `baseBottom` (đổi vị trí gốc khi màn có thanh CTA dính đáy như checkout/tour detail). Size 50x50, borderRadius 25
 - `SearchBar.tsx` — Ô tìm kiếm
+- `TabHeader.tsx` — Header đỏ dùng chung cho tab Du lịch / Lịch sử / Thông báo (tiêu đề + phụ đề, vòng tròn trang trí, logo in chìm). Props: `title`, `subtitle`, `right`, `children`, `safeArea`, `onBack`. `Header.tsx` giờ chỉ còn dùng cho tab Home (qua `CollapsingHeader`): logo + chuông thông báo, **không** còn nút đổi giao diện/avatar (chuyển sang tab Tài khoản)
+- `profile/TierAvatar.tsx` — Avatar viền theo hạng thành viên (Đồng → Ruby, hạng cao có cánh/lấp lánh/ngọc/vương miện), vẽ bằng react-native-svg. Dùng ở tab Tài khoản
 - `MembershipBanner.tsx` — Banner thẻ thành viên
 - `tour/` — Components riêng cho tour: `TourCard`, `TourHero`, `BookingBar`, `ItineraryTimeline`, `TermsAccordion`, `DeparturePicker`, `DatePickerCalendar`, `FeaturedCarousel`, ...
 - `tour/TourImage.tsx` — **Bắt buộc** dùng thay `<Image>` RN cho ảnh tour từ API (expo-image: spinner khi chờ, fade-in, cache memory+disk, tự retry 2 lần khi lỗi). Đã dùng ở `TourCard`, `ImageCarousel`
@@ -54,6 +56,9 @@ Hằng số toàn app — **không hardcode** giá trị này trực tiếp.
 - `typography.ts` — `FONT_SIZE` object (xs, sm, md, lg, xl, ...)
 - `theme.ts` — Bảng màu (light/dark palettes)
 - `tourFilters.ts` — `SearchMode` enum, danh sách filter options
+- `faqContent.ts` — Câu hỏi thường gặp (do AI soạn, chờ công ty duyệt)
+- `companyInfo.ts` — Thông tin công ty, văn phòng, đại lý nước ngoài (nguồn: benthanhtourist.com/gioi-thieu, /lien-he)
+- `termsContent.ts` — Nội dung màn Điều khoản (`TOUR_TERMS` trong nước/nước ngoài nguyên văn từ web; Điều 1/2/4/5 do AI soạn, có nhãn trên UI, chờ công ty duyệt)
 
 ### `helper/`
 Pure functions xử lý dữ liệu.

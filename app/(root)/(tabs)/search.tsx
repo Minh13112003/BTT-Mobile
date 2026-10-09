@@ -1,9 +1,8 @@
 import { Footer } from "@/components/Footer";
-import Header from "@/components/Header";
+import TabHeader from "@/components/TabHeader";
 import { FONT_SIZE } from "@/constants/typography";
 import { SearchBar } from "@/components/SearchBar";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
-import { SectionHeader } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
 import { getPalette, getShadow } from "@/constants/theme";
 import {
@@ -25,6 +24,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Modal,
   RefreshControl,
   ScrollView,
   Text,
@@ -33,41 +33,77 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/** Pill chip used for both the mode bar and the region sub-filter. */
-function Chip({
+type SheetKey = "category" | "scope" | "region" | "collection";
+
+const ALL_LABEL = "Tất cả";
+const CATEGORY_OPTS: { label: string; mode: SearchMode }[] = [
+  { label: ALL_LABEL, mode: "newest" },
+  { label: "Đang hot", mode: "hot" },
+  { label: "Sắp khởi hành", mode: "upcoming" },
+  { label: "Bán chạy", mode: "popular" },
+];
+const SCOPE_OPTS: { label: string; mode: SearchMode }[] = [
+  { label: ALL_LABEL, mode: "newest" },
+  { label: "Trong nước", mode: "domestic" },
+  { label: "Quốc tế", mode: "foreign" },
+];
+const COLLECTION_MODES: SearchMode[] = [
+  "tour_of_the_year_2026",
+  "tour_cao_cap",
+  "tour_mice",
+  "tour_he",
+  "tour_du_lich_xanh",
+];
+const COLLECTION_OPTS: { label: string; mode: SearchMode }[] = [
+  { label: ALL_LABEL, mode: "newest" },
+  ...COLLECTION_MODES.map((m) => ({ label: MODE_CHIP_LABELS[m], mode: m })),
+];
+
+/** Ô thả xuống: nhãn nhỏ + giá trị đang chọn; bấm để mở danh sách lựa chọn. */
+function DropdownTile({
   label,
+  value,
   active,
+  disabled,
   onPress,
   isDark,
-  style,
 }: {
   label: string;
+  value: string;
   active: boolean;
+  disabled?: boolean;
   onPress: () => void;
   isDark: boolean;
-  style?: any;
 }) {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
+      disabled={disabled}
       onPress={onPress}
-      className={`px-4 py-3 rounded-full border ${
+      className={`flex-row items-center px-3.5 rounded-2xl border ${
         active
-          ? "bg-[#D0021B] border-[#D0021B]"
+          ? isDark
+            ? "bg-red-950/40 border-red-700"
+            : "bg-[#FFF1F3] border-[#F3C4CA]"
           : isDark
             ? "bg-[#1E222B] border-slate-700/60"
             : "bg-white border-slate-200"
-      }`}
-      style={[{ marginRight: 6, marginBottom: 8, minHeight: 44, justifyContent: "center" }, style]}
+      } ${disabled ? "opacity-50" : ""}`}
+      style={{ height: 56, flex: 1 }}
     >
-      <Text
-        className={`font-bold ${
-          active ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
-        }`}
-        style={{ fontSize: FONT_SIZE.xs }}
-      >
-        {label}
-      </Text>
+      <View className="flex-1">
+        <Text className={isDark ? "text-slate-400" : "text-slate-500"} style={{ fontSize: FONT_SIZE.xxs }}>
+          {label}
+        </Text>
+        <Text
+          numberOfLines={1}
+          className={`font-bold ${active ? "text-[#B30118]" : isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
+          style={{ fontSize: FONT_SIZE.xxs }}
+        >
+          {value}
+        </Text>
+      </View>
+      <Ionicons name="chevron-down" size={16} color={active ? "#B30118" : "#94A3B8"} />
     </TouchableOpacity>
   );
 }
@@ -134,18 +170,25 @@ export default function SearchScreen() {
     handleScrollY,
   );
 
-  // SubFilterBar slide-down (height 0 -> 56). Only runs on mode change (never on
-  // scroll), so keeping it JS-driven here is harmless.
   const regions = regionsForMode(mode);
-  const subVisible = !!regions && !query.trim();
-  const subHeight = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(subHeight, {
-      toValue: subVisible ? 56 : 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
-  }, [subVisible, subHeight]);
+  const [sheet, setSheet] = useState<SheetKey | null>(null);
+
+  const tileValue = (opts: { label: string; mode: SearchMode }[]) =>
+    mode !== "newest" ? opts.find((o) => o.mode === mode)?.label ?? ALL_LABEL : ALL_LABEL;
+
+  const sheetOptions: { label: string; selected: boolean; onPick: () => void }[] =
+    sheet === "region"
+      ? [
+          { label: ALL_LABEL, selected: region === null, onPick: () => setRegion(null) },
+          ...(regions ?? []).map((r) => ({ label: r, selected: region === r, onPick: () => setRegion(r) })),
+        ]
+      : (sheet === "category" ? CATEGORY_OPTS : sheet === "scope" ? SCOPE_OPTS : COLLECTION_OPTS).map((o) => ({
+          label: o.label,
+          selected: tileValue(sheet === "category" ? CATEGORY_OPTS : sheet === "scope" ? SCOPE_OPTS : COLLECTION_OPTS) === o.label,
+          onPick: () => setMode(o.mode),
+        }));
+  const sheetTitle =
+    sheet === "category" ? "Danh mục" : sheet === "scope" ? "Phạm vi" : sheet === "region" ? "Khu vực" : "Bộ sưu tập";
 
   const openDetail = (tour: TourItem) => {
     let matchingDeparture = null;
@@ -349,104 +392,68 @@ export default function SearchScreen() {
           backgroundColor: palette.gradient[0],
         }}
       >
-        <Header
-          title="BENTHANH TOURIST"
-          showActions={true}
+        <TabHeader
           safeArea={false}
-          showBackButton={!!params.referrer}
-          onBackPress={() => {
-            resetSearch();
-            router.setParams({
-              q: "",
-              mode: "newest",
-              dateMode: "",
-              specificDate: "",
-              startDate: "",
-              endDate: "",
-              referrer: "",
-            });
-            router.back();
-          }}
+          title="Du lịch"
+          subtitle={`${meta?.total ?? results.length} kết quả`}
+          onBack={
+            params.referrer
+              ? () => {
+                  resetSearch();
+                  router.setParams({
+                    q: "",
+                    mode: "newest",
+                    dateMode: "",
+                    specificDate: "",
+                    startDate: "",
+                    endDate: "",
+                    referrer: "",
+                  });
+                  router.back();
+                }
+              : undefined
+          }
         />
 
         <View className="px-5 pt-4 pb-1">
-          <View className="flex-row items-center justify-between mb-3">
-            <SectionHeader title="Tìm kiếm tour" />
-            <Text
-              className="font-semibold text-slate-400"
-              style={{ fontSize: FONT_SIZE.xs }}
-            >
-              {meta?.total ?? results.length} kết quả
-            </Text>
-          </View>
-
           <SearchBar value={query} onChangeText={setQuery} />
 
-          {/* Mode chips - 2 hàng cuộn ngang, mỗi hàng 5 tabs */}
-          <View style={{ marginTop: 12 }}>
-            {/* Hàng 1: 5 tab đầu */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingRight: 20 }}
-            >
-              {SECTION_ORDER.slice(0, 5).map((m) => (
-                <Chip
-                  key={m}
-                  label={MODE_CHIP_LABELS[m]}
-                  active={mode === m && !query.trim()}
-                  onPress={() => setMode(m)}
-                  isDark={isDark}
-                  style={{ marginBottom: 0 }}
-                />
-              ))}
-            </ScrollView>
-
-            {/* Hàng 2: các tab còn lại */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 8 }}
-              contentContainerStyle={{ paddingRight: 20 }}
-            >
-              {SECTION_ORDER.slice(5).map((m) => (
-                <Chip
-                  key={m}
-                  label={MODE_CHIP_LABELS[m]}
-                  active={mode === m && !query.trim()}
-                  onPress={() => setMode(m)}
-                  isDark={isDark}
-                  style={{ marginBottom: 0 }}
-                />
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Region sub-filter (slides down for domestic / foreign) */}
-          <Animated.View style={{ height: subHeight, overflow: "hidden" }}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="mt-3"
-              contentContainerStyle={{ paddingRight: 12 }}
-            >
-              <Chip
-                label="Tất cả"
-                active={region === null}
-                onPress={() => setRegion(null)}
+          {/* 4 ô thả xuống — mặc định "Tất cả"; chọn ô nào thì các ô còn lại về "Tất cả" */}
+          <View style={{ marginTop: 12, gap: 8 }}>
+            <View className="flex-row" style={{ gap: 8 }}>
+              <DropdownTile
+                label="Danh mục"
+                value={tileValue(CATEGORY_OPTS)}
+                active={tileValue(CATEGORY_OPTS) !== ALL_LABEL}
+                onPress={() => setSheet("category")}
                 isDark={isDark}
               />
-              {(regions ?? []).map((r) => (
-                <Chip
-                  key={r}
-                  label={r}
-                  active={region === r}
-                  onPress={() => setRegion(r)}
-                  isDark={isDark}
-                />
-              ))}
-            </ScrollView>
-          </Animated.View>
+              <DropdownTile
+                label="Phạm vi"
+                value={tileValue(SCOPE_OPTS)}
+                active={tileValue(SCOPE_OPTS) !== ALL_LABEL}
+                onPress={() => setSheet("scope")}
+                isDark={isDark}
+              />
+            </View>
+            <View className="flex-row" style={{ gap: 8 }}>
+              <DropdownTile
+                label="Khu vực"
+                value={regions ? region ?? ALL_LABEL : "Chọn phạm vi trước"}
+                active={!!region}
+                disabled={!regions}
+                onPress={() => setSheet("region")}
+                isDark={isDark}
+              />
+              <DropdownTile
+                label="Bộ sưu tập"
+                value={tileValue(COLLECTION_OPTS)}
+                active={tileValue(COLLECTION_OPTS) !== ALL_LABEL}
+                onPress={() => setSheet("collection")}
+                isDark={isDark}
+              />
+            </View>
+          </View>
         </View>
       </Animated.View>
 
@@ -482,6 +489,46 @@ export default function SearchScreen() {
           <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      <Modal visible={!!sheet} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setSheet(null)}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+        >
+          <View
+            className={`rounded-t-[28px] px-5 pt-5 ${isDark ? "bg-[#1A1F2B]" : "bg-white"}`}
+            style={{ paddingBottom: insets.bottom + 16 }}
+          >
+            <Text className={`font-black mb-3 ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`} style={{ fontSize: FONT_SIZE.xs }}>
+              {sheetTitle}
+            </Text>
+            {sheetOptions.map((o) => (
+              <TouchableOpacity
+                key={o.label}
+                activeOpacity={0.8}
+                onPress={() => {
+                  o.onPick();
+                  setSheet(null);
+                }}
+                className={`flex-row items-center h-14 rounded-2xl px-4 mb-2 ${
+                  o.selected ? (isDark ? "bg-red-950/40" : "bg-[#FFF1F3]") : isDark ? "bg-slate-800" : "bg-slate-50"
+                }`}
+              >
+                <Text
+                  className={`flex-1 font-semibold ${
+                    o.selected ? "text-[#B30118]" : isDark ? "text-slate-100" : "text-[#1A1A2E]"
+                  }`}
+                  style={{ fontSize: FONT_SIZE.xxs }}
+                >
+                  {o.label}
+                </Text>
+                {o.selected && <Ionicons name="checkmark-circle" size={20} color="#D0021B" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <ZaloFloatingButton />
     </View>

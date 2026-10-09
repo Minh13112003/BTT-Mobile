@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import TabHeader from "@/components/TabHeader";
 import { Footer } from "@/components/Footer";
 import { FavoritesList } from "@/components/FavoritesList";
 import { FONT_SIZE } from "@/constants/typography";
@@ -447,26 +447,17 @@ export default function HistoryScreen() {
           backgroundColor: palette.gradient[0],
         }}
       >
-        <Header title="BENTHANH TOURIST" showActions={true} safeArea={false} />
-
-        <View className="px-5 pt-5 pb-1">
-          <Text
-            className={`font-black tracking-tight ${isDark ? "text-slate-100" : "text-[#1A1A2E]"}`}
-            style={{ fontSize: 22 }}
-          >
-            {activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
-          </Text>
-          <Text
-            className={`font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-400"}`}
-            style={{ fontSize: 16 }}
-          >
-            {activeTab === "history"
+        <TabHeader
+          safeArea={false}
+          title={activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
+          subtitle={
+            activeTab === "history"
               ? pendingCount > 0
                 ? `${pendingCount} đơn hàng đang xử lý`
                 : `${orders.length} đơn hàng`
-              : "Tour bạn đã lưu lại"}
-          </Text>
-        </View>
+              : "Tour bạn đã lưu lại"
+          }
+        />
 
         {/* Tab switch: Lịch sử / Yêu thích */}
         <View className="px-5 pt-3">

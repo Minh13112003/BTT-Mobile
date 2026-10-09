@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { postFeedback } from "@/services/feedback";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import CustomAlert from "@/components/CustomAlert";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useTheme } from "@/context/Theme_Context";
 
@@ -30,12 +30,31 @@ export default function FeedbackScreen() {
   const [focusedField, setFocusedField] = useState("");
   const [sending, setSending] = useState(false);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "confirm">("success");
+  const [goBackOnClose, setGoBackOnClose] = useState(false);
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "confirm" = "success",
+    goBack = false,
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setGoBackOnClose(goBack);
+    setAlertVisible(true);
+  };
+
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const handleSubmit = async () => {
     if (!subject.trim() || !content.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ chủ đề và nội dung phản hồi.");
+      showAlert("Thiếu thông tin", "Vui lòng nhập đầy đủ chủ đề và nội dung phản hồi.", "warning");
       return;
     }
 
@@ -47,16 +66,12 @@ export default function FeedbackScreen() {
       });
 
       if (res.success) {
-        Alert.alert(
-          "Thành công",
-          res.message,
-          [{ text: "OK", onPress: () => router.back() }]
-        );
+        showAlert("Đã gửi góp ý", res.message, "success", true);
       }
     } catch (error: any) {
       console.error(error);
       const msg = error.message || "Gửi phản hồi thất bại. Vui lòng thử lại sau!";
-      Alert.alert("Thất bại", msg);
+      showAlert("Gửi thất bại", msg, "error");
     } finally {
       setSending(false);
     }
@@ -163,17 +178,17 @@ export default function FeedbackScreen() {
                 className={`flex-row items-center rounded-2xl border-2 px-4 h-14 mb-4 ${
                   isDark
                     ? focusedField === "subject"
-                      ? "border-blue-500 bg-slate-900/60"
+                      ? "border-[#D0021B] bg-slate-900/60"
                       : "border-slate-700/60 bg-slate-900/30"
                     : focusedField === "subject"
-                      ? "border-blue-500 bg-white"
+                      ? "border-[#D0021B] bg-white"
                       : "border-slate-100 bg-slate-50/50"
                 }`}
               >
                 <Ionicons
                   name="help-circle-outline"
                   size={20}
-                  color={focusedField === "subject" ? (isDark ? "#60A5FA" : "#3B82F6") : "#94A3B8"}
+                  color={focusedField === "subject" ? (isDark ? "#FCA5A5" : "#D0021B") : "#94A3B8"}
                 />
                 <TextInput
                   className={`flex-1 h-full ml-3 font-semibold ${
@@ -200,10 +215,10 @@ export default function FeedbackScreen() {
                 className={`rounded-2xl border-2 p-4 mb-4 ${
                   isDark
                     ? focusedField === "content"
-                      ? "border-blue-500 bg-slate-900/60"
+                      ? "border-[#D0021B] bg-slate-900/60"
                       : "border-slate-700/60 bg-slate-900/30"
                     : focusedField === "content"
-                      ? "border-blue-500 bg-white"
+                      ? "border-[#D0021B] bg-white"
                       : "border-slate-100 bg-slate-50/50"
                 }`}
               >
@@ -239,6 +254,16 @@ export default function FeedbackScreen() {
 
         <ZaloFloatingButton />
       </SafeAreaView>
+      <CustomAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          if (goBackOnClose) router.back();
+        }}
+      />
     </LinearGradient>
   );
 }
