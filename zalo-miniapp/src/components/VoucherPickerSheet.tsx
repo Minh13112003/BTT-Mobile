@@ -153,27 +153,8 @@ export default function VoucherPickerSheet({
         )}
 
         <div style={{ margin: "16px 0 8px", color: palette.textMuted, fontSize: FONT_SIZE.xxs }}>
-          Hoặc chọn một voucher bên dưới
+          Hoặc chọn một voucher bên dưới (bấm lần nữa để bỏ chọn)
         </div>
-
-        {/* Bỏ chọn voucher */}
-        {selectedId && (
-          <button
-            onClick={() => setSelectedId(null)}
-            className="w-full flex items-center justify-center font-bold"
-            style={{
-              minHeight: 44,
-              marginBottom: 12,
-              borderRadius: RADIUS.sm,
-              border: `1px solid ${palette.border}`,
-              color: palette.textSecondary,
-              fontSize: FONT_SIZE.xxs,
-              gap: 6,
-            }}
-          >
-            ✕ Không dùng voucher
-          </button>
-        )}
 
         {loading ? (
           <div className="flex justify-center" style={{ padding: 24 }}>
@@ -189,7 +170,8 @@ export default function VoucherPickerSheet({
             return (
               <button
                 key={item.id}
-                onClick={() => setSelectedId(item.id)}
+                // Kiểu Grab: bấm để chọn, bấm lần nữa vào đúng voucher đó để bỏ chọn.
+                onClick={() => setSelectedId((prev) => (prev === item.id ? null : item.id))}
                 className="block w-full text-left"
                 style={{
                   marginBottom: 12,
@@ -228,18 +210,17 @@ export default function VoucherPickerSheet({
                       {item.expiry}
                     </div>
                   </div>
-                  {/* Radio — giống Ionicons radio-button-on/off bên RN */}
-                  <span
-                    className="flex items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 11,
-                      border: `2px solid ${isSelected ? palette.brand : isDark ? "#475569" : "#CBD5E1"}`,
-                    }}
-                  >
-                    {isSelected && (
-                      <span style={{ width: 10, height: 10, borderRadius: 5, background: palette.brand }} />
+                  {/* Dấu tích tròn — checkmark-circle / ellipse-outline bên RN */}
+                  <span className="flex items-center justify-center flex-shrink-0" style={{ width: 24, height: 24, display: "flex" }}>
+                    {isSelected ? (
+                      <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="11" fill={palette.brand} />
+                        <path d="m7 12.5 3.4 3.4L17 9" fill="none" stroke="#FFFFFF" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke={isDark ? "#475569" : "#CBD5E1"} strokeWidth={2} />
+                      </svg>
                     )}
                   </span>
                 </div>

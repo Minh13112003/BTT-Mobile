@@ -2,16 +2,19 @@ import { BookingBar } from "@/components/tour/BookingBar";
 import { DeparturePicker } from "@/components/tour/DeparturePicker";
 import { FeaturedHighlightsCard } from "@/components/tour/FeaturedHighlightsCard";
 import { HighlightChips } from "@/components/tour/HighlightChips";
-import { PriceIncludedCard } from "@/components/tour/PriceIncludedCard";
+// import { PriceIncludedCard } from "@/components/tour/PriceIncludedCard"; // 2 danh sách liền nhau — thay bằng PriceIncludedTabs (2026-10-26)
+import { PriceIncludedTabs } from "@/components/tour/PriceIncludedTabs";
 // import { TermsAccordion } from "@/components/tour/TermsAccordion"; // NestJS — điều khoản tĩnh, thay bằng TermsHtmlAccordion (Laravel)
-import { TermsHtmlAccordion } from "@/components/tour/TermsHtmlAccordion";
+// import { TermsHtmlAccordion } from "@/components/tour/TermsHtmlAccordion"; // Accordion — thay bằng TermsTabs (2026-10-26)
+import { TermsTabs } from "@/components/tour/TermsTabs";
 import { TourHero } from "@/components/tour/TourHero";
 // import { TourScheduleAccordion } from "@/components/tour/TourScheduleAccordion"; // NestJS — cấu trúc sáng/trưa/chiều/tối, thay bằng TourScheduleHtmlAccordion (Laravel)
-import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAccordion";
+// import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAccordion"; // Accordion từng ngày — thay bằng TourScheduleTabs (2026-10-26)
+import { TourScheduleTabs } from "@/components/tour/TourScheduleTabs";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
-import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
@@ -89,6 +92,7 @@ export default function TourDetailScreen() {
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
   const { scale: imageScale, setScale: setImageScale, panHandlers: imagePanHandlers } = usePinchToZoom(1, 1, 4.0);
 
@@ -218,6 +222,8 @@ export default function TourDetailScreen() {
         // DEMO — nguồn tour hiện tại là Laravel (useTourDetail → getTourItemMapped).
         // tourKey = id tour Laravel, departureKey = tour_days[].id (đã map trong services/tour.ts).
         source: "LARAVEL",
+        // Tour nước ngoài (đường dẫn ảnh /tour/nuoc-ngoai/...) → mỗi khách bắt buộc hộ chiếu + visa. Backend kiểm tra lại theo cùng quy tắc.
+        isForeign: (tour.imageUrl[0] ?? "").includes("/nuoc-ngoai/") ? "true" : "false",
         tourKey: tour.id,
         departureKey: selectedDeparture.id,
       },
@@ -345,20 +351,18 @@ export default function TourDetailScreen() {
           <FeaturedHighlightsCard featuredDescription={tour.htmlFeaturedDescription} />
 
           {/* NestJS: <TourScheduleAccordion schedules={tour.schedules} /> — tour.schedules không còn được backend Laravel trả về */}
-          <TourScheduleHtmlAccordion plans={tour.htmlPlans} />
+          {/* Lịch trình / dịch vụ / điều khoản dạng tab (mẫu "Hero cũ + nội dung kiểu Mẫu 2", 2026-10-26) */}
+          <TourScheduleTabs plans={tour.htmlPlans} />
 
-          <PriceIncludedCard
+          <PriceIncludedTabs
             priceIncluded={tour.htmlPriceIncluded}
             priceNotIncluded={tour.htmlPriceNotIncluded}
           />
 
-          <TripInfoCard tour={tour} />
+          {/* NestJS: <TermsAccordion /> — nội dung tĩnh, tour Laravel dùng HTML thật từ API */}
+          <TermsTabs terms={tour.htmlTerms} />
 
-          <View className="mt-5">
-            <SectionTitle title="Điều khoản & Lưu ý chung" />
-            {/* NestJS: <TermsAccordion /> — nội dung tĩnh, tour Laravel dùng HTML thật từ API */}
-            <TermsHtmlAccordion terms={tour.htmlTerms} />
-          </View>
+          <TripInfoCard tour={tour} />
         </View>
       </ScrollView>
 
@@ -429,19 +433,19 @@ export default function TourDetailScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 194,
+            bottom: 194 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
+            shadowOpacity: 0,
             shadowRadius: 8,
-            elevation: 6,
+            elevation: 0,
             zIndex: 99,
           }}
         >

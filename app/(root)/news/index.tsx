@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
@@ -13,7 +14,7 @@ import {
 } from "@/services/news";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
@@ -157,6 +158,8 @@ function NewsCard({
 
 export default function NewsScreen() {
   const router = useRouter();
+  // Trang chủ mở thẳng mục đang xem (?category=company|guide) từ nút "Xem tất cả" của "Tin tức & cẩm nang".
+  const { category: initialCategory } = useLocalSearchParams<{ category?: string }>();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
@@ -164,13 +167,16 @@ export default function NewsScreen() {
 
   const flatListRef = useRef<FlatList>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
 
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [slowLoad, setSlowLoad] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [category, setCategory] = useState<CategoryKey>(CATEGORIES[0].key);
+  const [category, setCategory] = useState<CategoryKey>(
+    CATEGORIES.find((c) => c.key === initialCategory)?.key ?? CATEGORIES[0].key,
+  );
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -375,19 +381,19 @@ export default function NewsScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 94 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
+            shadowOpacity: 0,
             shadowRadius: 8,
-            elevation: 6,
+            elevation: 0,
             zIndex: 99,
           }}
         >

@@ -58,8 +58,12 @@ hỏi/gắn lúc đó — không cấu hình sẵn trong code.
 ## Biến môi trường
 
 Xem `.env` (không commit, đã gitignore) — `.env.example` cho các giá trị mẫu
-(xem file `.env` hiện tại). `VITE_API_URL` cần trỏ đúng IP LAN máy chạy backend
-NestJS (giống cách app React Native cấu hình `EXPO_PUBLIC_API_URL`).
+(xem file `.env` hiện tại). `VITE_API_URL` cần trỏ đúng địa chỉ backend NestJS
+(IP LAN hoặc link Cloudflare Tunnel, giống `EXPO_PUBLIC_API_URL` bên app RN);
+`VITE_CHATBOT_URL` là địa chỉ chatbot bttAI (giống `EXPO_PUBLIC_CHATBOT_URL`).
+Đổi `.env` thì phải tắt và chạy lại `npm start`. Backend chatbot đã bật CORS cho
+`localhost`/LAN, `*.mini.123c.vn`, `h5.zdn.vn` (xem `D:\ChatBot\main.py`); NestJS
+cũng whitelist các origin này (xem `src/main.ts` bên backend).
 
 ## Bắt buộc đăng nhập
 
@@ -103,12 +107,52 @@ NestJS (giống cách app React Native cấu hình `EXPO_PUBLIC_API_URL`).
   - Fix: chi tiết tour giờ truyền `source=LARAVEL` sang checkout (trước đó thiếu
     → booking gửi sai payload kiểu NestJS).
 
+- **Đồng bộ đợt 12/10/2026** (toàn bộ thay đổi mới của app RN):
+  - Thanh tab nổi dạng viên thuốc (`BottomNav.tsx`), `TabHeader` đỏ cho Du lịch /
+    Lịch sử / Thông báo, `Header` đổi sang logo ảnh + chuông thông báo.
+  - Tab **Tài khoản** thiết kế lại: avatar theo hạng (`TierAvatar.tsx`), 3 ô thống kê,
+    "Tour sắp khởi hành của bạn · trong 5 ngày", nhóm Tài khoản/Hỗ trợ/Cài đặt (đổi
+    giao diện tối nằm ở đây). Trang con mới: **Thông tin cá nhân** (ngày sinh, giới tính,
+    CCCD, hộ chiếu — lưu vào NestJS), **Mật khẩu & mã PIN** (`/security`, `/setup-pin`,
+    `/change-pin`), **Câu hỏi thường gặp** (`/faq`), **Về BenThanh Tourist** (`/about`),
+    **Điều khoản & chính sách** (`/terms`, Điều 3 có tab Trong nước / Nước ngoài).
+  - Tab **Du lịch**: 4 ô thả xuống (Danh mục / Phạm vi / Khu vực / Bộ sưu tập), mặc định
+    "Tất cả" = toàn bộ tour **trong nước trước, nước ngoài sau**; giữ bộ lọc khi chuyển tab,
+    quá **30 phút** không vào lại thì về mặc định (`pages/search`, bộ nhớ trong phiên).
+  - Ô loại tour ở Home: thêm **Tour mùa thu - đông** (thay Tour hè) và **Tour độc lạ**;
+    một tour thuộc nhiều loại (`tourTypes`).
+  - Lịch sử: giữ dữ liệu cũ khi vào lại tab và tải bản mới âm thầm (theo từng tài khoản).
+  - Chọn voucher kiểu Grab: bấm để chọn, bấm lần nữa để bỏ chọn.
+  - Nút "lên đầu trang" dùng chung (`BackToTopButton`) + vị trí các nút nổi tính tập trung ở
+    `components/floating.ts` (bttAI dưới Zalo, Zalo dưới "lên đầu trang").
+  - **Chatbot bttAI**: nút nổi robot đỏ dưới nút Zalo, khung chat trượt lên, thu nhỏ thành thanh
+    ngang, thẻ tour mở đúng trang tour **và chọn sẵn đúng đợt khởi hành**, lệnh `/clear`, lịch sử
+    tối đa 50 tin / 3 ngày theo từng tài khoản, thẻ chuyển nhân viên Zalo, báo hết lượt/mất kết nối.
+    Mã nguồn: `components/chatbot/`, `context/ChatbotContext.tsx`, `services/chatbot.ts`.
+
+- **Đồng bộ đợt 21/10/2026** (thay đổi 13–14/10 của app RN):
+  - **Đặt tour qua chatbot bttAI** (theo hợp đồng mới 22/10): nút bấm trong khung chat (chọn tour, ngày, số người, Đồng ý/Không đồng ý, đổi ngày/số người). Bấm "Đồng ý" thì **chatbot tự đặt tour luôn** (gọi NestJS `POST /bookings`, không hỏi CCCD/hộ chiếu) và trả `booking: { booking_id }`; tin nhắn có nút "Xem trạng thái đơn" mở `/booking-detail/:id`. `services/chatbot.ts`, `ChatbotContext` (`sendAction`), `ChatMessageBubble` (`ChatChoices`), `ChatbotHost.openBooking`.
+  - **Trang đặt tour thành công** `/booking-success` (`pages/booking-success`): checkout `navigate(..., { replace: true })` sang đây thay cho snackbar + về Lịch sử; nút "Đến lịch sử" / "Đến trang chủ"; nút Back (sự kiện `popstate`) cũng về trang chủ.
+  - **Lời nhắc hoàn thiện thông tin** (`components/ProfileCompletionPrompt.tsx`, gắn một lần ở `App.tsx`): chỉ hiện ngay sau khi đăng nhập nếu thiếu email / ngày sinh / mã PIN.
+  - **Nhắc lịch khởi hành**: thông báo `DEPARTURE_REMINDER` có icon riêng; `refType` bắt đầu bằng `BOOKING` thì mở thẳng `/booking-detail/:id`.
+  - Điều khoản (Điều 2) thêm câu cam kết dùng thông tin cá nhân; hàng "Thông tin cá nhân" ở tab Tài khoản đổi mô tả thành "Họ tên, ngày sinh, email".
+  - **TẠM TẮT CCCD/hộ chiếu** theo app RN (chủ dự án chưa cần): khối "Giấy tờ tuỳ thân" và phần kiểm tra/gửi 3 trường ở `pages/selfprofile` đã comment, tìm "TẠM TẮT" để bật lại. Không gửi các trường này lên NestJS (gửi null sẽ xoá dữ liệu đã lưu).
+
+- **Đồng bộ đợt 26/10/2026** (mẫu giao diện đã chốt trên artifact thiết kế):
+  - **TourCard rút gọn**: bỏ ô ★ (Laravel luôn trả 0) và 3 dòng 📅/💰/🕒; thêm nhãn "Trong nước / Nước ngoài" (suy từ đường dẫn ảnh), ngày khởi hành + giá chung 1 hàng, sóng đỏ cao 180px, nút "Xem chi tiết", không còn vạch chia.
+  - **Chi tiết tour** (`components/TourDetailSections.tsx`): chọn ngày dạng ô thứ/ngày/năm + bảng Khởi hành/Ngày về/Chỗ trống/Giá (`Departure.returnDate` mới); lịch trình theo tab "Ngày N" (3 cột) + nút Ngày trước/Ngày sau; dịch vụ 2 tab "Bao gồm (n) / Chưa bao gồm (n)"; điều khoản lưới 2 cột, nhãn kèm số ý lớn khi > 1.
+  - Chọn ngày khởi hành: hàng trượt ngang luôn thấy 3,5 ô (ô thứ 4 cắt nửa ở mép thẻ), ô ghi "Còn N" chỗ.
+  - Thanh toán: gọi `GET /bookings/laravel-seats` lấy số chỗ thật (stock_qty − khách đã đặt qua app); nút "+" khoá khi đủ chỗ (trước đây không giới hạn).
+  - Trang chủ: bỏ lời chào + 3 ô Tin tức/Mẹo hay/Ưu đãi; cuối trang là "Tin tức & cẩm nang" (Tin công ty / Cẩm nang du lịch), "Xem tất cả" mở `/news?category=`.
+  - **Hướng dẫn lần đầu** cho 5 tab (`context/GuideContext.tsx`, `components/GuideOverlay.tsx`, `components/GuideHelpButton.tsx`, nội dung `constants/guideSteps.ts` chép 1:1 từ RN): tự hiện khi vào tab lần đầu, nút ? trên header để xem lại, "đã xem" lưu theo tài khoản (`guide_seen:<userId>`). Trang cuộn bằng window nên không cần `useGuideScroller`. Bước "Xem thêm" của tab Thông báo tự bỏ qua vì mini app chỉ cắt 4 dòng, chưa có nút mở rộng từng thông báo.
+
 ## Những gì CHƯA port (quyết định phạm vi có chủ đích)
 
-- **PIN bảo mật** (`setup-pin`/`change-pin`, xác nhận PIN trước khi đặt tour) —
-  Zalo Mini App không có SecureStore/keychain/biometric cấp hệ điều hành như
-  native app. Checkout hiện dùng 1 bước confirm đơn giản (`confirm()`) thay
-  cho bước xác nhận PIN.
+- **Thân nhân & thông tin hành khách khi đặt tour** — app RN đã làm xong (13/10) nhưng **TẠM TẮT từ 14/10/2026** (chủ dự án chưa cần nhân thân/CCCD/hộ chiếu): backend không còn bắt buộc `guests`, nên đặt tour từ mini app chạy bình thường. Khi nào bật lại bên RN thì mới port `relatives`, `relative-form`, mục "Thông tin hành khách" ở checkout và bước chọn người đi cùng của chatbot (nút `nguoi:*` trong `ChatChoices` đã sẵn sàng).
+
+- **Xác nhận PIN khi đặt tour** — đã có trang tạo/đổi PIN (`/security`) nhưng Zalo
+  Mini App không có SecureStore/keychain/biometric cấp hệ điều hành như native app,
+  nên Checkout vẫn dùng 1 bước confirm đơn giản (`confirm()`) thay cho bước nhập PIN.
 - **Push notification** — app RN dùng Firebase/`expo-notifications`; Zalo Mini
   App dùng cơ chế gửi tin nhắn qua Zalo OA (Official Account), hoàn toàn khác
   cơ chế, cần thiết kế riêng nếu muốn làm.
@@ -117,6 +161,8 @@ NestJS (giống cách app React Native cấu hình `EXPO_PUBLIC_API_URL`).
 - **Giao diện cuộn-thu-gọn (collapsing header)** ở Search/History — bản RN
   dùng `Animated.diffClamp` đồng bộ với scroll; bản web dùng header tĩnh đơn
   giản hơn cho v1.
+- **Nút Back phần cứng khi đang mở khung chat** — Zalo không có sự kiện riêng; chuyển
+  trang (kể cả bấm Back) sẽ tự thu nhỏ khung chat thay vì đóng nó.
 
 ## Cấu trúc
 

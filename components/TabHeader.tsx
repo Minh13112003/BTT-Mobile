@@ -1,3 +1,5 @@
+import GuideHelpButton from "@/components/guide/GuideHelpButton";
+import { GuideTab } from "@/constants/guideSteps";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,13 +20,15 @@ interface TabHeaderProps {
   safeArea?: boolean;
   /** Hiện nút quay lại bên trái tiêu đề. */
   onBack?: () => void;
+  /** Hiện nút ? (xem lại hướng dẫn của tab) trước `right`. */
+  guideTab?: GuideTab;
 }
 
 /**
  * Header đỏ dùng chung cho các tab (Du lịch, Lịch sử, Thông báo): tiêu đề +
  * phụ đề, vòng tròn trang trí và logo in chìm góc phải, bo tròn đáy.
  */
-export default function TabHeader({ title, subtitle, right, children, safeArea = true, onBack }: TabHeaderProps) {
+export default function TabHeader({ title, subtitle, right, children, safeArea = true, onBack, guideTab }: TabHeaderProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
@@ -71,7 +75,14 @@ export default function TabHeader({ title, subtitle, right, children, safeArea =
             </Text>
           ) : null}
         </View>
-        {right}
+        {guideTab ? (
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <GuideHelpButton tab={guideTab} />
+            {right}
+          </View>
+        ) : (
+          right
+        )}
       </View>
       {children}
     </LinearGradient>

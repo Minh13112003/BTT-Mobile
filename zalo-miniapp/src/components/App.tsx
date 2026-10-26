@@ -5,8 +5,13 @@ import { App, ZMPRouter, AnimationRoutes, SnackbarProvider, Spinner } from "zmp-
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { ChatbotProvider } from "@/context/ChatbotContext";
+import { GuideProvider } from "@/context/GuideContext";
 import BottomNav from "@/components/BottomNav";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import BackToTopButton from "@/components/BackToTopButton";
+import ChatbotHost from "@/components/chatbot/ChatbotHost";
+import ProfileCompletionPrompt from "@/components/ProfileCompletionPrompt";
 
 import HomePage from "@/pages/home";
 import SearchPage from "@/pages/search";
@@ -16,6 +21,7 @@ import ProfilePage from "@/pages/profile";
 import TourDetailPage from "@/pages/tour-detail";
 import BookingDetailPage from "@/pages/booking-detail";
 import CheckoutPage from "@/pages/checkout";
+import BookingSuccessPage from "@/pages/booking-success";
 import MembershipPage from "@/pages/membership";
 import LoginPage from "@/pages/login";
 import ForgotPasswordPage from "@/pages/forgot-password";
@@ -28,6 +34,11 @@ import NewsListPage from "@/pages/news-list";
 import NewsDetailPage from "@/pages/news-detail";
 import TipsListPage from "@/pages/tips-list";
 import TipsDetailPage from "@/pages/tips-detail";
+import SecurityPage from "@/pages/security";
+import PinPage from "@/pages/pin";
+import FaqPage from "@/pages/faq";
+import AboutPage from "@/pages/about";
+import TermsPage from "@/pages/terms";
 
 /** Các route vào được khi CHƯA đăng nhập — mọi route khác bắt buộc đăng nhập. */
 const PUBLIC_PATHS = ["/login", "/forgot-password", "/reset-password"];
@@ -71,6 +82,7 @@ const MyApp = () => {
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
+          <ChatbotProvider>
           <App>
             <Suspense
               fallback={
@@ -82,6 +94,7 @@ const MyApp = () => {
               <SnackbarProvider>
                 <ZMPRouter>
                   <AuthGate>
+                    <GuideProvider>
                     <AnimationRoutes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/search" element={<SearchPage />} />
@@ -91,6 +104,7 @@ const MyApp = () => {
                       <Route path="/tour/:id" element={<TourDetailPage />} />
                       <Route path="/booking-detail/:id" element={<BookingDetailPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
+                      <Route path="/booking-success" element={<BookingSuccessPage />} />
                       <Route path="/membership" element={<MembershipPage />} />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -103,14 +117,25 @@ const MyApp = () => {
                       <Route path="/news/:id" element={<NewsDetailPage />} />
                       <Route path="/tips" element={<TipsListPage />} />
                       <Route path="/tips/:id" element={<TipsDetailPage />} />
+                      <Route path="/security" element={<SecurityPage />} />
+                      <Route path="/setup-pin" element={<PinPage />} />
+                      <Route path="/change-pin" element={<PinPage />} />
+                      <Route path="/faq" element={<FaqPage />} />
+                      <Route path="/about" element={<AboutPage />} />
+                      <Route path="/terms" element={<TermsPage />} />
                     </AnimationRoutes>
                     <BottomNav />
                     <ZaloFloatingButton />
+                    <BackToTopButton />
+                    <ChatbotHost />
+                    <ProfileCompletionPrompt />
+                    </GuideProvider>
                   </AuthGate>
                 </ZMPRouter>
               </SnackbarProvider>
             </Suspense>
           </App>
+          </ChatbotProvider>
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

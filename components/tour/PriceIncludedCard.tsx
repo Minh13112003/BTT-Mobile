@@ -8,6 +8,22 @@ import React from "react";
 import { Text, View, useWindowDimensions } from "react-native";
 import RenderHTML from "react-native-render-html";
 
+/**
+ * Tách "Giá tour bao gồm" thành từng dòng. VAT thường nằm ở cuối danh sách nên duyệt
+ * ngược từ cuối lên; chuẩn hoá nguyên dòng đó thành "Bao gồm VAT" thay vì giữ chi
+ * tiết % / điều kiện gốc. Dùng chung với PriceIncludedTabs.
+ */
+export function toIncludedItems(priceIncluded?: string): string[] {
+  const items = priceIncluded?.trim() ? splitTopLevelListItems(priceIncluded) : [];
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (/vat/i.test(items[i])) {
+      items[i] = "Bao gồm VAT";
+      break;
+    }
+  }
+  return items;
+}
+
 interface Props {
   /** HTML thô `<ul><li>...</li></ul>` — field `tour_price_included` (Laravel). */
   priceIncluded?: string;
@@ -28,20 +44,10 @@ export function PriceIncludedCard({ priceIncluded, priceNotIncluded }: Props) {
   const isDark = theme === "dark";
   const { width } = useWindowDimensions();
 
-  const rawIncludedItems = priceIncluded?.trim() ? splitTopLevelListItems(priceIncluded) : [];
+  const includedItems = toIncludedItems(priceIncluded);
   const notIncludedItems = priceNotIncluded?.trim()
     ? splitTopLevelListItems(priceNotIncluded)
     : [];
-
-  // VAT thường nằm ở cuối danh sách "bao gồm" nên duyệt ngược từ cuối lên cho nhanh.
-  // Chuẩn hoá nguyên dòng đó thành "Bao gồm VAT" thay vì giữ chi tiết % / điều kiện gốc.
-  const includedItems = [...rawIncludedItems];
-  for (let i = includedItems.length - 1; i >= 0; i--) {
-    if (/vat/i.test(includedItems[i])) {
-      includedItems[i] = "Bao gồm VAT";
-      break;
-    }
-  }
 
   if (includedItems.length === 0 && notIncludedItems.length === 0) return null;
 

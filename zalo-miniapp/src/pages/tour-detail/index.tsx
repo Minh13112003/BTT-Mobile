@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 
 import { useAuth } from "@/context/AuthContext";
@@ -7,7 +7,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useTourDetail } from "@/hooks/useTourDetail";
 import type { Departure } from "@/services/departure";
 import { addFavorite, isFavorited as checkIsFavorited, removeFavorite } from "@/services/favorite";
-import { splitTopLevelListItems } from "@/services/tour";
 import { getNearestDeparture, formatDepartureDate } from "@/utils/tour";
 import { formatPrice } from "@/helper/format";
 import { getPalette, RADIUS } from "@/constants/theme";
@@ -15,14 +14,15 @@ import { FONT_SIZE } from "@/constants/typography";
 import { ArrowBackIcon, CloseIcon, HeartIcon } from "@/components/icons";
 import HighlightChips from "@/components/HighlightChips";
 import PrimaryButton from "@/components/PrimaryButton";
+import { DepartureSection, ScheduleTabs, ServiceTabs, TermsTabs } from "@/components/TourDetailSections";
 
 /**
  * Port từ app/(root)/tour/[id].tsx — gộp 8 sub-component RN gốc (TourHero,
  * DeparturePicker, FeaturedHighlightsCard, TourScheduleHtmlAccordion,
  * PriceIncludedCard, TripInfoCard, TermsHtmlAccordion, HighlightChips) thành
  * các section inline trong 1 file cho v1, giữ nguyên luồng chọn ngày khởi
- * hành → đặt tour. Dùng thẻ <details> HTML cho các khối điều khoản thay vì
- * tự viết lại Accordion — nhẹ hơn và là pattern chuẩn trên web.
+ * hành → đặt tour. Chọn ngày / lịch trình / dịch vụ / điều khoản dạng tab nằm ở
+ * components/TourDetailSections.tsx (port mẫu mới 2026-10-26 bên RN).
  */
 export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +32,7 @@ export default function TourDetailPage() {
   const palette = getPalette(isDark);
 
   const { tour, loading, error, refetch } = useTourDetail(id);
+  const [searchParams] = useSearchParams();
   const [selectedDeparture, setSelectedDeparture] = useState<Departure | null>(null);
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -116,6 +117,41 @@ export default function TourDetailPage() {
     return () => clearInterval(timer);
   }, [images.length]);
 
+  // Chọn sẵn đợt khởi hành khớp ngày được truyền sang (từ tìm kiếm theo ngày ở tab Du lịch hoặc từ
+  // thẻ tour trong chatbot bttAI): ?searchDateMode=specific&searchSpecificDate=YYYY-MM-DD hoặc
+  // ?searchDateMode=range&searchStartDate=...&searchEndDate=... — giống app React Native.
+  const searchDateMode = searchParams.get("searchDateMode");
+  const searchSpecificDate = searchParams.get("searchSpecificDate");
+  const searchStartDate = searchParams.get("searchStartDate");
+  const searchEndDate = searchParams.get("searchEndDate");
+  useEffect(() => {
+    if (!tour?.departures?.length) return;
+    let matched: Departure | undefined;
+    if (searchDateMode === "specific" && searchSpecificDate) {
+      const target = new Date(searchSpecificDate);
+      matched = tour.departures.find((dep) => {
+        const d = new Date(dep.departureDate);
+        return (
+          d.getFullYear() === target.getFullYear() &&
+          d.getMonth() === target.getMonth() &&
+          d.getDate() === target.getDate()
+        );
+      });
+    } else if (searchDateMode === "range" && (searchStartDate || searchEndDate)) {
+      const start = searchStartDate ? new Date(searchStartDate) : new Date(0);
+      const end = searchEndDate ? new Date(searchEndDate) : new Date(8640000000000000);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      matched = [...tour.departures]
+        .sort((x, y) => new Date(x.departureDate).getTime() - new Date(y.departureDate).getTime())
+        .find((dep) => {
+          const d = new Date(dep.departureDate);
+          return d >= start && d <= end;
+        });
+    }
+    if (matched) setSelectedDeparture(matched);
+  }, [tour, searchDateMode, searchSpecificDate, searchStartDate, searchEndDate]);
+
   const goCheckout = () => {
     if (!tour) return;
     if (!selectedDeparture) {
@@ -185,17 +221,6 @@ export default function TourDetailPage() {
   }
 
   const nearest = selectedDeparture ?? getNearestDeparture(tour.departures ?? []);
-  const priceIncludedItems = tour.htmlPriceIncluded ? splitTopLevelListItems(tour.htmlPriceIncluded) : [];
-  // VAT thường nằm cuối danh sách "bao gồm" — duyệt ngược, chuẩn hoá nguyên dòng
-  // đó thành "Bao gồm VAT" thay vì giữ chi tiết % / điều kiện gốc (giống PriceIncludedCard bên RN).
-  for (let i = priceIncludedItems.length - 1; i >= 0; i--) {
-    if (/vat/i.test(priceIncludedItems[i])) {
-      priceIncludedItems[i] = "Bao gồm VAT";
-      break;
-    }
-  }
-  const priceNotIncludedItems = tour.htmlPriceNotIncluded ? splitTopLevelListItems(tour.htmlPriceNotIncluded) : [];
-
   const handleHeroScroll = () => {
     const el = heroScrollerRef.current;
     if (!el) return;
@@ -317,46 +342,18 @@ export default function TourDetailPage() {
 
         <HighlightChips items={tour.highlights} />
 
-        {/* Chọn ngày khởi hành */}
-        {!!tour.departures?.length && (
-          <div style={{ marginTop: 20 }}>
-            <div className="font-black" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary, marginBottom: 10 }}>
-              Chọn ngày khởi hành
-            </div>
-            <div className="flex overflow-x-auto" style={{ gap: 10 }}>
-              {tour.departures.map((dep) => {
-                const active = selectedDeparture?.id === dep.id;
-                const soldOut = (dep.availableSeats ?? 0) <= 0;
-                return (
-                  <button
-                    key={dep.id}
-                    onClick={() => !soldOut && setSelectedDeparture(dep)}
-                    disabled={soldOut}
-                    className="flex-shrink-0 text-left"
-                    style={{
-                      borderRadius: RADIUS.lg,
-                      padding: 14,
-                      minWidth: 150,
-                      border: `1.5px solid ${active ? palette.brand : palette.border}`,
-                      background: active ? (isDark ? "rgba(208,2,27,0.15)" : "#FFF0EE") : palette.surface,
-                      opacity: soldOut ? 0.5 : 1,
-                    }}
-                  >
-                    <div className="font-bold" style={{ fontSize: FONT_SIZE.xxs, color: palette.textPrimary }}>
-                      {formatDepartureDate(dep.departureDate)}
-                    </div>
-                    <div className="font-black" style={{ fontSize: FONT_SIZE.xxs, color: palette.brand, marginTop: 6 }}>
-                      {formatPrice(dep.price)}
-                    </div>
-                    <div style={{ fontSize: 12, color: soldOut ? palette.danger : palette.textMuted, marginTop: 4, fontWeight: soldOut ? 700 : 400 }}>
-                      {soldOut ? "HẾT CHỖ" : `Còn ${dep.availableSeats} chỗ`}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Chọn ngày khởi hành — ô thứ/ngày/năm + bảng thông tin đợt đang chọn */}
+        <DepartureSection
+          departures={tour.departures ?? []}
+          selected={selectedDeparture}
+          onSelect={setSelectedDeparture}
+          onSoldOut={(dep) =>
+            snackbar.openSnackbar({
+              text: `Ngày ${formatDepartureDate(dep.departureDate)} đã hết chỗ, xin vui lòng chọn ngày khác`,
+              type: "warning",
+            })
+          }
+        />
 
         {/* Điểm nổi bật */}
         {!!tour.htmlFeaturedDescription && (
@@ -379,145 +376,29 @@ export default function TourDetailPage() {
           </div>
         )}
 
-        {/* Lịch trình */}
-        {!!tour.htmlPlans?.length && (
-          <div style={{ marginTop: 24 }}>
-            <div className="font-black" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary, marginBottom: 10 }}>
-              Lịch trình chuyến đi
-            </div>
-            {tour.htmlPlans.map((plan, i) => (
-              <details
-                key={i}
-                open={i === 0}
-                style={{
-                  marginBottom: 10,
-                  borderRadius: RADIUS.lg,
-                  border: `1px solid ${palette.border}`,
-                  background: palette.surface,
-                  overflow: "hidden",
-                }}
-              >
-                <summary
-                  className="font-bold"
-                  style={{ padding: 14, cursor: "pointer", color: palette.textPrimary, fontSize: FONT_SIZE.xxs }}
-                >
-                  {plan.day}: {plan.title}
-                </summary>
-                <div
-                  className="html-content"
-                  style={{ padding: "0 14px 14px", color: palette.textSecondary, fontSize: FONT_SIZE.xxs }}
-                  dangerouslySetInnerHTML={{ __html: plan.content }}
-                />
-              </details>
-            ))}
-          </div>
-        )}
-
-        {/* Dịch vụ tour */}
-        {(priceIncludedItems.length > 0 || priceNotIncludedItems.length > 0) && (
-          <div style={{ marginTop: 24 }}>
-            <div className="font-black" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary, marginBottom: 10 }}>
-              Dịch vụ tour
-            </div>
-            <div style={{ padding: 16, borderRadius: RADIUS.lg, background: palette.surface, border: `1px solid ${palette.border}` }}>
-              {priceIncludedItems.length > 0 && (
-                <>
-                  <div className="font-black uppercase" style={{ color: palette.textSecondary, fontSize: 12, letterSpacing: 0.5, marginBottom: 8 }}>
-                    Dịch vụ bao gồm
-                  </div>
-                  {priceIncludedItems.map((html, i) => (
-                    <div key={`inc-${i}`} className="flex items-start" style={{ marginBottom: 8, gap: 8 }}>
-                      <span style={{ color: "#16A34A", flexShrink: 0 }}>✓</span>
-                      <span
-                        className="html-content"
-                        style={{ color: palette.textSecondary, fontSize: FONT_SIZE.xxs }}
-                        dangerouslySetInnerHTML={{ __html: html }}
-                      />
-                    </div>
-                  ))}
-                </>
-              )}
-              {priceNotIncludedItems.length > 0 && (
-                <>
-                  <div className="font-black uppercase" style={{ color: palette.textSecondary, fontSize: 12, letterSpacing: 0.5, marginTop: priceIncludedItems.length > 0 ? 14 : 0, marginBottom: 8 }}>
-                    Chưa bao gồm
-                  </div>
-                  {priceNotIncludedItems.map((html, i) => (
-                    <div key={`exc-${i}`} className="flex items-start" style={{ marginBottom: 8, gap: 8 }}>
-                      <span style={{ color: palette.danger, flexShrink: 0 }}>✗</span>
-                      <span
-                        className="html-content"
-                        style={{ color: palette.textSecondary, fontSize: FONT_SIZE.xxs }}
-                        dangerouslySetInnerHTML={{ __html: html }}
-                      />
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Lịch trình / dịch vụ / điều khoản dạng tab (mẫu "Hero cũ + nội dung kiểu Mẫu 2", 2026-10-26) */}
+        <ScheduleTabs plans={tour.htmlPlans} />
+        <ServiceTabs priceIncluded={tour.htmlPriceIncluded} priceNotIncluded={tour.htmlPriceNotIncluded} />
+        <TermsTabs terms={tour.htmlTerms} />
 
         {/* Thông tin chuyến đi */}
-        <div style={{ marginTop: 24 }}>
-          <div className="font-black" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary, marginBottom: 10 }}>
-            Thông tin chuyến đi
+        <div style={{ marginTop: 18, padding: "16px 18px", borderRadius: RADIUS.xl, background: palette.surface, border: `1px solid ${palette.border}` }}>
+          <div className="flex justify-between" style={{ gap: 10, fontSize: FONT_SIZE.card }}>
+            <span style={{ color: palette.textSecondary }}>Nơi khởi hành</span>
+            <span className="font-bold" style={{ color: palette.textPrimary, textAlign: "right" }}>{tour.departureFrom}</span>
           </div>
-          <div style={{ padding: 16, borderRadius: RADIUS.lg, background: palette.surface, border: `1px solid ${palette.border}` }}>
-            <div style={{ fontSize: FONT_SIZE.xxs, color: palette.textSecondary, marginBottom: 8 }}>
-              📍 Khởi hành từ: <strong>{tour.departureFrom}</strong>
+          {!!tour.transport && (
+            <div className="flex justify-between" style={{ gap: 10, fontSize: FONT_SIZE.card, marginTop: 10 }}>
+              <span style={{ color: palette.textSecondary }}>Phương tiện</span>
+              <span className="font-bold" style={{ color: palette.textPrimary, textAlign: "right" }}>{tour.transport}</span>
             </div>
-            <div style={{ fontSize: FONT_SIZE.xxs, color: palette.textSecondary, marginBottom: 8 }}>
-              ✈️ Phương tiện: <strong>{tour.transport}</strong>
+          )}
+          {!!tour.notes && (
+            <div style={{ fontSize: FONT_SIZE.card, color: palette.textMuted, fontStyle: "italic", marginTop: 10 }}>
+              {tour.notes}
             </div>
-            {!!tour.notes && (
-              <div style={{ fontSize: FONT_SIZE.xxs, color: palette.textMuted, fontStyle: "italic" }}>
-                {tour.notes}
-              </div>
-            )}
-          </div>
+          )}
         </div>
-
-        {/* Điều khoản & lưu ý */}
-        {tour.htmlTerms && (
-          <div style={{ marginTop: 24 }}>
-            <div className="font-black" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary, marginBottom: 10 }}>
-              Điều khoản &amp; Lưu ý chung
-            </div>
-            {[
-              { title: "Lưu ý", html: tour.htmlTerms.warningNote },
-              { title: "Lưu ý visa", html: tour.htmlTerms.warningNoteVisa },
-              { title: "Chính sách hủy đặt chỗ", html: tour.htmlTerms.cancelBooking },
-              { title: "Hướng dẫn thanh toán", html: tour.htmlTerms.paymentInstructions },
-              { title: "Phạt hủy tour", html: tour.htmlTerms.cancelPenalty },
-            ]
-              .filter((s) => !!s.html?.trim())
-              .map((section) => (
-                <details
-                  key={section.title}
-                  style={{
-                    marginBottom: 10,
-                    borderRadius: RADIUS.lg,
-                    border: `1px solid ${palette.border}`,
-                    background: palette.surface,
-                    overflow: "hidden",
-                  }}
-                >
-                  <summary
-                    className="font-bold"
-                    style={{ padding: 14, cursor: "pointer", color: palette.textPrimary, fontSize: FONT_SIZE.xxs }}
-                  >
-                    {section.title}
-                  </summary>
-                  <div
-                    className="html-content"
-                    style={{ padding: "0 14px 14px", color: palette.textSecondary, fontSize: FONT_SIZE.xxs }}
-                    dangerouslySetInnerHTML={{ __html: section.html }}
-                  />
-                </details>
-              ))}
-          </div>
-        )}
       </div>
 
       {/* Thanh đặt tour cố định dưới */}

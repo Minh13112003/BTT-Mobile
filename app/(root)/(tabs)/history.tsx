@@ -1,7 +1,9 @@
 import TabHeader from "@/components/TabHeader";
+import { useGuideTarget, useTabGuide } from "@/context/Guide_Context";
 import { Footer } from "@/components/Footer";
 import { FavoritesList } from "@/components/FavoritesList";
 import { FONT_SIZE } from "@/constants/typography";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette, getShadow } from "@/constants/theme";
 import { useAuth } from "@/context/Auth_Context";
@@ -13,7 +15,7 @@ import { TourItem } from "@/services/tour";
 import { formatDepartureDate } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -93,28 +95,44 @@ function statusTone(statusVn: string, isDark: boolean) {
     : { bg: "bg-[#FFF3DC]", text: "text-[#B5710A]" };
 }
 
+/**
+ * Trang đầu của lịch sử, giữ lại giữa các lần vào tab: quay lại tab thì hiện ngay dữ liệu cũ,
+ * rồi âm thầm tải bản mới (không còn màn "Đang tải..." mỗi lần vào).
+ */
+let historyCache: { userId: string; orders: OrderItem[]; hasNext: boolean } | null = null;
+
 export default function HistoryScreen() {
   const router = useRouter();
-  useAuth();
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
+  // Chỉ dùng cache của ĐÚNG người đang đăng nhập (đổi tài khoản không được thấy đơn của người trước).
+  const cached = historyCache && historyCache.userId === userId ? historyCache : null;
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"history" | "favorites">("history");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cached === null);
   const [refreshing, setRefreshing] = useState(false);
-  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [orders, setOrders] = useState<OrderItem[]>(cached?.orders ?? []);
   const [page, setPage] = useState(1);
-  const [hasNext, setHasNext] = useState(false);
+  const [hasNext, setHasNext] = useState(cached?.hasNext ?? false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("Tất cả");
   const [chromeH, setChromeH] = useState(0);
 
   const flatListRef = useRef<FlatList<OrderItem>>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
 
   const handleScrollY = useCallback((y: number) => setShowBackToTop(y > 300), []);
   const { translateY: headerTranslateY, scrollProps, reveal } = useCollapsibleHeader(
     chromeH,
     handleScrollY,
   );
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → history)
+  useTabGuide("history", !loading);
+  const tabsRef = useGuideTarget("history.tabs");
+  const chipsRef = useGuideTarget("history.chips");
+  const orderRef = useGuideTarget("history.order");
 
   // Danh sách Yêu thích không gắn scroll → luôn hiện lại header khi đổi tab con.
   useEffect(() => {
@@ -146,6 +164,7 @@ export default function HistoryScreen() {
         setOrders((prev) => (isLoadMore ? [...prev, ...items] : items));
 
         setHasNext(meta?.hasNext ?? false);
+        if (!isLoadMore) historyCache = { userId, orders: items, hasNext: meta?.hasNext ?? false };
       }
     } catch (err: any) {
       console.error("Lỗi khi tải lịch sử giao dịch:", err);
@@ -156,9 +175,14 @@ export default function HistoryScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchOrders(1);
-  }, []);
+  // Mỗi lần vào tab: tải lại trang đầu âm thầm (đơn mới đặt, đổi trạng thái...). Nếu người dùng
+  // đã cuộn tải thêm trang sau thì không ghi đè, tránh danh sách bị giật về đầu.
+  useFocusEffect(
+    useCallback(() => {
+      if (page === 1) fetchOrders(1);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page]),
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -258,7 +282,7 @@ export default function HistoryScreen() {
                 </Text>
               </View>
             }
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               const statusVn = MAP_STATUS_VN[item.status] || item.status;
               const tone = statusTone(statusVn, isDark);
               const hasDiscount = !!item.discountAmount && item.discountAmount > 0;
@@ -269,6 +293,8 @@ export default function HistoryScreen() {
 
               return (
                 <View
+                  ref={index === 0 ? orderRef : undefined}
+                  collapsable={false}
                   className={`rounded-[24px] mb-4 overflow-hidden border ${
                     isDark
                       ? "bg-slate-800/90 border-slate-700/50"
@@ -449,6 +475,7 @@ export default function HistoryScreen() {
       >
         <TabHeader
           safeArea={false}
+          guideTab="history"
           title={activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
           subtitle={
             activeTab === "history"
@@ -462,6 +489,8 @@ export default function HistoryScreen() {
         {/* Tab switch: Lịch sử / Yêu thích */}
         <View className="px-5 pt-3">
           <View
+            ref={tabsRef}
+            collapsable={false}
             className={`flex-row rounded-full p-1 ${isDark ? "bg-[#1E222B]" : "bg-slate-100"}`}
           >
             {(
@@ -497,7 +526,7 @@ export default function HistoryScreen() {
 
         {/* Horizontal filter chips — chỉ áp dụng cho tab Lịch sử */}
         {activeTab === "history" && (
-          <View style={{ paddingTop: 8, paddingBottom: 8 }}>
+          <View ref={chipsRef} collapsable={false} style={{ paddingTop: 8, paddingBottom: 8 }}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -551,12 +580,12 @@ export default function HistoryScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 74 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: palette.brand,
+            backgroundColor: isDark ? "rgba(179,1,24,0.6)" : "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             ...(isDark
@@ -564,9 +593,9 @@ export default function HistoryScreen() {
               : {
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
+                  shadowOpacity: 0,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 }),
             zIndex: 99,
           }}
@@ -575,7 +604,7 @@ export default function HistoryScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton />
+      <ZaloFloatingButton baseBottom={10} />
     </View>
   );
 }

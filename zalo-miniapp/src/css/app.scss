@@ -97,3 +97,31 @@ img {
   border-top-color: #ffffff;
   animation: btn-spin 0.7s linear infinite;
 }
+
+// Chấm "bttAI đang soạn" — 3 chấm nhấp nháy lệch pha (thay Animated.loop bên RN).
+@keyframes bttai-dot-blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.bttai-dot {
+  animation: bttai-dot-blink 0.9s ease-in-out infinite;
+}
+
+/* Trang đặt tour thành công: dấu tích nảy vào khi mở (tương đương Animated.spring bên RN). */
+@keyframes booking-success-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.booking-success-check {
+  animation: booking-success-pop 0.5s ease-out both;
+}

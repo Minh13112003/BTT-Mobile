@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
   readonly VITE_BASE_BTT_URL: string;
+  readonly VITE_CHATBOT_URL: string;
 }
 
 interface ImportMeta {
@@ -18,6 +19,10 @@ declare module "*.jpg" {
   export default src;
 }
 declare module "*.svg" {
+  const src: string;
+  export default src;
+}
+declare module "*.webp" {
   const src: string;
   export default src;
 }

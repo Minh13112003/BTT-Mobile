@@ -154,27 +154,8 @@ export default function VoucherPickerScreen() {
             className={`mt-4 mb-2 ${isDark ? "text-slate-500" : "text-slate-400"}`}
             style={{ fontSize: FONT_SIZE.xs }}
           >
-            Hoặc chọn một voucher bên dưới
+            Hoặc chọn một voucher bên dưới (bấm lần nữa để bỏ chọn)
           </Text>
-
-          {/* Bỏ chọn voucher */}
-          {selectedId && (
-            <TouchableOpacity
-              onPress={() => setSelectedId(null)}
-              activeOpacity={0.7}
-              className={`flex-row items-center justify-center rounded-xl py-2.5 mb-3 border ${
-                isDark ? "border-slate-700" : "border-slate-300"
-              }`}
-            >
-              <Ionicons name="close-circle-outline" size={16} color={isDark ? "#94A3B8" : "#64748B"} />
-              <Text
-                className={`ml-1.5 font-bold ${isDark ? "text-slate-400" : "text-slate-500"}`}
-                style={{ fontSize: FONT_SIZE.xs }}
-              >
-                Không dùng voucher
-              </Text>
-            </TouchableOpacity>
-          )}
 
           {/* Voucher list */}
           {loading ? (
@@ -186,7 +167,8 @@ export default function VoucherPickerScreen() {
                 <TouchableOpacity
                   key={item.id}
                   activeOpacity={0.85}
-                  onPress={() => setSelectedId(item.id)}
+                  // Kiểu Grab: bấm để chọn, bấm lần nữa vào đúng voucher đó để bỏ chọn.
+                  onPress={() => setSelectedId((prev) => (prev === item.id ? null : item.id))}
                   className={`rounded-2xl p-4 mb-3 border ${
                     isSelected
                       ? isDark
@@ -225,8 +207,8 @@ export default function VoucherPickerScreen() {
                       </Text>
                     </View>
                     <Ionicons
-                      name={isSelected ? "radio-button-on" : "radio-button-off"}
-                      size={22}
+                      name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                      size={24}
                       color={isSelected ? "#D0021B" : isDark ? "#475569" : "#CBD5E1"}
                     />
                   </View>

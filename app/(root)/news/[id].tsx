@@ -1,6 +1,7 @@
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getNewsById, NewsItem } from "@/services/news";
 import { Ionicons } from "@expo/vector-icons";
@@ -50,6 +51,7 @@ export default function NewsDetailScreen() {
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
 
   const [item, setItem] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -481,19 +483,19 @@ export default function NewsDetailScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 94 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#D0021B",
+            backgroundColor: "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
+            shadowOpacity: 0,
             shadowRadius: 8,
-            elevation: 6,
+            elevation: 0,
             zIndex: 99,
           }}
         >

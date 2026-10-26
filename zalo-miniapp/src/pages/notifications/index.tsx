@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 
-import Header from "@/components/Header";
+import TabHeader from "@/components/TabHeader";
+import { useGuideTarget, useTabGuide } from "@/context/GuideContext";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -26,6 +27,7 @@ const TYPE_ICON: Record<string, NotifIconConfig> = {
   BOOKING_CREATED: { emoji: "✅", color: "#007545", bg: "#E6F2EC" },
   BOOKING_STATUS_UPDATED: { emoji: "📄", color: "#825500", bg: "#FAF3E6" },
   DEPARTURE_RESCHEDULED: { emoji: "⚠️", color: "#BA1A1A", bg: "#FDF2F2" },
+  DEPARTURE_REMINDER: { emoji: "⏰", color: "#D0021B", bg: "#FDECEE" },
   SCHEDULE_UPDATED: { emoji: "📅", color: "#825500", bg: "#FAF3E6" },
   PASSWORD_CHANGED: { emoji: "🔑", color: "#005A34", bg: "#E6EFF0" },
 };
@@ -113,6 +115,11 @@ export default function NotificationsPage() {
   const handleViewDetail = async (item: NotificationItem) => {
     if (!item.isRead) handleRead(item.id);
     if (!item.refId) return;
+    // Nhắc lịch khởi hành: refId là id booking -> mở thẳng chi tiết đơn.
+    if (item.refType?.startsWith("BOOKING")) {
+      navigate(`/booking-detail/${item.refId}`);
+      return;
+    }
     setNavigating(item.id);
     try {
       const res = await getTransactionHistory(1, 50);
@@ -128,7 +135,7 @@ export default function NotificationsPage() {
   if (!user) {
     return (
       <Page style={{ background: palette.screenBg, minHeight: "100vh" }}>
-        <Header title="BENTHANH TOURIST" showActions />
+        <TabHeader title="Thông báo" subtitle="Đăng nhập để xem thông báo" />
         <div className="flex flex-col items-center text-center" style={{ padding: "80px 32px" }}>
           <div style={{ fontSize: 48 }}>🔕</div>
           <div className="font-bold" style={{ marginTop: 16, fontSize: FONT_SIZE.lg, color: palette.textSecondary }}>
@@ -142,28 +149,47 @@ export default function NotificationsPage() {
     );
   }
 
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → notifications)
+  useTabGuide("notifications", !loading);
+  const itemRef = useGuideTarget("notifications.item");
+  const readAllRef = useGuideTarget("notifications.readall");
+
   return (
     <Page style={{ background: palette.screenBg, paddingBottom: BOTTOM_NAV_SPACE }}>
-      <Header title="BENTHANH TOURIST" showActions />
-
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "12px 16px", borderBottom: `1px solid ${palette.border}` }}
-      >
-        <span style={{ fontSize: FONT_SIZE.card, color: palette.textSecondary, fontWeight: 600 }}>
-          {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Tất cả đã đọc"}
-        </span>
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAll}
-            disabled={markingAll}
-            className="font-bold"
-            style={{ color: palette.brand, fontSize: FONT_SIZE.card }}
-          >
-            {markingAll ? "Đang xử lý..." : "✓✓ Đánh dấu tất cả đã đọc"}
-          </button>
-        )}
-      </div>
+      <TabHeader
+        title="Thông báo"
+        guideTab="notifications"
+        subtitle={unreadCount > 0 ? `Bạn có ${unreadCount} thông báo chưa đọc` : "Tất cả đã đọc"}
+        right={
+          unreadCount > 0 ? (
+            <button
+              ref={readAllRef}
+              onClick={handleMarkAll}
+              disabled={markingAll}
+              className="flex items-center text-white font-bold flex-shrink-0"
+              style={{
+                height: 44,
+                padding: "0 14px",
+                borderRadius: 22,
+                gap: 6,
+                fontSize: FONT_SIZE.xxs,
+                border: "1px solid rgba(255,255,255,0.3)",
+                background: "rgba(255,255,255,0.15)",
+              }}
+            >
+              {markingAll ? (
+                <Spinner />
+              ) : (
+                <>
+                  <span aria-hidden="true">✓✓</span>
+                  Đọc tất cả
+                </>
+              )}
+            </button>
+          ) : null
+        }
+      />
+      <div style={{ height: 4 }} />
 
       {loading ? (
         <div className="flex flex-col items-center" style={{ padding: 48 }}>
@@ -193,12 +219,13 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div style={{ paddingTop: 12 }}>
-          {items.map((item) => {
+          {items.map((item, index) => {
             const cfg = getIconConfig(item.type);
-            const canNavigate = !!(item.refId && item.refType === "TOUR");
+            const canNavigate = !!(item.refId && (item.refType === "TOUR" || item.refType?.startsWith("BOOKING")));
             return (
               <button
                 key={item.id}
+                ref={index === 0 ? itemRef : undefined}
                 onClick={() => !item.isRead && handleRead(item.id)}
                 className="block w-full text-left"
                 style={{
@@ -253,11 +280,12 @@ export default function NotificationsPage() {
                     </div>
                     <div
                       style={{
-                        fontSize: FONT_SIZE.xxs,
-                        lineHeight: "26px",
+                        // Nội dung cỡ 16, tối đa 4 dòng — giống app RN.
+                        fontSize: FONT_SIZE.card,
+                        lineHeight: "24px",
                         color: isDark ? "#94A3B8" : "#5E3F3A",
                         display: "-webkit-box",
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 4,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
                       }}

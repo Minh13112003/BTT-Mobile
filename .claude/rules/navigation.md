@@ -17,6 +17,7 @@ app/
     _layout.tsx                # Provider stack chính
     detailTour.tsx             # "/detailTour"
     checkout.tsx               # "/checkout"
+    booking-success.tsx        # "/booking-success" — sau khi đặt tour xong (checkout replace sang đây)
     membership.tsx             # "/membership"
     (auth)/
       login.tsx                # "/login"
@@ -32,6 +33,8 @@ app/
       faq.tsx                  # "/(profile)/faq" — Câu hỏi thường gặp
       about.tsx                # "/(profile)/about" — Về BenThanh Tourist (giới thiệu, liên hệ, văn phòng)
       terms.tsx                # "/(profile)/terms" — Điều khoản & chính sách (2 tab, Accordion từng điều)
+      relatives.tsx            # "/(profile)/relatives" — Thân nhân (danh sách, tối đa 20)
+      relative-form.tsx        # "/(profile)/relative-form" — Thêm/sửa thân nhân (?id= khi sửa)
       referral.tsx             # "/(profile)/referral"
       registercustomer.tsx     # "/(profile)/registercustomer"
     (tabs)/
@@ -44,6 +47,10 @@ app/
     tips/[id].tsx              # "/tips/[id]"
     tour/[id].tsx              # "/tour/[id]"
 ```
+
+## Mở trang tour từ chatbot
+
+`ChatbotHost.openTour` gọi `router.push({ pathname: "/(root)/tour/[id]", params })` với `id = tour_key` và `searchDateMode: "specific"` + `searchSpecificDate` (ngày đầu của `ngay_khoi_hanh`) để trang tour chọn sẵn đợt khởi hành; trước đó phải `minimize()` khung chat.
 
 ## Cách dùng router trong component
 

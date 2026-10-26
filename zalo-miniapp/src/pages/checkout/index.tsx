@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
 
 import Header from "@/components/Header";
 import { useTheme } from "@/context/ThemeContext";
-import { booking, PaymentMethod } from "@/services/booking";
+import { booking, getLaravelSeats, PaymentMethod } from "@/services/booking";
 import { getPalette, RADIUS } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -87,16 +87,48 @@ export default function CheckoutPage() {
   const tourHasVat = params.get("hasVat") === "true";
   const departureId = params.get("departureId") || "";
   const departureDate = params.get("departureDate") || "";
-  const availableSeats = params.get("availableSeats") ? parseInt(params.get("availableSeats")!, 10) : Infinity;
+  const paramSeats = params.get("availableSeats") ? parseInt(params.get("availableSeats")!, 10) : Infinity;
   const isLaravelSource = params.get("source") === "LARAVEL" && !!params.get("tourKey");
   const tourKey = params.get("tourKey") || "";
   const departureKey = params.get("departureKey") || "";
 
+  // Số chỗ từ trang tour là stock_qty Laravel (chưa trừ khách đã đặt qua app) — hỏi lại NestJS số chỗ thật.
+  const [liveSeats, setLiveSeats] = useState<number | null>(null);
+  const refreshSeats = useCallback(() => {
+    if (!isLaravelSource || !departureKey) return;
+    getLaravelSeats(tourKey, departureKey)
+      .then((r) => setLiveSeats(r.availableSeats ?? Infinity))
+      .catch(() => {});
+  }, [isLaravelSource, tourKey, departureKey]);
+  useEffect(() => {
+    refreshSeats();
+  }, [refreshSeats]);
+  const availableSeats = liveSeats ?? paramSeats;
+
   const maxTotal = availableSeats === Infinity ? 99 : availableSeats;
 
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
+  // Chatbot (bttAI) có thể dẫn khách tới đây với số người đã chọn sẵn; khách vẫn sửa được.
+  const prefill = (key: string, min: number) => {
+    const n = parseInt(params.get(key) ?? "", 10);
+    return Number.isFinite(n) ? Math.min(Math.max(n, min), maxTotal) : min;
+  };
+  const [adults, setAdults] = useState(() => prefill("adults", 1));
+  const [children, setChildren] = useState(() => prefill("children", 0));
+  const [infants, setInfants] = useState(() => prefill("infants", 0));
+
+  // Số chỗ thật về sau ít hơn số khách đang chọn → bớt em bé, rồi trẻ em, rồi người lớn (giữ tối thiểu 1).
+  useEffect(() => {
+    let over = adults + children + infants - maxTotal;
+    if (over <= 0) return;
+    const cutInfants = Math.min(infants, over);
+    over -= cutInfants;
+    const cutChildren = Math.min(children, over);
+    over -= cutChildren;
+    const cutAdults = Math.min(adults - 1, over);
+    if (cutInfants) setInfants(infants - cutInfants);
+    if (cutChildren) setChildren(children - cutChildren);
+    if (cutAdults > 0) setAdults(adults - cutAdults);
+  }, [maxTotal, adults, children, infants]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [notice, setNotice] = useState("");
   const [selectedVoucher, setSelectedVoucher] = useState<ExtendedVoucher | null>(null);
@@ -139,15 +171,24 @@ export default function CheckoutPage() {
 
       const res = await booking(bookingData);
       if (res) {
-        snackbar.openSnackbar({
-          text: "Yêu cầu đăng ký tour đã được ghi nhận. Bộ phận chăm sóc khách hàng sẽ liên hệ sớm nhất!",
-          type: "success",
-          duration: 4000,
+        const tourCodeStr = res.data?.departure?.tourCode || res.data?.booking?.departure?.tourCode || tourCode;
+        // replace (không push) để Back không quay lại màn đặt tour đã hoàn tất
+        const q = new URLSearchParams({
+          tourName,
+          tourCode: tourCodeStr,
+          departureDate,
+          adults: String(adults),
+          children: String(children),
+          infants: String(infants),
+          total: String(finalPrice),
+          paymentMethod: paymentMethod ?? "",
         });
-        navigate("/history");
+        navigate(`/booking-success?${q.toString()}`, { replace: true });
       }
     } catch (error: any) {
       console.error("Lỗi đặt tour:", error);
+      // Có thể vừa có người khác đặt mất chỗ — cập nhật lại số chỗ.
+      refreshSeats();
       snackbar.openSnackbar({
         text: error?.response?.data?.message || "Đặt tour không thành công. Vui lòng thử lại sau.",
         type: "error",
@@ -165,7 +206,12 @@ export default function CheckoutPage() {
     const total = adults + children + infants;
     if (total > maxTotal) {
       return snackbar.openSnackbar({
-        text: availableSeats === Infinity ? "Số lượng khách tối đa là 99 người" : `Chỉ còn ${availableSeats} chỗ cho chuyến đi này`,
+        text:
+          availableSeats === Infinity
+            ? "Số lượng khách tối đa là 99 người"
+            : availableSeats <= 0
+              ? "Đợt khởi hành này đã hết chỗ. Vui lòng chọn ngày khác."
+              : `Chỉ còn ${availableSeats} chỗ cho chuyến đi này`,
         type: "warning",
       });
     }
@@ -174,11 +220,13 @@ export default function CheckoutPage() {
     }
   };
 
+  // Hết chỗ thì khoá nút "+" của cả 3 loại khách (tổng không vượt số chỗ còn lại).
+  const isFull = adults + children + infants >= maxTotal;
   const GuestStepper = ({ label, sub, value, onChange, min = 0 }: { label: string; sub: string; value: number; onChange: (v: number) => void; min?: number }) => (
     <div className="flex items-center justify-between" style={{ padding: "12px 0" }}>
       <div>
         <div className="font-bold" style={{ fontSize: FONT_SIZE.xxs, color: palette.textPrimary }}>{label}</div>
-        <div style={{ fontSize: 12, color: palette.textMuted }}>{sub}</div>
+        <div style={{ fontSize: FONT_SIZE.card, color: palette.textMuted }}>{sub}</div>
       </div>
       <div className="flex items-center" style={{ gap: 12 }}>
         <button
@@ -190,9 +238,11 @@ export default function CheckoutPage() {
         </button>
         <span className="font-bold" style={{ minWidth: 20, textAlign: "center", color: palette.textPrimary }}>{value}</span>
         <button
-          onClick={() => onChange(value + 1)}
+          onClick={() => !isFull && onChange(value + 1)}
+          disabled={isFull}
+          aria-label={`Thêm ${label.toLowerCase()}`}
           className="flex items-center justify-center font-black text-white"
-          style={{ width: 32, height: 32, borderRadius: 16, background: palette.brand }}
+          style={{ width: 32, height: 32, borderRadius: 16, background: palette.brand, opacity: isFull ? 0.35 : 1 }}
         >
           +
         </button>
@@ -235,11 +285,11 @@ export default function CheckoutPage() {
             Số lượng khách
           </div>
           <div style={{ padding: "0 4px" }}>
-            <GuestStepper label="Người lớn" sub="Từ 12 tuổi" value={adults} onChange={setAdults} min={1} />
+            <GuestStepper label="Người lớn" sub="Từ 16 tuổi · 100%" value={adults} onChange={setAdults} min={1} />
             <div style={{ height: 1, background: palette.border }} />
-            <GuestStepper label="Trẻ em" sub="2 - 11 tuổi (80% giá)" value={children} onChange={setChildren} />
+            <GuestStepper label="Trẻ em" sub="Từ 06 – 10 tuổi · 80%" value={children} onChange={setChildren} />
             <div style={{ height: 1, background: palette.border }} />
-            <GuestStepper label="Em bé" sub="Dưới 2 tuổi (40% giá)" value={infants} onChange={setInfants} />
+            <GuestStepper label="Em bé" sub="Dưới 05 tuổi · 40%" value={infants} onChange={setInfants} />
           </div>
           {availableSeats !== Infinity && adults + children + infants >= maxTotal && (
             <div style={{ marginTop: 10, fontSize: FONT_SIZE.xxs, color: "#F97316", fontWeight: 700 }}>

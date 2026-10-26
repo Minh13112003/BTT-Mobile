@@ -239,10 +239,12 @@ export async function getBlogItemMapped(postId: number | string): Promise<NewsIt
 //   }
 // };
 
-/** Lấy tối đa 5 tin tức mới nhất cho carousel trang chủ — chỉ từ category "Tin tức hoạt động công ty" (Laravel). */
-export const getNews = async (): Promise<{ data: NewsItem[] }> => {
+/** Lấy tối đa 5 bài mới nhất cho mục "Tin tức & cẩm nang" ở trang chủ — mặc định category "Tin tức hoạt động công ty" (Laravel). */
+export const getNews = async (
+  categoryId: number = BLOG_CATEGORY_COMPANY_NEWS,
+): Promise<{ data: NewsItem[] }> => {
   try {
-    const { items } = await getBlogCategoryMapped(BLOG_CATEGORY_COMPANY_NEWS, 1);
+    const { items } = await getBlogCategoryMapped(categoryId, 1);
     return { data: items.slice(0, 5) };
   } catch {
     return { data: [] };

@@ -1,6 +1,7 @@
 // services/booking.ts
 import * as urls from "./api/constants";
 import { apiService } from "./api/interceptor";
+import type { GuestPayload } from "@/utils/guest";
 
 // Thống nhất dữ liệu Mock và hàm dịch vụ Booking
 
@@ -16,6 +17,10 @@ interface Booking {
   paymentMethod: PaymentMethod;
   voucherCode?: string | null;
   notice?: string | null;
+  /** Thông tin từng hành khách (đúng bằng adults + children + infants; khách 1 = người đặt). */
+  guests?: GuestPayload[];
+  /** Vị trí các khách cần lưu vào danh sách thân nhân. */
+  saveToRelatives?: number[];
 
   // ===== DEMO — booking từ nguồn Laravel (benthanhtourist.com) =====
   // Khi có tourKey, backend NestJS gọi /api/tour/item lấy snapshot & bỏ qua idTour/departureId.
@@ -106,6 +111,22 @@ export function getBookingById(id: string) {
 
 export function booking(bookingData : Booking){
   return apiService.post(urls.URL_Booking, bookingData);
+}
+
+export interface LaravelSeats {
+  stockQty: number | null;
+  bookedSeats: number;
+  /** null = Laravel không trả số chỗ (không giới hạn). */
+  availableSeats: number | null;
+}
+
+/**
+ * Số chỗ thật còn đặt được của 1 đợt khởi hành nguồn Laravel. `stock_qty` bên benthanhtourist.com
+ * không giảm khi khách đặt qua app, nên NestJS trừ tổng khách các đơn còn giữ chỗ.
+ */
+export async function getLaravelSeats(tourKey: string, departureKey: string): Promise<LaravelSeats> {
+  const res = await apiService.get<LaravelSeats>(urls.URL_LaravelSeats, { tourKey, departureKey });
+  return res.data;
 }
 
 export type { Booking };

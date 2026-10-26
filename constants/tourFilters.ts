@@ -16,7 +16,8 @@ export type SearchMode =
   | "tour_of_the_year_2026"
   | "tour_cao_cap"
   | "tour_mice"
-  | "tour_he"
+  | "tour_mua_thu_dong"
+  | "tour_doc_la"
   | "tour_du_lich_xanh";
 
 /** Khu vực hợp lệ cho country = "Trong nước". */
@@ -45,7 +46,8 @@ export const SECTION_LABELS: Record<SearchMode, string> = {
   tour_of_the_year_2026: "TOUR OF THE YEAR 2026",
   tour_cao_cap: "TOUR CAO CẤP",
   tour_mice: "TOUR MICE",
-  tour_he: "TOUR HÈ",
+  tour_mua_thu_dong: "TOUR MÙA THU - ĐÔNG",
+  tour_doc_la: "TOUR ĐỘC LẠ",
   tour_du_lich_xanh: "DU LỊCH XANH",
 };
 
@@ -67,7 +69,8 @@ export const MODE_CHIP_LABELS: Record<SearchMode, string> = {
   tour_of_the_year_2026: "TOUR OF THE YEAR 2026",
   tour_cao_cap: "TOUR CAO CẤP",
   tour_mice: "TOUR MICE",
-  tour_he: "TOUR HÈ",
+  tour_mua_thu_dong: "TOUR MÙA THU - ĐÔNG",
+  tour_doc_la: "TOUR ĐỘC LẠ",
   tour_du_lich_xanh: "DU LỊCH XANH",
 };
 
@@ -82,8 +85,9 @@ export const SECTION_ORDER: SearchMode[] = [
   "tour_of_the_year_2026",
   "tour_cao_cap",
   "tour_mice",
-  "tour_he",
+  "tour_mua_thu_dong",
   "tour_du_lich_xanh",
+  "tour_doc_la",
 ];
 
 /** Giá trị `country` gửi lên API cho 2 mode theo vị trí. */
@@ -97,7 +101,8 @@ export const MODE_TOUR_TYPE: Partial<Record<SearchMode, string>> = {
   tour_of_the_year_2026: "TOUR OF THE YEAR 2026",
   tour_cao_cap: "TOUR CAO CẤP",
   tour_mice: "TOUR MICE",
-  tour_he: "TOUR HÈ",
+  tour_mua_thu_dong: "TOUR MÙA THU - ĐÔNG",
+  tour_doc_la: "TOUR ĐỘC LẠ",
   tour_du_lich_xanh: "DU LỊCH XANH",
 };
 

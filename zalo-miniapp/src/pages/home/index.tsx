@@ -7,9 +7,10 @@ import Footer from "@/components/Footer";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import TourCard from "@/components/TourCard";
 import { useAuth } from "@/context/AuthContext";
+import { useGuideTarget, useTabGuide } from "@/context/GuideContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useHomeTours } from "@/hooks/useHomeTours";
-import { getNews, NewsItem } from "@/services/news";
+import { BLOG_CATEGORY_TRAVEL_GUIDE, getNews, NewsItem } from "@/services/news";
 import { getMe } from "@/services/user";
 import MemberCard from "@/components/MemberCard";
 import { getPalette, BOTTOM_NAV_SPACE, RADIUS } from "@/constants/theme";
@@ -18,15 +19,17 @@ import { FONT_SIZE } from "@/constants/typography";
 import tourYear2026 from "@/static/tour-types/tour_year_2026.png";
 import tourCaoCap from "@/static/tour-types/tour_cao_cap.png";
 import tourMice from "@/static/tour-types/tour_mice.png";
-import tourHe from "@/static/tour-types/tour_he.png";
+import tourMuaThuDong from "@/static/tour-types/tour_mua_thu_dong.webp";
 import tourDuLichXanh from "@/static/tour-types/tour_du_lich_xanh.png";
+import tourDocLa from "@/static/tour-types/tour_doc_la.webp";
 
 const TOUR_TYPE_ICONS = [
   { mode: "tour_of_the_year_2026", label: "TOUR OF THE\nYEAR 2026", image: tourYear2026 },
   { mode: "tour_cao_cap", label: "TOUR\nCAO CẤP", image: tourCaoCap },
   { mode: "tour_mice", label: "TOUR\nMICE", image: tourMice },
-  { mode: "tour_he", label: "TOUR\nHÈ", image: tourHe },
+  { mode: "tour_mua_thu_dong", label: "TOUR MÙA\nTHU - ĐÔNG", image: tourMuaThuDong },
   { mode: "tour_du_lich_xanh", label: "DU LỊCH\nXANH", image: tourDuLichXanh },
+  { mode: "tour_doc_la", label: "TOUR\nĐỘC LẠ", image: tourDocLa },
 ];
 
 /** Port từ app/(root)/(tabs)/index.tsx bên React Native. */
@@ -38,8 +41,18 @@ export default function HomePage() {
   const palette = getPalette(isDark);
 
   const { sections, loading } = useHomeTours();
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → home)
+  useTabGuide("home", !loading);
+  const memberRef = useGuideTarget("home.member");
+  const searchRef = useGuideTarget("home.search");
+  const typesRef = useGuideTarget("home.types");
+  const hotRef = useGuideTarget("home.hot");
+  const newsRef = useGuideTarget("home.news");
   const [searchQuery, setSearchQuery] = useState("");
-  const [news, setNews] = useState<NewsItem[]>([]);
+  // Cuối trang: tin hoạt động công ty + cẩm nang du lịch (thay 3 ô Tin tức / Mẹo hay / Ưu đãi cũ) — giống app RN.
+  const [news, setNews] = useState<{ company: NewsItem[]; guide: NewsItem[] }>({ company: [], guide: [] });
+  const [newsTab, setNewsTab] = useState<"company" | "guide">("company");
   const [earnedPoints, setEarnedPoints] = useState(0);
 
   // Bộ tìm theo ngày khởi hành — port từ app/(root)/(tabs)/index.tsx, dùng
@@ -57,7 +70,10 @@ export default function HomePage() {
 
   useEffect(() => {
     getNews()
-      .then((res) => setNews(Array.isArray(res.data) ? res.data : []))
+      .then((res) => setNews((n) => ({ ...n, company: Array.isArray(res.data) ? res.data : [] })))
+      .catch(() => {});
+    getNews(BLOG_CATEGORY_TRAVEL_GUIDE)
+      .then((res) => setNews((n) => ({ ...n, guide: Array.isArray(res.data) ? res.data : [] })))
       .catch(() => {});
     getMe()
       .then((res) => {
@@ -86,12 +102,13 @@ export default function HomePage() {
 
   return (
     <Page style={{ background: palette.screenBg, paddingBottom: BOTTOM_NAV_SPACE }}>
-      <Header />
+      <Header guideTab="home" />
 
       {/* Thẻ hạng thành viên — bấm vào mở trang quyền lợi đầy đủ */}
       {user && (
         <div style={{ padding: "20px 16px 0" }}>
           <button
+            ref={memberRef}
             onClick={() => navigate(`/membership?earnedPoints=${earnedPoints}`)}
             className="block w-full"
             style={{ display: "flex", justifyContent: "center" }}
@@ -104,19 +121,9 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Chào mừng */}
-      <div style={{ padding: "20px 16px 0" }}>
-        <div className="font-semibold uppercase" style={{ color: palette.textMuted, fontSize: FONT_SIZE.card, letterSpacing: 1 }}>
-          Chào mừng bạn trở lại,
-        </div>
-        <div className="font-black" style={{ color: palette.textPrimary, fontSize: FONT_SIZE.xl, marginTop: 2 }}>
-          {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Khách du lịch"} 👋
-        </div>
-      </div>
-
       {/* Search bar + bộ tìm theo ngày khởi hành */}
       <div style={{ padding: 16 }}>
-        <div style={{ padding: 16, borderRadius: RADIUS.lg, background: palette.surface, border: `1px solid ${palette.border}` }}>
+        <div ref={searchRef} style={{ padding: 16, borderRadius: RADIUS.lg, background: palette.surface, border: `1px solid ${palette.border}` }}>
           <div
             className="flex items-center"
             style={{
@@ -224,7 +231,7 @@ export default function HomePage() {
       </div>
 
       {/* 5 icon loại tour */}
-      <div className="flex overflow-x-auto" style={{ padding: "4px 16px", gap: 14 }}>
+      <div ref={typesRef} className="flex overflow-x-auto" style={{ padding: "4px 16px", gap: 14 }}>
         {TOUR_TYPE_ICONS.map((item) => (
           <button
             key={item.mode}
@@ -248,28 +255,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Quick Access Grid */}
-      <div
-        className="flex"
-        style={{ margin: "20px 16px 0", borderRadius: RADIUS.md, background: palette.surface, border: `1px solid ${palette.border}`, padding: "16px 8px" }}
-      >
-        {[
-          { label: "Tin tức", emoji: "📰", bg: isDark ? "#1A2D20" : "#ECFDF5", color: "#10B981", onPress: () => navigate("/news") },
-          { label: "Mẹo hay", emoji: "💡", bg: isDark ? "#2A2010" : "#FFFBEB", color: "#F59E0B", onPress: () => navigate("/tips") },
-          { label: "Ưu đãi", emoji: "🎁", bg: isDark ? "#2A1520" : "#FFF1F2", color: "#E11D48", onPress: () => navigate("/search?mode=hot") },
-        ].map((q) => (
-          <button key={q.label} onClick={q.onPress} className="flex-1 flex flex-col items-center" style={{ minHeight: 44 }}>
-            <div
-              className="flex items-center justify-center"
-              style={{ width: 52, height: 52, borderRadius: RADIUS.md, background: q.bg, marginBottom: 6, fontSize: 24 }}
-            >
-              {q.emoji}
-            </div>
-            <div className="font-bold" style={{ fontSize: FONT_SIZE.card, color: palette.textPrimary }}>{q.label}</div>
-          </button>
-        ))}
-      </div>
-
       {loading ? (
         <div className="flex justify-center" style={{ padding: 40 }}>
           <Spinner />
@@ -278,7 +263,7 @@ export default function HomePage() {
         <>
           {/* Tour hot — carousel */}
           {sections.hot.length > 0 && (
-            <div style={{ marginTop: 8 }}>
+            <div ref={hotRef} style={{ marginTop: 8 }}>
               <FeaturedCarousel tours={sections.hot} />
             </div>
           )}
@@ -298,29 +283,60 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Tin tức nổi bật */}
-          {news.length > 0 && (
-            <div style={{ marginTop: 20 }}>
+          {/* Tin tức & cẩm nang — cuối trang */}
+          {(news.company.length > 0 || news.guide.length > 0) && (
+            <div ref={newsRef} style={{ marginTop: 20 }}>
               <div
                 className="flex items-center justify-between"
                 style={{ padding: "0 16px", marginBottom: 12 }}
               >
                 <div className="font-black" style={{ fontSize: FONT_SIZE.xl, color: palette.textPrimary }}>
-                  Tin tức nổi bật
+                  Tin tức & cẩm nang
                 </div>
                 <button
-                  onClick={() => navigate("/news")}
+                  onClick={() => navigate(`/news?category=${newsTab}`)}
                   className="font-black"
                   style={{ fontSize: FONT_SIZE.xxs, color: palette.brand }}
                 >
                   Xem tất cả →
                 </button>
               </div>
+              <div className="flex" style={{ padding: "0 16px", marginBottom: 12, gap: 8 }}>
+                {(
+                  [
+                    { key: "company", label: "Tin công ty" },
+                    { key: "guide", label: "Cẩm nang du lịch" },
+                  ] as const
+                ).map((t) => {
+                  const active = newsTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => setNewsTab(t.key)}
+                      className="font-bold"
+                      style={{
+                        minHeight: 44,
+                        padding: "0 16px",
+                        borderRadius: 999,
+                        fontSize: FONT_SIZE.card,
+                        background: active ? palette.brand : palette.surface,
+                        color: active ? "#FFFFFF" : palette.textSecondary,
+                        border: `1px solid ${active ? palette.brand : palette.border}`,
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
               <div
                 className="flex overflow-x-auto"
                 style={{ paddingLeft: 16, paddingRight: 8, gap: 12 }}
               >
-                {news.map((item) => (
+                {news[newsTab].length === 0 && (
+                  <div style={{ fontSize: FONT_SIZE.xxs, color: palette.textMuted }}>Chưa có bài viết trong mục này.</div>
+                )}
+                {news[newsTab].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => navigate(`/news/${item.id}`)}

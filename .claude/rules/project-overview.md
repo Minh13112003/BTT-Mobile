@@ -27,20 +27,21 @@ App du lịch mobile cho công ty **BenThanh Tourist**.
 
 | Màn hình | File | Mô tả |
 |---|---|---|
-| Home | `app/(root)/(tabs)/index.tsx` | Newest, Hot, Popular tours |
-| Du lịch | `app/(root)/(tabs)/search.tsx` | Search + filter tours |
+| Home | `app/(root)/(tabs)/index.tsx` | Thẻ thành viên → tìm theo ngày → 6 loại tour → Tour hot → Tour sắp khởi hành → **Tin tức & cẩm nang** (cuối trang, 2 nút Tin công ty / Cẩm nang du lịch; "Xem tất cả" mở `/news?category=`). Đã bỏ lời chào và 3 ô Tin tức/Mẹo hay/Ưu đãi (2026-10-26) |
+| Du lịch | `app/(root)/(tabs)/search.tsx` | Search + filter tours. Mặc định "Tất cả" = toàn bộ tour, **Trong nước trước, Nước ngoài sau** (Laravel, `mode "newest"` trong `useTourSearch`). Bộ lọc đang chọn được giữ khi chuyển tab; rời tab > 30 phút rồi quay lại thì về mặc định (mỗi lần vào/rời tab tính lại mốc 30 phút; điều hướng kèm tham số từ Home thì giữ đúng lựa chọn đó) |
 | Lịch sử | `app/(root)/(tabs)/history.tsx` | Booking history |
 | Thông báo | `app/(root)/(tabs)/notifications.tsx` | Push notification list |
 | Tài khoản | `app/(root)/(tabs)/profile.tsx` | User profile + logout |
 | Chi tiết booking | `app/(root)/detailTour.tsx` | Lịch trình, điều khoản, đánh giá (COMPLETED) |
 | Thanh toán | `app/(root)/checkout.tsx` | Ngày, phòng, voucher, xác nhận |
+| Đặt tour thành công | `app/(root)/booking-success.tsx` | Màn xác nhận sau khi `checkout.tsx` đặt xong (`router.replace`, params: tourName/tourCode/departureDate/adults/children/infants/total/paymentMethod). Nút "Đến lịch sử" + "Đến trang chủ"; Back/vuốt về cũng về trang chủ |
 | Thông tin cá nhân | `app/(root)/(profile)/selfprofile.tsx` | Họ tên, ngày sinh, giới tính, email, CCCD, hộ chiếu, avatar (đổi mật khẩu/PIN ở `security.tsx`) |
 | PIN | `app/(root)/(profile)/setup-pin.tsx` / `change-pin.tsx` | Tạo / đổi PIN 6 số |
 
 ## Provider stack (app/(root)/_layout.tsx)
 
 ```
-ThemeProvider → AuthProvider → NotificationProvider → Stack
+ThemeProvider → AuthProvider → NotificationProvider → ChatbotProvider → GuideProvider → Stack + ChatbotHost + ProfileCompletionPrompt (+ GuideOverlay khi đang hướng dẫn)
 ```
 
 ## Lưu ý Expo SDK 54

@@ -1,5 +1,6 @@
 import CustomAlert from "@/components/CustomAlert";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { KeypadCaret, PhoneKeypad } from "@/components/PhoneKeypad";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
@@ -11,10 +12,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   LogBox,
   Platform,
@@ -23,6 +26,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -62,6 +66,56 @@ function maskDate(text: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
+/**
+ * Label / Section PHẢI nằm ngoài SelfProfileScreen: nếu khai báo trong thân component, mỗi lần gõ 1 ký tự
+ * (đổi state) chúng thành "component mới" → React huỷ & dựng lại cả Section → TextInput mất focus,
+ * bàn phím tự đóng sau mỗi ký tự.
+ */
+function Label({ children, hint }: { children: string; hint?: string }) {
+  const { theme } = useTheme();
+  const textMuted = theme === "dark" ? "text-slate-400" : "text-slate-500";
+  return (
+    <View className="flex-row items-baseline mb-1.5 pl-1">
+      <Text className={`font-bold ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
+        {children}
+      </Text>
+      {hint ? (
+        <Text className={`ml-2 ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
+          {hint}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function Section({ title, badge, children }: { title: string; badge?: string; children: React.ReactNode }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <View
+      className={`rounded-[24px] p-5 mb-4 border ${
+        isDark ? "bg-slate-800/90 border-slate-700/50" : "bg-white border-slate-100"
+      }`}
+    >
+      <View className="flex-row items-center mb-4">
+        <Text className={`font-black ${isDark ? "text-slate-100" : "text-slate-800"}`} style={{ fontSize: FONT_SIZE.xs }}>
+          {title}
+        </Text>
+        {badge ? (
+          <View className="bg-orange-700 rounded-full px-2 py-0.5 ml-2">
+            <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xxs }}>
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+type NumericField = "dob" | "nid" | "ppx";
+
 export default function SelfProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -75,6 +129,14 @@ export default function SelfProfileScreen() {
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
   const [focused, setFocused] = useState("");
 
+  // Bàn phím số tự vẽ (cùng kiểu bàn phím nhập PIN) cho các ô toàn số: ngày sinh, CCCD, ngày hết hạn hộ chiếu.
+  const { height: windowHeight } = useWindowDimensions();
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
+  const fieldRefs = useRef<Partial<Record<NumericField, View | null>>>({});
+  const [keypadField, setKeypadField] = useState<NumericField | null>(null);
+  const [keypadHeight, setKeypadHeight] = useState(0);
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
@@ -84,6 +146,44 @@ export default function SelfProfileScreen() {
   const [passportNumber, setPassportNumber] = useState("");
   const [passportExpiry, setPassportExpiry] = useState("");
   const [error, setError] = useState("");
+
+  const numericValue: Record<NumericField, string> = { dob, nid: nationalId, ppx: passportExpiry };
+
+  const openKeypad = (field: NumericField) => {
+    Keyboard.dismiss();
+    setFocused(field);
+    setKeypadField(field);
+    // Chờ khoảng trống cuối ScrollView render xong rồi cuộn để ô đang nhập nằm trên bàn phím.
+    setTimeout(() => {
+      fieldRefs.current[field]?.measureInWindow((_x, y, _w, h) => {
+        const limit = windowHeight - (keypadHeight || 340) - 16;
+        if (y + h > limit) scrollRef.current?.scrollTo({ y: scrollY.current + (y + h - limit), animated: true });
+      });
+    }, 120);
+  };
+
+  const closeKeypad = () => {
+    setKeypadField(null);
+    setFocused("");
+  };
+
+  const applyNumeric = (field: NumericField, next: (digits: string) => string) => {
+    const digits = numericValue[field].replace(/\D/g, "");
+    const out = next(digits);
+    if (field === "nid") setNationalId(out.slice(0, 12));
+    else if (field === "dob") setDob(maskDate(out));
+    else setPassportExpiry(maskDate(out));
+  };
+
+  // Android: nút Back đóng bàn phím số trước, không thoát màn hình.
+  useEffect(() => {
+    if (!keypadField) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      closeKeypad();
+      return true;
+    });
+    return () => sub.remove();
+  }, [keypadField]);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
@@ -162,16 +262,17 @@ export default function SelfProfileScreen() {
       setError("Ngày sinh không hợp lệ. Nhập theo dạng DD/MM/YYYY.");
       return;
     }
-    const expiryIso = dmyToIso(passportExpiry);
-    if (expiryIso === undefined) {
-      setError("Ngày hết hạn hộ chiếu không hợp lệ. Nhập theo dạng DD/MM/YYYY.");
-      return;
-    }
-    const nid = nationalId.trim();
-    if (nid && !/^(\d{9}|\d{12})$/.test(nid)) {
-      setError("Số CCCD gồm 9 hoặc 12 chữ số.");
-      return;
-    }
+    // [TẠM TẮT — chủ dự án chưa cần CCCD/hộ chiếu] không kiểm tra, cũng KHÔNG gửi 3 trường này (gửi null sẽ xoá dữ liệu đã lưu)
+    // const expiryIso = dmyToIso(passportExpiry);
+    // if (expiryIso === undefined) {
+    //   setError("Ngày hết hạn hộ chiếu không hợp lệ. Nhập theo dạng DD/MM/YYYY.");
+    //   return;
+    // }
+    // const nid = nationalId.trim();
+    // if (nid && !/^(\d{9}|\d{12})$/.test(nid)) {
+    //   setError("Số CCCD gồm 9 hoặc 12 chữ số.");
+    //   return;
+    // }
 
     try {
       setSaving(true);
@@ -181,9 +282,9 @@ export default function SelfProfileScreen() {
         email: email.trim(),
         dateOfBirth: dobIso,
         gender,
-        nationalId: nid || null,
-        passportNumber: passportNumber.trim() ? passportNumber.trim().toUpperCase() : null,
-        passportExpiry: expiryIso,
+        // nationalId: nid || null,
+        // passportNumber: passportNumber.trim() ? passportNumber.trim().toUpperCase() : null,
+        // passportExpiry: expiryIso,
       });
       const updated = res.data?.user || res.data;
       if (updated) {
@@ -247,8 +348,8 @@ export default function SelfProfileScreen() {
     `rounded-2xl border-2 px-4 h-14 justify-center ${
       readonly
         ? isDark
-          ? "bg-slate-800/50 border-slate-700"
-          : "bg-slate-100 border-slate-100"
+          ? "bg-slate-950/60 border-slate-700 border-dashed"
+          : "bg-slate-100 border-slate-300 border-dashed"
         : focused === key
           ? isDark
             ? "bg-slate-800 border-red-400"
@@ -257,41 +358,6 @@ export default function SelfProfileScreen() {
             ? "bg-slate-800 border-slate-700"
             : "bg-white border-slate-200"
     }`;
-
-  const Label = ({ children, hint }: { children: string; hint?: string }) => (
-    <View className="flex-row items-baseline mb-1.5 pl-1">
-      <Text className={`font-bold ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
-        {children}
-      </Text>
-      {hint ? (
-        <Text className={`ml-2 ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
-          {hint}
-        </Text>
-      ) : null}
-    </View>
-  );
-
-  const Section = ({ title, badge, children }: { title: string; badge?: string; children: React.ReactNode }) => (
-    <View
-      className={`rounded-[24px] p-5 mb-4 border ${
-        isDark ? "bg-slate-800/90 border-slate-700/50" : "bg-white border-slate-100"
-      }`}
-    >
-      <View className="flex-row items-center mb-4">
-        <Text className={`font-black ${textMain}`} style={{ fontSize: FONT_SIZE.xs }}>
-          {title}
-        </Text>
-        {badge ? (
-          <View className="bg-orange-700 rounded-full px-2 py-0.5 ml-2">
-            <Text className="text-white font-bold" style={{ fontSize: FONT_SIZE.xxs }}>
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-      {children}
-    </View>
-  );
 
   const inputText = `font-medium ${isDark ? "text-slate-100" : "text-slate-800"}`;
   const placeholderColor = isDark ? "#64748B" : "#94A3B8";
@@ -317,9 +383,19 @@ export default function SelfProfileScreen() {
         ) : (
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"}>
             <ScrollView
+              ref={scrollRef}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 }}
+              onScroll={(e) => {
+                scrollY.current = e.nativeEvent.contentOffset.y;
+              }}
+              scrollEventThrottle={16}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingTop: 8,
+                // Chừa chỗ bằng chiều cao bàn phím số để cuộn được ô cuối lên trên nó.
+                paddingBottom: keypadField ? keypadHeight + 24 : 40,
+              }}
             >
               {/* Ảnh đại diện */}
               <View className="items-center mb-5">
@@ -382,7 +458,10 @@ export default function SelfProfileScreen() {
                       <TextInput
                         value={firstName}
                         onChangeText={setFirstName}
-                        onFocus={() => setFocused("first")}
+                        onFocus={() => {
+                          setKeypadField(null);
+                          setFocused("first");
+                        }}
                         onBlur={() => setFocused("")}
                         placeholder="Họ"
                         placeholderTextColor={placeholderColor}
@@ -397,7 +476,10 @@ export default function SelfProfileScreen() {
                       <TextInput
                         value={lastName}
                         onChangeText={setLastName}
-                        onFocus={() => setFocused("last")}
+                        onFocus={() => {
+                          setKeypadField(null);
+                          setFocused("last");
+                        }}
                         onBlur={() => setFocused("")}
                         placeholder="Tên"
                         placeholderTextColor={placeholderColor}
@@ -409,19 +491,38 @@ export default function SelfProfileScreen() {
                 </View>
 
                 <Label hint="DD/MM/YYYY">Ngày sinh</Label>
-                <View className={`${inputWrap("dob")} mb-4`}>
-                  <TextInput
-                    value={dob}
-                    onChangeText={(t) => setDob(maskDate(t))}
-                    onFocus={() => setFocused("dob")}
-                    onBlur={() => setFocused("")}
-                    placeholder="20/05/1990"
-                    placeholderTextColor={placeholderColor}
-                    keyboardType="number-pad"
-                    maxLength={10}
-                    className={inputText}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                  />
+                <View
+                  ref={(r) => {
+                    fieldRefs.current.dob = r;
+                  }}
+                  collapsable={false}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => openKeypad("dob")}
+                    accessibilityRole="button"
+                    accessibilityLabel={numericValue.dob || "20/05/1990"}
+                    className={`${inputWrap("dob")} mb-4`}
+                  >
+                    <View className="flex-row items-center">
+                      {keypadField === "dob" && !numericValue.dob && (
+                        <View style={{ marginRight: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                      <Text
+                        className={numericValue.dob ? inputText : ""}
+                        style={{ fontSize: FONT_SIZE.xs, color: numericValue.dob ? undefined : placeholderColor }}
+                      >
+                        {numericValue.dob || "20/05/1990"}
+                      </Text>
+                      {keypadField === "dob" && !!numericValue.dob && (
+                        <View style={{ marginLeft: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
                 </View>
 
                 <Label>Giới tính</Label>
@@ -454,18 +555,27 @@ export default function SelfProfileScreen() {
               </Section>
 
               <Section title="Liên hệ">
-                <Label hint="Đăng nhập bằng số này">Số điện thoại</Label>
-                <View className={`${inputWrap("phone", true)} mb-4`}>
+                <Label hint="chỉ xem · dùng để đăng nhập">Số điện thoại</Label>
+                <View className={`${inputWrap("phone", true)} mb-4 flex-row items-center justify-between`}>
                   <Text className={textMuted} style={{ fontSize: FONT_SIZE.xs }}>
                     {displayUser?.phonenumber || "Chưa có"}
                   </Text>
+                  <View className="flex-row items-center">
+                    <Ionicons name="lock-closed" size={16} color={isDark ? "#64748B" : "#94A3B8"} />
+                    <Text className={`ml-1.5 ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
+                      Không thể sửa
+                    </Text>
+                  </View>
                 </View>
                 <Label>Email</Label>
                 <View className={inputWrap("email")}>
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    onFocus={() => setFocused("email")}
+                    onFocus={() => {
+                          setKeypadField(null);
+                          setFocused("email");
+                        }}
                     onBlur={() => setFocused("")}
                     placeholder="email@example.com"
                     placeholderTextColor={placeholderColor}
@@ -477,27 +587,51 @@ export default function SelfProfileScreen() {
                 </View>
               </Section>
 
+              {/* [TẠM TẮT — chủ dự án chưa cần CCCD/hộ chiếu] bỏ comment cả khối để bật lại (cùng 2 khối cùng ghi chú ở handleSave)
               <Section title="Giấy tờ tuỳ thân" badge="Mới">
                 <Label>Số CCCD</Label>
-                <View className={`${inputWrap("nid")} mb-4`}>
-                  <TextInput
-                    value={nationalId}
-                    onChangeText={(t) => setNationalId(t.replace(/\D/g, "").slice(0, 12))}
-                    onFocus={() => setFocused("nid")}
-                    onBlur={() => setFocused("")}
-                    placeholder="12 chữ số"
-                    placeholderTextColor={placeholderColor}
-                    keyboardType="number-pad"
-                    className={inputText}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                  />
+                <View
+                  ref={(r) => {
+                    fieldRefs.current.nid = r;
+                  }}
+                  collapsable={false}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => openKeypad("nid")}
+                    accessibilityRole="button"
+                    accessibilityLabel={numericValue.nid || "12 chữ số"}
+                    className={`${inputWrap("nid")} mb-4`}
+                  >
+                    <View className="flex-row items-center">
+                      {keypadField === "nid" && !numericValue.nid && (
+                        <View style={{ marginRight: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                      <Text
+                        className={numericValue.nid ? inputText : ""}
+                        style={{ fontSize: FONT_SIZE.xs, color: numericValue.nid ? undefined : placeholderColor }}
+                      >
+                        {numericValue.nid || "12 chữ số"}
+                      </Text>
+                      {keypadField === "nid" && !!numericValue.nid && (
+                        <View style={{ marginLeft: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
                 </View>
                 <Label>Số hộ chiếu</Label>
                 <View className={`${inputWrap("pp")} mb-4`}>
                   <TextInput
                     value={passportNumber}
                     onChangeText={(t) => setPassportNumber(t.toUpperCase().slice(0, 20))}
-                    onFocus={() => setFocused("pp")}
+                    onFocus={() => {
+                          setKeypadField(null);
+                          setFocused("pp");
+                        }}
                     onBlur={() => setFocused("")}
                     placeholder="C1234567"
                     placeholderTextColor={placeholderColor}
@@ -507,24 +641,44 @@ export default function SelfProfileScreen() {
                   />
                 </View>
                 <Label hint="DD/MM/YYYY">Ngày hết hạn</Label>
-                <View className={`${inputWrap("ppx")} mb-3`}>
-                  <TextInput
-                    value={passportExpiry}
-                    onChangeText={(t) => setPassportExpiry(maskDate(t))}
-                    onFocus={() => setFocused("ppx")}
-                    onBlur={() => setFocused("")}
-                    placeholder="15/01/2032"
-                    placeholderTextColor={placeholderColor}
-                    keyboardType="number-pad"
-                    maxLength={10}
-                    className={inputText}
-                    style={{ fontSize: FONT_SIZE.xs }}
-                  />
+                <View
+                  ref={(r) => {
+                    fieldRefs.current.ppx = r;
+                  }}
+                  collapsable={false}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => openKeypad("ppx")}
+                    accessibilityRole="button"
+                    accessibilityLabel={numericValue.ppx || "15/01/2032"}
+                    className={`${inputWrap("ppx")} mb-3`}
+                  >
+                    <View className="flex-row items-center">
+                      {keypadField === "ppx" && !numericValue.ppx && (
+                        <View style={{ marginRight: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                      <Text
+                        className={numericValue.ppx ? inputText : ""}
+                        style={{ fontSize: FONT_SIZE.xs, color: numericValue.ppx ? undefined : placeholderColor }}
+                      >
+                        {numericValue.ppx || "15/01/2032"}
+                      </Text>
+                      {keypadField === "ppx" && !!numericValue.ppx && (
+                        <View style={{ marginLeft: 2 }}>
+                          <KeypadCaret />
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
                 </View>
                 <Text className={`leading-5 ${textMuted}`} style={{ fontSize: FONT_SIZE.xxs }}>
                   Chỉ dùng để làm thủ tục tour (vé máy bay, visa). Hộ chiếu cần còn hạn ít nhất 6 tháng tính từ ngày về.
                 </Text>
               </Section>
+              */}
 
               {error ? (
                 <View className="rounded-2xl p-3.5 mb-4 bg-red-50 border border-red-200">
@@ -539,7 +693,15 @@ export default function SelfProfileScreen() {
           </KeyboardAvoidingView>
         )}
       </SafeAreaView>
-      <ZaloFloatingButton />
+      <PhoneKeypad
+        visible={keypadField !== null}
+        onKey={(d) => keypadField && applyNumeric(keypadField, (digits) => digits + d)}
+        onDelete={() => keypadField && applyNumeric(keypadField, (digits) => digits.slice(0, -1))}
+        onClear={() => keypadField && applyNumeric(keypadField, () => "")}
+        onDone={closeKeypad}
+        onHeightChange={setKeypadHeight}
+      />
+      <ZaloFloatingButton liftBy={keypadField ? keypadHeight : 0} />
       <CustomAlert
         visible={alertVisible}
         type={alertType}

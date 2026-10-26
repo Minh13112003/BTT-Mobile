@@ -1,3 +1,4 @@
+import { useGuideTarget } from "@/context/Guide_Context";
 import { useNotification } from "@/context/Notification_Context";
 import {
   ScrollVisibilityProvider,
@@ -41,6 +42,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const isDark = theme === "dark";
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotification();
+  const navRef = useGuideTarget("nav");
 
   const count = state.routes.length;
   const [innerW, setInnerW] = useState(0);
@@ -84,6 +86,7 @@ function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
       }}
     >
       <Animated.View
+        ref={navRef}
         onLayout={(e) => setInnerW(e.nativeEvent.layout.width - PAD * 2 - 2)}
         style={{
           opacity: contentOpacity,

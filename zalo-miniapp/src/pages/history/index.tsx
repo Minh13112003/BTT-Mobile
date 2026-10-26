@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 
-import Header from "@/components/Header";
+import TabHeader from "@/components/TabHeader";
+import { useGuideTarget, useTabGuide } from "@/context/GuideContext";
 import Footer from "@/components/Footer";
 import FavoritesList from "@/components/FavoritesList";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { getTransactionHistory } from "@/services/booking";
 import type { TourItem } from "@/services/tour";
@@ -63,20 +65,30 @@ function statusTone(statusVn: string, isDark: boolean) {
 const LIMIT = 5;
 
 /**
+ * Trang đầu của lịch sử, giữ lại giữa các lần vào tab (trang này mount lại mỗi lần chuyển tab): vào
+ * lại thì hiện ngay dữ liệu cũ rồi âm thầm tải bản mới — không còn màn "Đang tải..." mỗi lần vào.
+ * Gắn theo id người dùng để đổi tài khoản không thấy đơn của người trước.
+ */
+let historyCache: { userId: string; orders: OrderItem[]; hasNext: boolean } | null = null;
+
+/**
  * Port từ app/(root)/(tabs)/history.tsx — giản lược collapsing header + back-to-top.
  * Có 2 tab: "Lịch sử" (đơn đặt tour) và "Yêu thích" (tour đã tim, xem FavoritesList).
  */
 export default function HistoryPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
+  const cached = historyCache && historyCache.userId === userId ? historyCache : null;
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
 
   const [activeTab, setActiveTab] = useState<"history" | "favorites">("history");
-  const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [loading, setLoading] = useState(cached === null);
+  const [orders, setOrders] = useState<OrderItem[]>(cached?.orders ?? []);
   const [page, setPage] = useState(1);
-  const [hasNext, setHasNext] = useState(false);
+  const [hasNext, setHasNext] = useState(cached?.hasNext ?? false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
 
@@ -88,6 +100,7 @@ export default function HistoryPage() {
         const meta = res.data.meta;
         setOrders((prev) => (isLoadMore ? [...prev, ...items] : items));
         setHasNext(meta?.hasNext ?? false);
+        if (!isLoadMore) historyCache = { userId, orders: items, hasNext: meta?.hasNext ?? false };
       }
     } catch (err) {
       console.error("Lỗi khi tải lịch sử giao dịch:", err);
@@ -119,26 +132,30 @@ export default function HistoryPage() {
 
   const pendingCount = orders.filter((o) => (MAP_STATUS_VN[o.status] || o.status) === "Chờ xử lý").length;
 
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → history)
+  useTabGuide("history", !loading);
+  const tabsRef = useGuideTarget("history.tabs");
+  const chipsRef = useGuideTarget("history.chips");
+  const orderRef = useGuideTarget("history.order");
+
   return (
     <Page style={{ background: palette.screenBg, paddingBottom: BOTTOM_NAV_SPACE }}>
-      <Header />
-
-      <div style={{ padding: "20px 20px 4px" }}>
-        <div className="font-black" style={{ fontSize: FONT_SIZE.lg, color: palette.textPrimary }}>
-          {activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
-        </div>
-        <div style={{ fontSize: FONT_SIZE.card, color: palette.textMuted, marginTop: 2 }}>
-          {activeTab === "history"
+      <TabHeader
+        guideTab="history"
+        title={activeTab === "history" ? "Lịch sử đặt tour" : "Tour yêu thích"}
+        subtitle={
+          activeTab === "history"
             ? pendingCount > 0
               ? `${pendingCount} đơn hàng đang xử lý`
               : `${orders.length} đơn hàng`
-            : "Tour bạn đã lưu lại"}
-        </div>
-      </div>
+            : "Tour bạn đã lưu lại"
+        }
+      />
 
       {/* Tab switch: Lịch sử / Yêu thích */}
       <div style={{ padding: "12px 20px 0" }}>
         <div
+          ref={tabsRef}
           className="flex"
           style={{ borderRadius: RADIUS.pill, padding: 4, background: isDark ? palette.surface : "#F1F5F9" }}
         >
@@ -172,7 +189,7 @@ export default function HistoryPage() {
 
       {/* Filter chip trạng thái — chỉ áp dụng cho tab Lịch sử */}
       {activeTab === "history" && (
-      <div className="flex overflow-x-auto" style={{ padding: "12px 20px", gap: 8 }}>
+      <div ref={chipsRef} className="flex overflow-x-auto" style={{ padding: "12px 20px", gap: 8 }}>
         {STATUS_OPTIONS.map((status) => {
           const active = selectedStatus === status;
           return (
@@ -227,7 +244,7 @@ export default function HistoryPage() {
           </div>
         ) : (
           <>
-            {filteredOrders.map((item) => {
+            {filteredOrders.map((item, index) => {
               const statusVn = MAP_STATUS_VN[item.status] || item.status;
               const tone = statusTone(statusVn, isDark);
               const hasDiscount = !!item.discountAmount && item.discountAmount > 0;
@@ -240,6 +257,7 @@ export default function HistoryPage() {
               return (
                 <div
                   key={item.id}
+                  ref={index === 0 ? orderRef : undefined}
                   className="relative overflow-hidden"
                   style={{
                     marginBottom: 16,

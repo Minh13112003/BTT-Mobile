@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Image, Linking, TouchableOpacity } from "react-native";
+import ChatbotFloatingButton, { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import CustomAlert from "@/components/CustomAlert";
+import { useAuth } from "@/context/Auth_Context";
+import { useChatbot } from "@/context/Chatbot_Context";
+import { useGuideTarget } from "@/context/Guide_Context";
+import { GuideTab } from "@/constants/guideSteps";
 
 const ZALO_GROUP_URL = "https://zalo.me/237833859403376914";
 
@@ -9,14 +14,24 @@ interface ZaloFloatingButtonProps {
   liftBy?: number;
   /** Vị trí `bottom` mặc định — dùng khi màn hình có thanh CTA dính đáy (vd BookingBar) cần né. */
   baseBottom?: number;
+  /** Tab có bước hướng dẫn "Hỗ trợ nhanh" — đăng ký 2 nút làm phần tử được làm nổi. */
+  guideTab?: GuideTab;
 }
 
 /**
  * Nút nổi liên hệ Zalo — luôn hiển thị, mờ đi (opacity) để không che chữ phía sau,
  * rung lắc định kỳ để thu hút chú ý. Nhấn vào sẽ hỏi xác nhận trước khi mở nhóm Zalo.
  */
-export default function ZaloFloatingButton({ liftBy = 0, baseBottom = 30 }: ZaloFloatingButtonProps) {
+export default function ZaloFloatingButton({ liftBy = 0, baseBottom = 30, guideTab }: ZaloFloatingButtonProps) {
+  const zaloRef = useGuideTarget(guideTab ? `${guideTab}.zalo` : null);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const { isLoggedIn } = useAuth();
+  const { isOpen } = useChatbot();
+  const chatbotLift = useChatbotLift();
+  // Nút bttAI nằm ngay dưới Zalo. Chỗ của nó luôn được chừa (khi đã đăng nhập) để Zalo không nhảy;
+  // chỉ ẩn nút khi khung chat đang mở/thu nhỏ.
+  const showChatbot = isLoggedIn && !isOpen;
+  const zaloBottom = baseBottom + liftBy + chatbotLift;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -39,9 +54,10 @@ export default function ZaloFloatingButton({ liftBy = 0, baseBottom = 30 }: Zalo
   return (
     <>
       <Animated.View
+        ref={zaloRef}
         style={{
           position: "absolute",
-          bottom: baseBottom + liftBy,
+          bottom: zaloBottom,
           right: 20,
           zIndex: 98,
           transform: [{ rotate }],
@@ -71,6 +87,8 @@ export default function ZaloFloatingButton({ liftBy = 0, baseBottom = 30 }: Zalo
           />
         </TouchableOpacity>
       </Animated.View>
+
+      {showChatbot && <ChatbotFloatingButton bottom={baseBottom + liftBy} guideKey={guideTab ? `${guideTab}.bot` : undefined} />}
 
       <CustomAlert
         visible={confirmVisible}

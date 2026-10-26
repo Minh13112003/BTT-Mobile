@@ -1,5 +1,7 @@
 import TabHeader from "@/components/TabHeader";
+import { useGuideTarget, useTabGuide } from "@/context/Guide_Context";
 import { Footer } from "@/components/Footer";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette, RADIUS, getShadow } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
@@ -62,6 +64,11 @@ const TYPE_ICON: Record<string, NotifIconConfig> = {
     color: "#825500", // secondary (amber/gold)
     bg: "#FAF3E6",
   },
+  DEPARTURE_REMINDER: {
+    name: "alarm",
+    color: "#D0021B",
+    bg: "#FDECEE",
+  },
   PASSWORD_CHANGED: {
     name: "key", // key symbol
     color: "#005a34", // tertiary (dark green)
@@ -91,6 +98,7 @@ export default function NotificationsScreen() {
 
   const flatListRef = useRef<FlatList<NotificationItem>>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
 
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [page, setPage] = useState(1);
@@ -99,6 +107,10 @@ export default function NotificationsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → notifications)
+  useTabGuide("notifications", !!user && !loading);
+  const readAllRef = useGuideTarget("notifications.readall");
   // [TẮT TẠM — expo-notifications] Gỡ package tạm thời, báo lại khi cần deploy bản có push notification.
   // const notifListenerRef = useRef<{ remove: () => void } | null>(null);
 
@@ -215,6 +227,12 @@ export default function NotificationsScreen() {
       if (!item.isRead) handleRead(item.id);
       if (!item.refId) return;
 
+      // Nhắc lịch khởi hành: refId là id booking -> mở thẳng chi tiết đơn.
+      if (item.refType?.startsWith("BOOKING")) {
+        router.push({ pathname: "/detailTour" as any, params: { id: item.refId } });
+        return;
+      }
+
       setNavigating(item.id);
       try {
         // Lấy danh sách booking của user, tìm booking có tour.id === refId
@@ -242,15 +260,19 @@ export default function NotificationsScreen() {
     [handleRead, router]
   );
 
-  const NotifItem = ({ item }: { item: NotificationItem }) => {
+  const NotifItem = ({ item, isFirst }: { item: NotificationItem; isFirst: boolean }) => {
     const iconCfg = getIconConfig(item.type);
-    const canNavigate = !!(item.refId && item.refType === "TOUR");
+    const itemRef = useGuideTarget(isFirst ? "notifications.item" : null);
+    const moreRef = useGuideTarget("notifications.more");
+    const canNavigate = !!(item.refId && (item.refType === "TOUR" || item.refType?.startsWith("BOOKING")));
     const [expanded, setExpanded] = useState(false);
     const [isLong, setIsLong] = useState(false);
-    const MAX_LINES = 3;
+    // Nội dung cỡ 16, hiện tối đa 4 dòng — dài hơn thì có nút "Xem thêm ↓".
+    const MAX_LINES = 4;
 
     return (
       <TouchableOpacity
+        ref={itemRef}
         activeOpacity={0.75}
         onPress={() => handleNotifPress(item)}
         className={isDark
@@ -337,8 +359,8 @@ export default function NotificationsScreen() {
             <View style={{ height: 0, overflow: "hidden" }}>
               <Text
                 style={{
-                  fontSize: FONT_SIZE.xs,
-                  lineHeight: 26,
+                  fontSize: FONT_SIZE.card,
+                  lineHeight: 24,
                 }}
                 onTextLayout={(e) => {
                   if (!isLong && e.nativeEvent.lines.length > MAX_LINES) {
@@ -352,8 +374,8 @@ export default function NotificationsScreen() {
             {/* Text hiển thị thật */}
             <Text
               style={{
-                fontSize: FONT_SIZE.xs,
-                lineHeight: 26,
+                fontSize: FONT_SIZE.card,
+                lineHeight: 24,
                 color: isDark ? "#94A3B8" : "#5e3f3a"
               }}
               numberOfLines={expanded ? undefined : MAX_LINES}
@@ -363,6 +385,7 @@ export default function NotificationsScreen() {
 
             {isLong && (
               <TouchableOpacity
+                ref={moreRef}
                 onPress={() => setExpanded((v) => !v)}
                 activeOpacity={0.7}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
@@ -430,8 +453,8 @@ export default function NotificationsScreen() {
     );
   };
 
-  const renderItem = ({ item }: { item: NotificationItem }) => (
-    <NotifItem item={item} />
+  const renderItem = ({ item, index }: { item: NotificationItem; index: number }) => (
+    <NotifItem item={item} isFirst={index === 0} />
   );
 
   if (!user) {
@@ -469,10 +492,12 @@ export default function NotificationsScreen() {
       <StatusBar style="light" />
       <TabHeader
         title="Thông báo"
+        guideTab="notifications"
         subtitle={unreadCount > 0 ? `Bạn có ${unreadCount} thông báo chưa đọc` : "Tất cả đã đọc"}
         right={
           unreadCount > 0 ? (
             <TouchableOpacity
+              ref={readAllRef}
               onPress={handleMarkAll}
               disabled={markingAll}
               activeOpacity={0.8}
@@ -585,12 +610,12 @@ export default function NotificationsScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 74 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: palette.brand,
+            backgroundColor: isDark ? "rgba(179,1,24,0.6)" : "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             ...(isDark
@@ -598,9 +623,9 @@ export default function NotificationsScreen() {
               : {
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
+                  shadowOpacity: 0,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 }),
             zIndex: 99,
           }}
@@ -609,7 +634,7 @@ export default function NotificationsScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton />
+      <ZaloFloatingButton baseBottom={10} />
     </View>
   );
 }

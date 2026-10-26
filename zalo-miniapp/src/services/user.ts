@@ -10,6 +10,12 @@ export interface UserProfile {
   earnedPoints?: number;
   rewardPoints?: number;
   avatarUrl?: string | null;
+  /** ISO date YYYY-MM-DD; chuỗi rỗng/null = xoá */
+  dateOfBirth?: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  nationalId?: string | null;
+  passportNumber?: string | null;
+  passportExpiry?: string | null;
 }
 
 interface Password {

@@ -62,6 +62,15 @@ export function useTourSearch(init?: UseTourSearchInit) {
 
   const debouncedQuery = useDebounce(query, 500);
 
+  // Kế hoạch phân trang của chế độ "Tất cả" (Trong nước rồi tới Nước ngoài) — xem fetchPage.
+  const allPlanRef = useRef<{
+    dTotal: number;
+    fTotal: number;
+    total: number;
+    limit: number;
+    foreignFirst: TourItem[];
+  }>({ dTotal: 0, fTotal: 0, total: 0, limit: 10, foreignFirst: [] });
+
   // Sync state values when initial parameters change
   useEffect(() => {
     if (init?.query !== undefined) setQuery(init.query);
@@ -120,7 +129,9 @@ export function useTourSearch(init?: UseTourSearchInit) {
         // 2. Filter by search mode / type
         if (MODE_TOUR_TYPE[mode]) {
           filtered = filtered.filter(
-            (item) => item.tourType === MODE_TOUR_TYPE[mode]
+            (item) =>
+              item.tourTypes?.includes(MODE_TOUR_TYPE[mode]!) ||
+              item.tourType === MODE_TOUR_TYPE[mode]
           );
         } else if (MODE_COUNTRY[mode]) {
           filtered = filtered.filter(
@@ -222,6 +233,48 @@ export function useTourSearch(init?: UseTourSearchInit) {
               hasPrevious: upcomingMeta.current_page > 1,
             }
           : null;
+      } else if (!city && mode === "newest") {
+        // "Tất cả": toàn bộ tour — TRONG NƯỚC trước, NƯỚC NGOÀI sau (Laravel, thứ tự API trả về).
+        // Hai danh mục phân trang riêng nên nối lại: trang 1..dTotal là Trong nước, tiếp theo là
+        // Nước ngoài. Gọi song song cả hai ở trang 1 để biết tổng số trang và tổng số tour.
+        const plan = allPlanRef.current;
+        const domId = await resolveCategoryHashByName(MODE_COUNTRY.domestic!);
+        const forId = await resolveCategoryHashByName(MODE_COUNTRY.foreign!);
+        const emptyPage = { items: [] as TourItem[], meta: null };
+
+        if (pageNum === 1) {
+          const [dom, foreign] = await Promise.all([
+            domId != null ? getToursByCategoryMapped(domId, 1) : emptyPage,
+            forId != null ? getToursByCategoryMapped(forId, 1) : emptyPage,
+          ]);
+          plan.dTotal = dom.meta?.last_page ?? 0;
+          plan.fTotal = foreign.meta?.last_page ?? 0;
+          plan.total = (dom.meta?.total ?? 0) + (foreign.meta?.total ?? 0);
+          plan.limit = dom.meta?.per_page ?? foreign.meta?.per_page ?? 10;
+          plan.foreignFirst = foreign.items;
+          items = plan.dTotal > 0 ? dom.items : foreign.items;
+        } else if (pageNum <= plan.dTotal) {
+          const dom = domId != null ? await getToursByCategoryMapped(domId, pageNum) : emptyPage;
+          items = dom.items;
+        } else {
+          const foreignPage = pageNum - plan.dTotal;
+          if (foreignPage === 1) {
+            items = plan.foreignFirst;
+          } else {
+            const foreign = forId != null ? await getToursByCategoryMapped(forId, foreignPage) : emptyPage;
+            items = foreign.items;
+          }
+        }
+
+        const totalPages = plan.dTotal + plan.fTotal;
+        paginatedMeta = {
+          total: plan.total,
+          page: pageNum,
+          limit: plan.limit,
+          totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrevious: pageNum > 1,
+        };
       } else {
         // Standard search logic (NestJS)
         if (city) {

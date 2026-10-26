@@ -117,7 +117,7 @@ export function PhoneKeypad({
                     onPress={onDone}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Xong, chuyển sang ô mật khẩu"
+                    accessibilityLabel="Xong"
                     style={{
                       flex: 1,
                       height: 58,

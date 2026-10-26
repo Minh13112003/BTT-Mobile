@@ -60,6 +60,7 @@ export const TERMS_SCOPE = {
 
 export const TERMS_ACCOUNT = [
   "Bạn đăng nhập bằng số điện thoại và mật khẩu. Thông tin cung cấp cần chính xác, đúng với giấy tờ tuỳ thân vì dùng để xuất vé, làm visa và bảo hiểm.",
+  "Thông tin cá nhân bạn cung cấp (email, ngày sinh, số CCCD, hộ chiếu, thông tin thân nhân) chỉ dùng để phục vụ việc đặt tour và làm thủ tục cho chuyến đi (xuất vé, visa, bảo hiểm, liên hệ xác nhận). Công ty không dùng các thông tin này vào mục đích khác.",
   "Bạn tự bảo mật mật khẩu và mã PIN 6 số, không chia sẻ cho người khác. Thao tác dùng đúng thông tin đăng nhập được xem là do chính bạn thực hiện.",
   "Hạng thành viên (Đồng, Bạc, Vàng, Bạch Kim, Kim Cương, Ruby) tăng theo điểm tích luỹ từ các chuyến đi đã hoàn thành. Quyền lợi theo từng hạng xem ở mục Hạng thành viên.",
   "Bạn có thể bật hoặc tắt thông báo khuyến mãi trong phần Cài đặt bất cứ lúc nào.",

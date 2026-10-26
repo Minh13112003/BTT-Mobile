@@ -1,7 +1,9 @@
 import { Footer } from "@/components/Footer";
 import TabHeader from "@/components/TabHeader";
+import { useGuideTarget, useTabGuide } from "@/context/Guide_Context";
 import { FONT_SIZE } from "@/constants/typography";
 import { SearchBar } from "@/components/SearchBar";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { TourCard } from "@/components/tour/TourCard";
 import { getPalette, getShadow } from "@/constants/theme";
@@ -18,7 +20,7 @@ import { TourItem } from "@/services/tour";
 import { getNearestDeparture } from "@/utils/tour";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -34,6 +36,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SheetKey = "category" | "scope" | "region" | "collection";
+
+/** Quá khoảng này không vào lại tab Du lịch thì bộ lọc được khôi phục về mặc định ("Tất cả"). */
+const SEARCH_IDLE_RESET_MS = 30 * 60 * 1000;
 
 const ALL_LABEL = "Tất cả";
 const CATEGORY_OPTS: { label: string; mode: SearchMode }[] = [
@@ -51,8 +56,9 @@ const COLLECTION_MODES: SearchMode[] = [
   "tour_of_the_year_2026",
   "tour_cao_cap",
   "tour_mice",
-  "tour_he",
+  "tour_mua_thu_dong",
   "tour_du_lich_xanh",
+  "tour_doc_la",
 ];
 const COLLECTION_OPTS: { label: string; mode: SearchMode }[] = [
   { label: ALL_LABEL, mode: "newest" },
@@ -131,6 +137,7 @@ export default function SearchScreen() {
 
   const flatListRef = useRef<any>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
 
   const {
     mode,
@@ -157,6 +164,27 @@ export default function SearchScreen() {
     endDate: params.endDate,
   });
 
+  // Giữ bộ lọc đang chọn khi chuyển tab (màn hình vẫn được giữ nguyên). Rời tab quá 30 phút
+  // rồi mới quay lại thì về mặc định; mỗi lần vào/rời tab đều tính lại mốc 30 phút.
+  // Nếu vừa được điều hướng với tham số mới (vd bấm ô loại tour ở Home) thì giữ đúng lựa chọn đó.
+  const lastActiveRef = useRef(Date.now());
+  const seenParamsRef = useRef(JSON.stringify(params));
+  const paramsSig = JSON.stringify(params);
+  useFocusEffect(
+    useCallback(() => {
+      const hasNewParams = paramsSig !== seenParamsRef.current;
+      seenParamsRef.current = paramsSig;
+      if (!hasNewParams && Date.now() - lastActiveRef.current > SEARCH_IDLE_RESET_MS) {
+        resetSearch();
+        flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+      }
+      lastActiveRef.current = Date.now();
+      return () => {
+        lastActiveRef.current = Date.now();
+      };
+    }, [paramsSig, resetSearch]),
+  );
+
   // ── Collapsing header, driven on the native (UI) thread ──────────────────
   // The chrome (brand bar + search controls) is absolutely positioned and slides
   // up via `translateY` tied directly to scroll with `Animated.diffClamp`. Because
@@ -169,6 +197,12 @@ export default function SearchScreen() {
     chromeH,
     handleScrollY,
   );
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → search)
+  useTabGuide("search", !loading);
+  const searchRef = useGuideTarget("search.search");
+  const filtersRef = useGuideTarget("search.filters");
+  const cardRef = useGuideTarget("search.card");
 
   const regions = regionsForMode(mode);
   const [sheet, setSheet] = useState<SheetKey | null>(null);
@@ -225,7 +259,8 @@ export default function SearchScreen() {
     router.push({
       pathname: "/(root)/tour/[id]",
       params: {
-        id: tour.id,
+        // Tour từ NestJS: `id` là UUID nội bộ, trang chi tiết (Laravel) cần `tourKey`.
+        id: tour.tourKey ?? tour.id,
         name: tour.name,
         imageUrl: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl,
         price: displayPrice != null ? String(displayPrice) : "0",
@@ -297,16 +332,25 @@ export default function SearchScreen() {
             }
             onEndReached={loadMore}
             onEndReachedThreshold={0.3}
-            renderItem={({ item }: { item: TourItem }) => (
-              <TourCard
-                tour={item}
-                onPress={() => openDetail(item)}
-                dateMode={params.dateMode}
-                specificDate={params.specificDate}
-                startDate={params.startDate}
-                endDate={params.endDate}
-              />
-            )}
+            renderItem={({ item, index }: { item: TourItem; index: number }) => {
+              const card = (
+                <TourCard
+                  tour={item}
+                  onPress={() => openDetail(item)}
+                  dateMode={params.dateMode}
+                  specificDate={params.specificDate}
+                  startDate={params.startDate}
+                  endDate={params.endDate}
+                />
+              );
+              return index === 0 ? (
+                <View ref={cardRef} collapsable={false}>
+                  {card}
+                </View>
+              ) : (
+                card
+              );
+            }}
             ListFooterComponent={
               <>
                 {loadingMore ? (
@@ -395,6 +439,7 @@ export default function SearchScreen() {
         <TabHeader
           safeArea={false}
           title="Du lịch"
+          guideTab="search"
           subtitle={`${meta?.total ?? results.length} kết quả`}
           onBack={
             params.referrer
@@ -416,10 +461,12 @@ export default function SearchScreen() {
         />
 
         <View className="px-5 pt-4 pb-1">
-          <SearchBar value={query} onChangeText={setQuery} />
+          <View ref={searchRef} collapsable={false}>
+            <SearchBar value={query} onChangeText={setQuery} />
+          </View>
 
           {/* 4 ô thả xuống — mặc định "Tất cả"; chọn ô nào thì các ô còn lại về "Tất cả" */}
-          <View style={{ marginTop: 12, gap: 8 }}>
+          <View ref={filtersRef} collapsable={false} style={{ marginTop: 12, gap: 8 }}>
             <View className="flex-row" style={{ gap: 8 }}>
               <DropdownTile
                 label="Danh mục"
@@ -466,12 +513,12 @@ export default function SearchScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 74 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: palette.brand,
+            backgroundColor: isDark ? "rgba(179,1,24,0.6)" : "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             ...(isDark
@@ -479,9 +526,9 @@ export default function SearchScreen() {
               : {
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
+                  shadowOpacity: 0,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 }),
             zIndex: 99,
           }}
@@ -530,7 +577,7 @@ export default function SearchScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <ZaloFloatingButton />
+      <ZaloFloatingButton baseBottom={10} />
     </View>
   );
 }

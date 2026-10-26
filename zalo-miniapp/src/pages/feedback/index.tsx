@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Page, useSnackbar } from "zmp-ui";
+import { Page } from "zmp-ui";
 
+import AlertDialog, { AlertType } from "@/components/AlertDialog";
 import Header from "@/components/Header";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useAuth } from "@/context/AuthContext";
@@ -17,26 +18,27 @@ export default function FeedbackPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
-  const snackbar = useSnackbar();
 
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
+  const [alert, setAlert] = useState<{ title: string; message: string; type: AlertType; goBack: boolean } | null>(null);
+  const showAlert = (title: string, message: string, type: AlertType, goBack = false) =>
+    setAlert({ title, message, type, goBack });
 
   const handleSubmit = async () => {
     if (!subject.trim() || !content.trim()) {
-      return snackbar.openSnackbar({ text: "Vui lòng nhập đầy đủ chủ đề và nội dung phản hồi.", type: "warning" });
+      return showAlert("Thiếu thông tin", "Vui lòng nhập đầy đủ chủ đề và nội dung phản hồi.", "warning");
     }
     try {
       setSending(true);
       const res = await postFeedback({ subject: subject.trim(), content: content.trim() });
       if (res.success) {
-        snackbar.openSnackbar({ text: res.message, type: "success" });
-        navigate(-1);
+        showAlert("Đã gửi góp ý", res.message, "success", true);
       }
     } catch (error: any) {
       console.error(error);
-      snackbar.openSnackbar({ text: error.message || "Gửi phản hồi thất bại. Vui lòng thử lại sau!", type: "error" });
+      showAlert("Gửi thất bại", error.message || "Gửi phản hồi thất bại. Vui lòng thử lại sau!", "error");
     } finally {
       setSending(false);
     }
@@ -44,7 +46,7 @@ export default function FeedbackPage() {
 
   const fieldBox = (focused: boolean) => ({
     borderRadius: RADIUS.lg,
-    border: `2px solid ${focused ? "#3B82F6" : palette.border}`,
+    border: `2px solid ${focused ? "#D0021B" : palette.border}`,
     background: palette.surfaceAlt,
     padding: "0 16px",
     height: 56,
@@ -109,6 +111,17 @@ export default function FeedbackPage() {
           </div>
         </div>
       </div>
+      <AlertDialog
+        visible={!!alert}
+        type={alert?.type}
+        title={alert?.title ?? ""}
+        message={alert?.message}
+        onClose={() => {
+          const goBack = alert?.goBack;
+          setAlert(null);
+          if (goBack) navigate(-1);
+        }}
+      />
     </Page>
   );
 }

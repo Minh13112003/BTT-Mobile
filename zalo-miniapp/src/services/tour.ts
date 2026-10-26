@@ -30,6 +30,8 @@ export interface TourItem {
   tourRegion?: string | null;
   tourCity?: string | null;
   tourType?: string | null;
+  /** Một tour có thể thuộc nhiều loại (Cao cấp + Độc lạ…); dùng cho lọc theo ô loại tour. */
+  tourTypes?: string[];
   /** Chỉ có ở API /tours/popular; các API khác trả undefined */
   bookingCount?: number;
   schedules?: TourSchedule[];
@@ -405,6 +407,7 @@ function mapTourDaysToDepartures(detail: TourItemDetailLaravel): Departure[] {
     price: d.price,
     availableSeats: d.stock_qty,
     code: d.code,
+    returnDate: d.destination_date,
   }));
 
   const hasTopLevelDate = fromTourDays.some(
@@ -422,6 +425,7 @@ function mapTourDaysToDepartures(detail: TourItemDetailLaravel): Departure[] {
     price: detail.price,
     availableSeats: detail.stock_qty,
     code: detail.code,
+    returnDate: detail.destination_date,
   };
 
   return [topLevel, ...fromTourDays].sort(

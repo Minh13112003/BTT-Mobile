@@ -41,4 +41,17 @@ export function booking(bookingData: Booking) {
   return apiService.post(urls.URL_Booking, bookingData);
 }
 
+export interface LaravelSeats {
+  stockQty: number | null;
+  bookedSeats: number;
+  /** null = Laravel không trả số chỗ (không giới hạn). */
+  availableSeats: number | null;
+}
+
+/** Port từ services/booking.ts bên RN — số chỗ thật còn đặt được của 1 đợt nguồn Laravel. */
+export async function getLaravelSeats(tourKey: string, departureKey: string): Promise<LaravelSeats> {
+  const res = await apiService.get<LaravelSeats>(urls.URL_LaravelSeats, { tourKey, departureKey });
+  return res.data;
+}
+
 export type { Booking };

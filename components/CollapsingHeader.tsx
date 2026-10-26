@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { GuideTab } from "@/constants/guideSteps";
 import { useScrollVisibility } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
 import React, { useState } from "react";
@@ -53,9 +54,11 @@ export function Collapsible({ children }: { children: React.ReactNode }) {
 export function CollapsingHeader({
   title,
   showActions = true,
+  guideTab,
 }: {
   title?: string;
   showActions?: boolean;
+  guideTab?: GuideTab;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -71,7 +74,7 @@ export function CollapsingHeader({
         }}
       />
       <Collapsible>
-        <Header title={title} showActions={showActions} safeArea={false} />
+        <Header title={title} showActions={showActions} safeArea={false} guideTab={guideTab} />
       </Collapsible>
     </View>
   );

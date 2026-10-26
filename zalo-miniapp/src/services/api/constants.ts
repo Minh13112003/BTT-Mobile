@@ -14,12 +14,18 @@ export const URL_Logout = `${API_BASE_URL}/api/v1/auth/logout`;
 export const URL_UpdateProfile = `${API_BASE_URL}/api/v1/users/me`;
 export const URL_ChangePassword = `${API_BASE_URL}/api/v1/users/me/password`;
 export const URL_GetMe = `${API_BASE_URL}/api/v1/users/me`;
+export const URL_PinStatus = `${API_BASE_URL}/api/v1/users/me/pin-status`;
+export const URL_SetPin = `${API_BASE_URL}/api/v1/users/me/pin`;
+export const URL_VerifyPin = `${API_BASE_URL}/api/v1/users/me/pin/verify`;
+export const URL_ChangePin = `${API_BASE_URL}/api/v1/users/me/pin`;
 
 // Booking APIs
 export const URL_DashboardOverview = `${API_BASE_URL}/api/v1/bookings/dashboard`;
 export const URL_TransactionHistory = `${API_BASE_URL}/api/v1/bookings/me?`;
 export const URL_GetBookingById = `${API_BASE_URL}/api/v1/bookings/`;
 export const URL_Booking = `${API_BASE_URL}/api/v1/bookings`;
+/** Số chỗ còn đặt được của 1 đợt khởi hành nguồn Laravel (stock_qty − khách đã đặt qua app). */
+export const URL_LaravelSeats = `${API_BASE_URL}/api/v1/bookings/laravel-seats`;
 
 // Voucher APIs
 export const URL_GetVouchers = `${API_BASE_URL}/api/v1/vouchers?`;

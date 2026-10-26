@@ -28,7 +28,7 @@ export const BRAND = {
  * History, Notifications, Profile) cần padding-bottom bằng giá trị này để nội
  * dung cuối trang không bị tab bar fixed đè lên.
  */
-export const BOTTOM_NAV_SPACE = "calc(env(safe-area-inset-bottom) + 64px)";
+export const BOTTOM_NAV_SPACE = "calc(max(env(safe-area-inset-bottom), 12px) + 96px)";
 
 export const RADIUS = {
   sm: 12,

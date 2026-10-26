@@ -1,3 +1,6 @@
+import GuideHelpButton from "@/components/guide/GuideHelpButton";
+import { GuideTab } from "@/constants/guideSteps";
+import { useGuideTarget } from "@/context/Guide_Context";
 import { useNotification } from "@/context/Notification_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { getPalette } from "@/constants/theme";
@@ -19,6 +22,8 @@ interface HeaderProps {
   safeArea?: boolean;
   showBackButton?: boolean;
   onBackPress?: () => void;
+  /** Có thì hiện nút ? (xem lại hướng dẫn) cạnh chuông, và chuông được đăng ký làm bước hướng dẫn. */
+  guideTab?: GuideTab;
 }
 
 export default function Header({
@@ -27,7 +32,9 @@ export default function Header({
   safeArea = true,
   showBackButton = false,
   onBackPress,
+  guideTab,
 }: HeaderProps) {
+  const bellRef = useGuideTarget(guideTab ? `${guideTab}.bell` : null);
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
@@ -89,8 +96,10 @@ export default function Header({
           )}
         </View>
 
+        {showActions && guideTab ? <GuideHelpButton tab={guideTab} size={44} /> : null}
         {showActions && (
           <TouchableOpacity
+            ref={bellRef}
             onPress={() => router.push("/(root)/(tabs)/notifications" as any)}
             activeOpacity={0.8}
             accessibilityLabel="Thông báo"

@@ -10,7 +10,7 @@ interface Props {
   terms?: TourTermsLaravel;
 }
 
-const SECTIONS: { key: keyof TourTermsLaravel; title: string }[] = [
+export const TERM_SECTIONS: { key: keyof TourTermsLaravel; title: string }[] = [
   { key: "paymentInstructions", title: "Hướng dẫn thanh toán" },
   { key: "cancelBooking", title: "Điều kiện hủy/đổi tour" },
   { key: "cancelPenalty", title: "Phí phạt hủy tour" },
@@ -32,7 +32,7 @@ export function TermsHtmlAccordion({ terms }: Props) {
   if (!terms) return null;
 
   const bodyColor = isDark ? "#CBD5E1" : "#334155";
-  const visibleSections = SECTIONS.filter((s) => terms[s.key]?.trim());
+  const visibleSections = TERM_SECTIONS.filter((s) => terms[s.key]?.trim());
   if (visibleSections.length === 0) return null;
 
   return (

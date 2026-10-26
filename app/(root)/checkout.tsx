@@ -1,26 +1,28 @@
 import { FONT_SIZE } from "@/constants/typography";
 import { useTheme } from "@/context/Theme_Context";
-import { booking, PaymentMethod } from "@/services/booking";
+import { booking, getLaravelSeats, PaymentMethod } from "@/services/booking";
 import { consumePendingVoucherSelection } from "@/services/voucherSelection";
 import { getPinStatus, verifyPin } from "@/services/pin";
 import PINInput from "@/components/PINInput";
+// [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] bỏ comment 3 dòng dưới + các khối cùng ghi chú để bật lại
+// import GuestSection from "@/components/guest/GuestSection";
+// import { useCheckoutGuests } from "@/hooks/useCheckoutGuests";
+// import { formToPayload, validateGuestForm } from "@/utils/guest";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import CustomToast from "@/components/CustomToast";
 import CustomAlert from "@/components/CustomAlert";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -118,7 +120,7 @@ export default function CheckoutScreen() {
   // Departure info passed from the tour detail screen.
   const departureId = (params.departureId as string) || "";
   const departureDate = (params.departureDate as string) || "";
-  const availableSeats = params.availableSeats
+  const paramSeats = params.availableSeats
     ? parseInt(params.availableSeats as string, 10)
     : Infinity;
 
@@ -128,11 +130,49 @@ export default function CheckoutScreen() {
   const tourKey = (params.tourKey as string) || "";
   const departureKey = (params.departureKey as string) || "";
 
-  const maxTotal = availableSeats === Infinity ? 99 : availableSeats;
+  // Số chỗ truyền từ trang tour là `stock_qty` của Laravel — chưa trừ khách đã đặt qua app. Hỏi lại
+  // NestJS số chỗ thật (null = chưa có / lỗi mạng → tạm dùng số từ trang tour, backend vẫn chặn khi đặt).
+  const [liveSeats, setLiveSeats] = useState<number | null>(null);
+  const refreshSeats = useCallback(() => {
+    if (!isLaravelSource || !departureKey) return;
+    getLaravelSeats(tourKey, departureKey)
+      .then((r) => setLiveSeats(r.availableSeats ?? Infinity))
+      .catch(() => {});
+  }, [isLaravelSource, tourKey, departureKey]);
+  useEffect(() => {
+    refreshSeats();
+  }, [refreshSeats]);
+  const availableSeats = liveSeats ?? paramSeats;
 
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
+  const maxTotal = availableSeats === Infinity ? 99 : availableSeats;
+  // Tour nước ngoài: mỗi khách bắt buộc hộ chiếu + visa (màn tour truyền sang theo đường dẫn ảnh /tour/nuoc-ngoai/).
+  const isForeign = params.isForeign === "true";
+
+  // Chatbot (bttAI) có thể dẫn khách tới đây với số người + thân nhân đã chọn sẵn; khách vẫn sửa được.
+  const prefill = (v: unknown, min: number) => {
+    const n = parseInt(String(v ?? ""), 10);
+    return Number.isFinite(n) ? Math.min(Math.max(n, min), maxTotal) : min;
+  };
+  const [adults, setAdults] = useState(() => prefill(params.adults, 1));
+  const [children, setChildren] = useState(() => prefill(params.children, 0));
+  const [infants, setInfants] = useState(() => prefill(params.infants, 0));
+
+  // Số chỗ thật về sau ít hơn số khách đang chọn → bớt em bé, rồi trẻ em, rồi người lớn (giữ tối thiểu 1).
+  useEffect(() => {
+    let over = adults + children + infants - maxTotal;
+    if (over <= 0) return;
+    const cutInfants = Math.min(infants, over);
+    over -= cutInfants;
+    const cutChildren = Math.min(children, over);
+    over -= cutChildren;
+    const cutAdults = Math.min(adults - 1, over);
+    if (cutInfants) setInfants(infants - cutInfants);
+    if (cutChildren) setChildren(children - cutChildren);
+    if (cutAdults > 0) setAdults(adults - cutAdults);
+  }, [maxTotal, adults, children, infants]);
+  // [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] 
+  // const prefillRelativeIds = ((params.relativeIds as string) || "").split(",").filter(Boolean);
+  // const guestState = useCheckoutGuests(adults + children + infants, prefillRelativeIds);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null,
   );
@@ -140,8 +180,6 @@ export default function CheckoutScreen() {
   const [selectedVoucher, setSelectedVoucher] =
     useState<ExtendedVoucher | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
@@ -264,11 +302,29 @@ export default function CheckoutScreen() {
         "Thông báo",
         availableSeats === Infinity
           ? "Số lượng khách tối đa là 99 người"
-          : `Chỉ còn ${availableSeats} chỗ cho chuyến đi này`,
+          : availableSeats <= 0
+            ? "Đợt khởi hành này đã hết chỗ. Vui lòng chọn ngày khác."
+            : `Chỉ còn ${availableSeats} chỗ cho chuyến đi này`,
         "warning"
       );
       return;
     }
+
+    // [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] 
+    // Thông tin từng hành khách (bắt buộc đủ theo quy tắc; backend kiểm tra lại)
+    // const refDate = departureDate ? new Date(departureDate) : undefined;
+    // for (let i = 0; i < guestState.guests.length; i++) {
+    //   const err = validateGuestForm(guestState.guests[i], {
+    //     label: `Khách ${i + 1}`,
+    //     requirePhone: i === 0,
+    //     requireVisa: isForeign,
+    //     refDate: refDate && !isNaN(refDate.getTime()) ? refDate : undefined,
+    //   });
+    //   if (err) {
+    //     triggerAlert("Thiếu thông tin hành khách", err.charAt(0).toUpperCase() + err.slice(1), "warning");
+    //     return;
+    //   }
+    // }
 
     try {
       const res = await getPinStatus();
@@ -311,6 +367,9 @@ export default function CheckoutScreen() {
   const performBooking = async () => {
     try {
       setSubmitting(true);
+      // [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] 
+      // const guestPayloads = guestState.guests.map(formToPayload);
+      // const saveToRelatives = guestState.saveFlags.flatMap((v, i) => (v && i > 0 && !guestState.picked[i] ? [i] : []));
       const bookingData = isLaravelSource
         ? {
             // DEMO — booking nguồn Laravel: backend NestJS gọi /api/tour/item lấy snapshot.
@@ -324,6 +383,8 @@ export default function CheckoutScreen() {
             paymentMethod: paymentMethod as PaymentMethod,
             voucherCode: selectedVoucher ? selectedVoucher.code : null,
             notice: notice || null,
+            // guests: guestPayloads,
+            // saveToRelatives,
           }
         : {
             idTour: tourId,
@@ -334,18 +395,32 @@ export default function CheckoutScreen() {
             paymentMethod: paymentMethod as PaymentMethod,
             voucherCode: selectedVoucher ? selectedVoucher.code : null,
             notice: notice || null,
+            // guests: guestPayloads,
+            // saveToRelatives,
           };
 
       const res = await booking(bookingData);
       if (res) {
-        const tourCodeStr = res.data?.departure?.tourCode || res.data?.booking?.departure?.tourCode || tourCode || "đăng ký";
-        setToastMessage(
-          `Kính gửi Quý khách, yêu cầu đăng ký tour (Mã: ${tourCodeStr}) của Quý khách đã được ghi nhận thành công và đang chờ xác nhận. Bộ phận chăm sóc khách hàng sẽ liên hệ với Quý khách trong thời gian sớm nhất để hỗ trợ hoàn tất dịch vụ. Trân trọng cảm ơn!`
-        );
-        setShowToast(true);
+        const tourCodeStr = res.data?.departure?.tourCode || res.data?.booking?.departure?.tourCode || tourCode;
+        // replace (không push) để Back không quay lại màn đặt tour đã hoàn tất
+        router.replace({
+          pathname: "/(root)/booking-success",
+          params: {
+            tourName,
+            tourCode: tourCodeStr,
+            departureDate,
+            adults: String(adults),
+            children: String(children),
+            infants: String(infants),
+            total: String(finalPrice),
+            paymentMethod: paymentMethod ?? "",
+          },
+        } as any);
       }
     } catch (error: any) {
       console.error("Lỗi đặt tour:", error);
+      // Có thể vừa có người khác đặt mất chỗ — cập nhật lại số chỗ để nút "+" giới hạn đúng.
+      refreshSeats();
       triggerAlert(
         "Thất bại",
         error.response?.data?.message ||
@@ -540,7 +615,7 @@ export default function CheckoutScreen() {
                   onDec: () => setAdults(Math.max(1, adults - 1)),
                   onInc: () =>
                     setAdults(
-                      Math.min(maxTotal - children - infants, adults + 1),
+                      Math.max(adults, Math.min(maxTotal - children - infants, adults + 1)),
                     ),
                   unitPrice: tourPrice,
                 },
@@ -551,7 +626,7 @@ export default function CheckoutScreen() {
                   onDec: () => setChildren(Math.max(0, children - 1)),
                   onInc: () =>
                     setChildren(
-                      Math.min(maxTotal - adults - infants, children + 1),
+                      Math.max(children, Math.min(maxTotal - adults - infants, children + 1)),
                     ),
                   unitPrice: tourPrice * 0.8,
                 },
@@ -562,7 +637,7 @@ export default function CheckoutScreen() {
                   onDec: () => setInfants(Math.max(0, infants - 1)),
                   onInc: () =>
                     setInfants(
-                      Math.min(maxTotal - adults - children, infants + 1),
+                      Math.max(infants, Math.min(maxTotal - adults - children, infants + 1)),
                     ),
                   unitPrice: tourPrice * 0.4,
                 },
@@ -617,11 +692,14 @@ export default function CheckoutScreen() {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={row.onInc}
+                      // Đủ số chỗ còn lại thì khoá "+" của cả 3 loại khách
+                      disabled={adults + children + infants >= maxTotal}
                       className={`w-9 h-9 rounded-xl items-center justify-center border ${
                         isDark
                           ? "bg-slate-700 border-slate-600"
                           : "bg-slate-100 border-slate-200"
                       }`}
+                      style={{ opacity: adults + children + infants >= maxTotal ? 0.35 : 1 }}
                     >
                       <Ionicons
                         name="add"
@@ -694,6 +772,9 @@ export default function CheckoutScreen() {
               </Text>
             </View>
           </View>
+
+          {/* // [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] */}
+          {/* <GuestSection state={guestState} adults={adults} children={children} isForeign={isForeign} /> */}
 
           {/* Voucher — gọn kiểu Grab, bấm mở trang chọn voucher riêng */}
           <View className="mt-5 border-t border-slate-100/50 pt-4">
@@ -983,28 +1064,6 @@ export default function CheckoutScreen() {
 
       <ZaloFloatingButton baseBottom={130} />
 
-      {showToast && (
-        <View
-          style={{
-            ...StyleSheet.absoluteFill,
-            backgroundColor: "rgba(0,0,0,0.3)",
-            zIndex: 9998,
-          }}
-        />
-      )}
-      <CustomToast
-        visible={showToast}
-        type="booking_success"
-        message={toastMessage}
-        onAction={() => {
-          setShowToast(false);
-          router.replace("/(root)/(tabs)/history");
-        }}
-        onClose={() => {
-          setShowToast(false);
-          router.replace("/(root)/(tabs)/history");
-        }}
-      />
       <CustomAlert
         visible={alertVisible}
         type={alertType}

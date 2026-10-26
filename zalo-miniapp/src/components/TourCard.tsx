@@ -8,7 +8,6 @@ import { FONT_SIZE } from "@/constants/typography";
 import { formatPrice } from "@/helper/format";
 import type { TourItem } from "@/services/tour";
 import { getNearestDeparture, formatDepartureDate } from "@/utils/tour";
-import { StarIcon } from "@/components/icons";
 import PrimaryButton from "@/components/PrimaryButton";
 
 /**
@@ -22,9 +21,18 @@ import PrimaryButton from "@/components/PrimaryButton";
 export default function TourCard({
   tour,
   width,
+  dateMode,
+  specificDate,
+  startDate,
+  endDate,
 }: {
   tour: TourItem;
   width?: number;
+  /** Bộ lọc ngày đang áp dụng (từ ô tìm ngày ở Home) — hiện đúng đợt khớp và chọn sẵn đợt đó ở trang chi tiết. */
+  dateMode?: string;
+  specificDate?: string;
+  startDate?: string;
+  endDate?: string;
 }) {
   const navigate = useNavigate();
   const snackbar = useSnackbar();
@@ -47,14 +55,51 @@ export default function TourCard({
       });
       return;
     }
-    navigate(`/tour/${detailKey}`);
+    const q = new URLSearchParams();
+    if (dateMode === "specific" && specificDate) {
+      q.set("searchDateMode", "specific");
+      q.set("searchSpecificDate", specificDate);
+    } else if (dateMode === "range" && (startDate || endDate)) {
+      q.set("searchDateMode", "range");
+      if (startDate) q.set("searchStartDate", startDate);
+      if (endDate) q.set("searchEndDate", endDate);
+    }
+    const qs = q.toString();
+    navigate(`/tour/${detailKey}${qs ? `?${qs}` : ""}`);
   };
 
-  const nearest = getNearestDeparture(tour.departures ?? []);
+  // Đợt khởi hành khớp bộ lọc ngày (nếu có) — giống TourCard bên app RN.
+  let matchingDeparture: (typeof tour.departures extends (infer D)[] | undefined ? D : never) | undefined;
+  if (dateMode === "specific" && specificDate) {
+    const target = new Date(specificDate);
+    matchingDeparture = tour.departures?.find((dep) => {
+      const d = new Date(dep.departureDate);
+      return d.getFullYear() === target.getFullYear() && d.getMonth() === target.getMonth() && d.getDate() === target.getDate();
+    });
+  } else if (dateMode === "range" && (startDate || endDate)) {
+    const start = startDate ? new Date(startDate) : new Date(0);
+    const end = endDate ? new Date(endDate) : new Date(8640000000000000);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    matchingDeparture = [...(tour.departures ?? [])]
+      .sort((a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime())
+      .find((dep) => {
+        const d = new Date(dep.departureDate);
+        return d >= start && d <= end;
+      });
+  }
+
+  const nearest = matchingDeparture ?? getNearestDeparture(tour.departures ?? []);
   const displayPrice = nearest?.price ?? null;
   const displayDate = nearest?.departureDate ?? null;
 
   const imageUrl = Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl;
+  // Laravel không có cờ trong nước/nước ngoài — đường dẫn ảnh là tour/trong-nuoc/... hoặc tour/nuoc-ngoai/...
+  const regionLabel = imageUrl?.includes("/nuoc-ngoai/")
+    ? "Nước ngoài"
+    : imageUrl?.includes("/trong-nuoc/")
+      ? "Trong nước"
+      : null;
 
   return (
     <button
@@ -68,27 +113,25 @@ export default function TourCard({
         boxShadow: isDark ? "none" : "0 4px 14px rgba(208,2,27,0.08)",
       }}
     >
-      {/* Ảnh + badge rating/thời lượng */}
+      {/* Ảnh + nhãn khu vực + thời lượng. Bỏ ô ★ (Laravel luôn trả rating 0). */}
       <div className="relative w-full" style={{ height: 176, background: palette.surfaceAlt }}>
         <img src={imageUrl} alt={tour.name} className="w-full h-full object-cover" />
-        <div
-          className="absolute flex items-center"
-          style={{
-            top: 12,
-            right: 12,
-            borderRadius: 999,
-            padding: "4px 10px",
-            background: isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.9)",
-          }}
-        >
-          <StarIcon size={12} />
-          <span
-            className="font-black ml-1"
-            style={{ fontSize: FONT_SIZE.xxs, color: isDark ? "#F1F5F9" : "#1E293B" }}
+        {regionLabel && (
+          <div
+            className="absolute font-semibold"
+            style={{
+              top: 12,
+              left: 12,
+              borderRadius: 999,
+              padding: "3px 10px",
+              fontSize: FONT_SIZE.card,
+              color: isDark ? "#F1F5F9" : "#B30118",
+              background: isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.92)",
+            }}
           >
-            {tour.rating}
-          </span>
-        </div>
+            {regionLabel}
+          </div>
+        )}
         <div
           className="absolute text-white font-black uppercase"
           style={{
@@ -104,31 +147,29 @@ export default function TourCard({
         </div>
       </div>
 
-      {/* Nội dung — nền sóng đỏ nhạt (light mode) giống bản RN (react-native-svg → SVG inline) */}
+      {/* Tên tour, ngày khởi hành + giá chung 1 hàng, nút Xem chi tiết — không vạch chia */}
       <div className="relative">
-        {!isDark && (
-          <svg
-            width="100%"
-            height={170}
-            viewBox="0 0 380 170"
-            preserveAspectRatio="none"
-            className="absolute"
-            style={{ top: 0, left: 0, right: 0, pointerEvents: "none" }}
-          >
-            <path
-              d="M0,170 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,170 Z"
-              fill={BRAND.red}
-              fillOpacity={0.22}
-            />
-          </svg>
-        )}
+        <svg
+          width="100%"
+          height={180}
+          viewBox="0 0 380 180"
+          preserveAspectRatio="none"
+          className="absolute"
+          style={{ bottom: 0, left: 0, right: 0, pointerEvents: "none" }}
+        >
+          <path
+            d="M0,180 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,180 Z"
+            fill={isDark ? "#64748B" : BRAND.red}
+            fillOpacity={0.2}
+          />
+        </svg>
 
-        <div className="relative" style={{ padding: 16 }}>
+        <div className="relative flex flex-col" style={{ padding: "14px 16px 16px", gap: 12 }}>
           <div
             className="font-black"
             style={{
-              fontSize: FONT_SIZE.xl,
-              lineHeight: "32px",
+              fontSize: FONT_SIZE.lg,
+              lineHeight: "30px",
               color: palette.textPrimary,
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -139,56 +180,27 @@ export default function TourCard({
             {tour.name}
           </div>
 
-          {/* Ngày khởi hành gần nhất + giá + thời lượng */}
-          <div style={{ marginTop: 10 }}>
-            <InfoRow emoji="📅" color={palette.textSecondary}>
-              {displayDate
-                ? `Khởi hành: ${formatDepartureDate(displayDate)}`
-                : "Liên hệ để biết lịch khởi hành"}
-            </InfoRow>
-            <InfoRow emoji="💰" color={isDark ? "#E2E8F0" : BRAND.red} bold>
-              {displayPrice != null ? `Từ ${formatPrice(displayPrice)}` : "Giá: Liên hệ"}
-            </InfoRow>
-            <InfoRow emoji="🕒" color={palette.textSecondary}>
-              {tour.duration}
-            </InfoRow>
+          <div className="flex items-center justify-between" style={{ gap: 10 }}>
+            <span
+              className="flex items-center font-semibold"
+              style={{ gap: 6, fontSize: FONT_SIZE.xs, color: palette.textSecondary, minWidth: 0 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#F87171" : BRAND.red} strokeWidth="2.2" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4M3 10h18" />
+              </svg>
+              {displayDate ? formatDepartureDate(displayDate) : "Chưa có lịch"}
+            </span>
+            <span className="font-black" style={{ fontSize: FONT_SIZE.lg, color: isDark ? "#F1F5F9" : BRAND.red, whiteSpace: "nowrap" }}>
+              {displayPrice != null ? formatPrice(displayPrice) : "Liên hệ"}
+            </span>
           </div>
 
-          <div
-            className="flex items-center justify-end"
-            style={{
-              marginTop: 16,
-              paddingTop: 12,
-              borderTop: `1px solid ${isDark ? "rgba(51,65,85,0.6)" : "#F1F5F9"}`,
-            }}
-          >
+          <div className="flex justify-end" style={{ marginTop: 6 }}>
             <PrimaryButton as="span" label={hasNoDetailPage ? "Liên hệ tư vấn" : "Xem chi tiết"} />
           </div>
         </div>
       </div>
     </button>
-  );
-}
-
-function InfoRow({
-  emoji,
-  color,
-  bold = false,
-  children,
-}: {
-  emoji: string;
-  color: string;
-  bold?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center" style={{ marginTop: 4 }}>
-      <span style={{ fontSize: FONT_SIZE.xxs }}>{emoji}</span>
-      <span
-        style={{ fontSize: FONT_SIZE.xxs, color, marginLeft: 6, fontWeight: bold ? 700 : 600 }}
-      >
-        {children}
-      </span>
-    </div>
   );
 }

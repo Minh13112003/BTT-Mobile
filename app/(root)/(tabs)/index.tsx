@@ -1,6 +1,7 @@
 import { CollapsingHeader } from "@/components/CollapsingHeader";
 import { Footer } from "@/components/Footer";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { FONT_SIZE } from "@/constants/typography";
 import { getPalette, RADIUS, getShadow } from "@/constants/theme";
@@ -10,10 +11,11 @@ import { SectionRow } from "@/components/tour/SectionHeader";
 import { TourCard } from "@/components/tour/TourCard";
 import { SECTION_LABELS } from "@/constants/tourFilters";
 import { useAuth } from "@/context/Auth_Context";
+import { useGuideScroller, useGuideTarget, useTabGuide } from "@/context/Guide_Context";
 import { useHideOnScroll } from "@/context/ScrollVisibility_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { useHomeTours, HomeSections } from "@/hooks/useHomeTours";
-import { getNews, NewsItem } from "@/services/news";
+import { BLOG_CATEGORY_TRAVEL_GUIDE, getNews, NewsItem } from "@/services/news";
 import { TourItem } from "@/services/tour";
 import { getMe } from "@/services/user";
 import { getNearestDeparture } from "@/utils/tour";
@@ -36,57 +38,6 @@ import DatePickerCalendar from "@/components/tour/DatePickerCalendar";
 /** Vertical sections rendered below the hot-tour carousel, in order. */
 const HOME_SECTIONS: (keyof HomeSections)[] = ["upcoming"];
 
-function QuickIcon({
-  label,
-  icon,
-  bgLight,
-  bgDark,
-  color,
-  onPress,
-  isDark,
-}: {
-  label: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  bgLight: string;
-  bgDark: string;
-  color: string;
-  onPress: () => void;
-  isDark: boolean;
-}) {
-  const palette = getPalette(isDark);
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.75}
-      style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center" }}
-    >
-      <View
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: RADIUS.md,
-          backgroundColor: isDark ? bgDark : bgLight,
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 6,
-        }}
-      >
-        <Ionicons name={icon} size={26} color={color} />
-      </View>
-      <Text
-        style={{
-          fontSize: FONT_SIZE.card,
-          fontWeight: "700",
-          color: palette.textSecondary,
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
 export default function HomeScreen() {
   const router = useRouter();
   const { user, rewardPoints } = useAuth();
@@ -98,10 +49,26 @@ export default function HomeScreen() {
   const onScroll = useHideOnScroll();
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → home)
+  useTabGuide("home", !loading);
+  useGuideScroller("home", {
+    scrollBy: (dy) => scrollViewRef.current?.scrollTo({ y: Math.max(0, scrollYRef.current + dy), animated: true }),
+    scrollToTop: () => scrollViewRef.current?.scrollTo({ y: 0, animated: true }),
+  });
+  const memberRef = useGuideTarget("home.member");
+  const searchRef = useGuideTarget("home.search");
+  const typesRef = useGuideTarget("home.types");
+  const hotRef = useGuideTarget("home.hot");
+  const newsRef = useGuideTarget("home.news");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [news, setNews] = useState<NewsItem[]>([]);
+  // Cuối trang: 2 nhóm bài — tin hoạt động công ty và cẩm nang du lịch (thay 3 ô Tin tức / Mẹo hay / Ưu đãi cũ).
+  const [news, setNews] = useState<{ company: NewsItem[]; guide: NewsItem[] }>({ company: [], guide: [] });
+  const [newsTab, setNewsTab] = useState<"company" | "guide">("company");
   const [earnedPoints, setEarnedPoints] = useState<number>(0);
   const [iconScrollProgress, setIconScrollProgress] = useState(0);
 
@@ -149,7 +116,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getNews()
-      .then((res) => setNews(Array.isArray(res.data) ? res.data : []))
+      .then((res) => setNews((n) => ({ ...n, company: Array.isArray(res.data) ? res.data : [] })))
+      .catch(() => {});
+    getNews(BLOG_CATEGORY_TRAVEL_GUIDE)
+      .then((res) => setNews((n) => ({ ...n, guide: Array.isArray(res.data) ? res.data : [] })))
       .catch(() => {});
     getMe()
       .then((res) => {
@@ -188,7 +158,7 @@ export default function HomeScreen() {
     router.push({
       pathname: "/(root)/tour/[id]",
       params: {
-        id: tour.id,
+        id: tour.tourKey ?? tour.id,
         name: tour.name,
         imageUrl: Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl,
         price: displayPrice != null ? String(displayPrice) : "0",
@@ -250,7 +220,7 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       {/* Màu vùng status bar do <CollapsingHeader> tự phủ backdrop — RN edge-to-edge không còn hỗ trợ StatusBar backgroundColor */}
       <StatusBar style="light" />
-      <CollapsingHeader title="BENTHANH TOURIST" showActions={true} />
+      <CollapsingHeader title="BENTHANH TOURIST" showActions={true} guideTab="home" />
 
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <ScrollView
@@ -259,6 +229,7 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
           onScroll={(event) => {
             const offsetY = event.nativeEvent.contentOffset.y;
+            scrollYRef.current = offsetY;
             setShowBackToTop(offsetY > 300);
             if (onScroll) onScroll(event);
           }}
@@ -274,6 +245,7 @@ export default function HomeScreen() {
           {/* MEMBERSHIP RANK BANNER — clickable → trang quyền lợi */}
           {!!user && (
             <TouchableOpacity
+              ref={memberRef}
               activeOpacity={0.85}
               className="px-5 mt-8"
               style={{ overflow: "visible" }}
@@ -306,32 +278,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
-          {/* SEARCH BAR & WELCOME GREETING */}
-          <View className="px-5 mt-9">
-            <Text
-              className={`font-semibold uppercase tracking-wider pl-1 ${
-                isDark ? "text-slate-400" : "text-slate-500"
-              }`}
-              style={{ fontSize: FONT_SIZE.xs }}
-            >
-              Chào mừng bạn trở lại,
-            </Text>
-            <Text
-              className={`font-black tracking-tight pl-1 ${
-                isDark ? "text-slate-100" : "text-slate-800"
-              }`}
-              style={{ fontSize: FONT_SIZE.xl }}
-            >
-              {user?.firstName && user?.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : "Khách du lịch"}{" "}
-              👋
-            </Text>
-          </View>
-
           {/* DATE PICKER WIDGET */}
           <View className="px-5 mt-9">
             <View
+              ref={searchRef}
+              collapsable={false}
               style={{
                 backgroundColor: palette.surface,
                 borderRadius: RADIUS.lg,
@@ -580,7 +531,7 @@ export default function HomeScreen() {
           </View>
 
           {/* 5 TOUR TYPE ICONS */}
-          <View className="mt-6">
+          <View ref={typesRef} collapsable={false} className="mt-6">
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -611,14 +562,19 @@ export default function HomeScreen() {
                   image: require("@/assets/images/tour_mice.png"),
                 },
                 {
-                  mode: "tour_he",
-                  label: "TOUR\nHÈ",
-                  image: require("@/assets/images/tour_he.png"),
+                  mode: "tour_mua_thu_dong",
+                  label: "TOUR MÙA\nTHU - ĐÔNG",
+                  image: require("@/assets/images/tour_mua_thu_dong.webp"),
                 },
                 {
                   mode: "tour_du_lich_xanh",
                   label: "DU LỊCH\nXANH",
                   image: require("@/assets/images/tour_du_lich_xanh.png"),
+                },
+                {
+                  mode: "tour_doc_la",
+                  label: "TOUR\nĐỘC LẠ",
+                  image: require("@/assets/images/tour_doc_la.webp"),
                 },
               ].map((item) => (
                  <TouchableOpacity
@@ -676,53 +632,6 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* QUICK ACCESS GRID — Shopee style */}
-          <View
-            className="mx-5 mt-9"
-            style={{
-              backgroundColor: palette.surface,
-              borderRadius: RADIUS.md,
-              ...getShadow(isDark, "sm"),
-              paddingVertical: 16,
-              paddingHorizontal: 8,
-            }}
-          >
-            <View style={{ flexDirection: "row" }}>
-              <QuickIcon
-                label="Tin tức"
-                icon="newspaper-outline"
-                bgLight="#ECFDF5"
-                bgDark="#1A2D20"
-                color="#10B981"
-                isDark={isDark}
-                onPress={() => router.push("/(root)/news" as any)}
-              />
-              <QuickIcon
-                label="Mẹo hay"
-                icon="bulb-outline"
-                bgLight="#FFFBEB"
-                bgDark="#2A2010"
-                color="#F59E0B"
-                isDark={isDark}
-                onPress={() => router.push("/(root)/tips" as any)}
-              />
-              <QuickIcon
-                label="Ưu đãi"
-                icon="gift-outline"
-                bgLight="#FFF1F2"
-                bgDark="#2A1520"
-                color="#E11D48"
-                isDark={isDark}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(root)/(tabs)/search" as any,
-                    params: { mode: "hot" },
-                  })
-                }
-              />
-            </View>
-          </View>
-
           {/* SECTION: TOUR HOT NHẤT — carousel tự động 5s */}
           <View className="mt-9">
             <SectionRow
@@ -730,14 +639,16 @@ export default function HomeScreen() {
               onSeeAll={() => openSearch({ mode: "hot" })}
             />
           </View>
-          <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
+          <View ref={hotRef} collapsable={false}>
+            <FeaturedCarousel tours={sections.hot} onPressTour={openDetail} />
+          </View>
 
           {/* SECTION: TOUR SẮP KHỞI HÀNH */}
           {!loading && HOME_SECTIONS.map((mode) => renderSection(mode))}
 
-          {/* TIN TỨC NỔI BẬT */}
-          {news.length > 0 && (
-            <View className="mt-9">
+          {/* TIN TỨC & CẨM NANG — cuối trang */}
+          {(news.company.length > 0 || news.guide.length > 0) && (
+            <View ref={newsRef} collapsable={false} className="mt-9">
               <View className="flex-row justify-between items-center px-5 mb-3">
                 <Text
                   className={`font-black tracking-tight ${
@@ -745,10 +656,12 @@ export default function HomeScreen() {
                   }`}
                   style={{ fontSize: FONT_SIZE.xl }}
                 >
-                  Tin tức nổi bật
+                  Tin tức & cẩm nang
                 </Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/(root)/news" as any)}
+                  onPress={() =>
+                    router.push({ pathname: "/(root)/news" as any, params: { category: newsTab } })
+                  }
                   activeOpacity={0.7}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
@@ -756,12 +669,55 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
 
+              <View className="flex-row px-5 mb-3" style={{ gap: 8 }}>
+                {(
+                  [
+                    { key: "company", label: "Tin công ty" },
+                    { key: "guide", label: "Cẩm nang du lịch" },
+                  ] as const
+                ).map((t) => {
+                  const active = newsTab === t.key;
+                  return (
+                    <TouchableOpacity
+                      key={t.key}
+                      activeOpacity={0.8}
+                      onPress={() => setNewsTab(t.key)}
+                      className={`px-4 rounded-full justify-center border ${
+                        active
+                          ? "bg-[#D0021B] border-[#D0021B]"
+                          : isDark
+                            ? "bg-[#1E222B] border-slate-700"
+                            : "bg-white border-slate-200"
+                      }`}
+                      style={{ minHeight: 44 }}
+                    >
+                      <Text
+                        className={`font-bold ${
+                          active ? "text-white" : isDark ? "text-slate-300" : "text-slate-600"
+                        }`}
+                        style={{ fontSize: FONT_SIZE.card }}
+                      >
+                        {t.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}
               >
-                {news.map((item) => (
+                {news[newsTab].length === 0 && (
+                  <Text
+                    className={`font-semibold ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                    style={{ fontSize: FONT_SIZE.xs }}
+                  >
+                    Chưa có bài viết trong mục này.
+                  </Text>
+                )}
+                {news[newsTab].map((item) => (
                   <TouchableOpacity
                     key={item.id}
                     activeOpacity={0.9}
@@ -860,12 +816,12 @@ export default function HomeScreen() {
           }}
           style={{
             position: "absolute",
-            bottom: 94,
+            bottom: 74 + chatbotLift,
             right: 20,
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: palette.brand,
+            backgroundColor: isDark ? "rgba(179,1,24,0.6)" : "rgba(208,2,27,0.55)",
             alignItems: "center",
             justifyContent: "center",
             ...(isDark
@@ -873,9 +829,9 @@ export default function HomeScreen() {
               : {
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
+                  shadowOpacity: 0,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 }),
             zIndex: 99,
           }}
@@ -884,7 +840,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
-      <ZaloFloatingButton />
+      <ZaloFloatingButton baseBottom={10} guideTab="home" />
     </View>
   );
 }

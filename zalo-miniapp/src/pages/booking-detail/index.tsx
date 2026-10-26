@@ -79,7 +79,6 @@ export default function BookingDetailPage() {
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [error, setError] = useState("");
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const fetchDetail = async () => {
     if (!id) {
@@ -117,15 +116,6 @@ export default function BookingDetailPage() {
     }
   };
 
-  useEffect(() => {
-    fetchDetail();
-  }, [id]);
-
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 300);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const formatCurrency = (v: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
 
@@ -488,15 +478,6 @@ export default function BookingDetailPage() {
         </div>
       )}
 
-      {showBackToTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed flex items-center justify-center"
-          style={{ bottom: 154, right: 20, width: 50, height: 50, borderRadius: 25, background: palette.brand, color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0,0,0,0.25)", zIndex: 99 }}
-        >
-          ↑
-        </button>
-      )}
     </Page>
   );
 }

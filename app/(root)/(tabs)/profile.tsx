@@ -1,10 +1,13 @@
 import { Footer } from "@/components/Footer";
 import { getTier } from "@/components/MembershipBanner";
+import AvatarViewer from "@/components/profile/AvatarViewer";
 import TierAvatar from "@/components/profile/TierAvatar";
+import GuideHelpButton from "@/components/guide/GuideHelpButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
 import { useAuth } from "@/context/Auth_Context";
+import { useGuideScroller, useGuideTarget, useTabGuide } from "@/context/Guide_Context";
 import { useTheme } from "@/context/Theme_Context";
 import { logout as apiLogout } from "@/services/auth";
 import { getTransactionHistory } from "@/services/booking";
@@ -16,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -67,6 +70,21 @@ export default function ProfileScreen() {
   const [favCount, setFavCount] = useState<number | null>(null);
   const [voucherCount, setVoucherCount] = useState<number | null>(null);
   const [promoOn, setPromoOn] = useState(true);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+
+  // Hướng dẫn lần đầu (constants/guideSteps.ts → profile)
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
+  useTabGuide("profile", isLoggedIn);
+  useGuideScroller("profile", {
+    scrollBy: (dy) => scrollRef.current?.scrollTo({ y: Math.max(0, scrollYRef.current + dy), animated: true }),
+    scrollToTop: () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
+  });
+  const profileRef = useGuideTarget("profile.profile");
+  const statsRef = useGuideTarget("profile.stats");
+  const accountRef = useGuideTarget("profile.account");
+  const supportRef = useGuideTarget("profile.support");
+  const settingsRef = useGuideTarget("profile.settings");
 
   const tier = getTier(earnedPoints ?? 0);
   const fullName =
@@ -271,7 +289,15 @@ export default function ProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.screenBg }}>
       <StatusBar style="light" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        onScroll={(e) => {
+          scrollYRef.current = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
+      >
         {/* Hero */}
         <LinearGradient
           colors={heroColors}
@@ -292,20 +318,30 @@ export default function ProfileScreen() {
             <Text className="text-white font-black" style={{ fontSize: FONT_SIZE.xl }}>
               Tài khoản
             </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(root)/(profile)/selfprofile")}
-              activeOpacity={0.8}
-              className="flex-row items-center h-10 px-4 rounded-full border border-white/30 bg-white/15"
-            >
-              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
-              <Text className="text-white font-bold ml-1.5" style={{ fontSize: FONT_SIZE.xxs }}>
-                Sửa hồ sơ
-              </Text>
-            </TouchableOpacity>
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <GuideHelpButton tab="profile" />
+              <TouchableOpacity
+                onPress={() => router.push("/(root)/(profile)/selfprofile")}
+                activeOpacity={0.8}
+                className="flex-row items-center h-10 px-4 rounded-full border border-white/30 bg-white/15"
+              >
+                <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+                <Text className="text-white font-bold ml-1.5" style={{ fontSize: FONT_SIZE.xxs }}>
+                  Sửa hồ sơ
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View className="items-center mt-1">
-            <TierAvatar tier={tier.name} avatarUrl={user?.avatarUrl} initials={initials} />
+          <View ref={profileRef} collapsable={false} className="items-center mt-1">
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setAvatarOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Xem ảnh đại diện"
+            >
+              <TierAvatar tier={tier.name} avatarUrl={user?.avatarUrl} initials={initials} />
+            </TouchableOpacity>
             <Text className="text-white font-bold text-center" style={{ fontSize: FONT_SIZE.lg, marginTop: -2 }}>
               {fullName}
             </Text>
@@ -332,7 +368,7 @@ export default function ProfileScreen() {
 
         <View className="px-4 gap-6" style={{ marginTop: -48 }}>
           {/* Ô thống kê nhanh */}
-          <View className="flex-row gap-2.5">
+          <View ref={statsRef} collapsable={false} className="flex-row gap-2.5">
             <Tile
               icon="calendar-outline"
               value={trips.length}
@@ -447,91 +483,106 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <Group label="Tài khoản">
-            <Row
-              icon="person-outline"
-              title="Thông tin cá nhân"
-              subtitle="Họ tên, ngày sinh, CCCD, hộ chiếu"
-              onPress={() => router.push("/(root)/(profile)/selfprofile")}
-            />
-            <Row
-              icon="lock-closed-outline"
-              title="Mật khẩu & mã PIN"
-              subtitle="Đổi mật khẩu, mã PIN xác nhận đặt tour"
-              onPress={() => router.push("/(root)/(profile)/security" as any)}
-              last
-            />
-          </Group>
+          <View ref={accountRef} collapsable={false}>
+            <Group label="Tài khoản">
+              <Row
+                icon="person-outline"
+                title="Thông tin cá nhân"
+                subtitle="Họ tên, ngày sinh, email"
+                onPress={() => router.push("/(root)/(profile)/selfprofile")}
+              />
+              {/* [TẠM TẮT — chủ dự án chưa cần thân nhân] bỏ comment để bật lại
+              <Row
+                icon="people-outline"
+                title="Thân nhân"
+                subtitle="Người đi cùng, chọn nhanh khi đặt tour"
+                badge="Mới"
+                onPress={() => router.push("/(root)/(profile)/relatives" as any)}
+              />
+              */}
+              <Row
+                icon="lock-closed-outline"
+                title="Mật khẩu & mã PIN"
+                subtitle="Đổi mật khẩu, mã PIN xác nhận đặt tour"
+                onPress={() => router.push("/(root)/(profile)/security" as any)}
+                last
+              />
+            </Group>
+          </View>
 
-          <Group label="Hỗ trợ">
-            <Row
-              icon="call-outline"
-              title="Gọi tổng đài 1900 6668"
-              subtitle="Tư vấn & hỗ trợ đặt tour"
-              onPress={() => Linking.openURL("tel:19006668").catch(() => {})}
-            />
-            <Row
-              icon="chatbubble-outline"
-              title="Nhắn tin qua Zalo"
-              subtitle="Trao đổi trực tiếp với nhân viên"
-              onPress={() => Linking.openURL("https://zalo.me/237833859403376914").catch(() => {})}
-            />
-            <Row
-              icon="help-circle-outline"
-              title="Câu hỏi thường gặp"
-              subtitle="Hoàn huỷ, visa, thanh toán, hành lý"
-              badge="Mới"
-              onPress={() => router.push("/(root)/(profile)/faq" as any)}
-            />
-            <Row
-              icon="chatbox-ellipses-outline"
-              title="Gửi góp ý"
-              subtitle="Giúp chúng tôi phục vụ tốt hơn"
-              onPress={() => router.push("/(root)/(profile)/feedback")}
-              last
-            />
-          </Group>
+          <View ref={supportRef} collapsable={false}>
+            <Group label="Hỗ trợ">
+              <Row
+                icon="call-outline"
+                title="Gọi tổng đài 1900 6668"
+                subtitle="Tư vấn & hỗ trợ đặt tour"
+                onPress={() => Linking.openURL("tel:19006668").catch(() => {})}
+              />
+              <Row
+                icon="chatbubble-outline"
+                title="Nhắn tin qua Zalo"
+                subtitle="Trao đổi trực tiếp với nhân viên"
+                onPress={() => Linking.openURL("https://zalo.me/237833859403376914").catch(() => {})}
+              />
+              <Row
+                icon="help-circle-outline"
+                title="Câu hỏi thường gặp"
+                subtitle="Hoàn huỷ, visa, thanh toán, hành lý"
+                badge="Mới"
+                onPress={() => router.push("/(root)/(profile)/faq" as any)}
+              />
+              <Row
+                icon="chatbox-ellipses-outline"
+                title="Gửi góp ý"
+                subtitle="Giúp chúng tôi phục vụ tốt hơn"
+                onPress={() => router.push("/(root)/(profile)/feedback")}
+                last
+              />
+            </Group>
+          </View>
 
-          <Group label="Cài đặt">
-            <Row
-              icon="moon-outline"
-              title="Giao diện tối"
-              right={
-                <Switch
-                  value={isDark}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: "#D7DAE2", true: "#D0021B" }}
-                  thumbColor="#FFFFFF"
-                />
-              }
-            />
-            <Row
-              icon="notifications-outline"
-              title="Thông báo khuyến mãi"
-              subtitle="Tour mới, ưu đãi giờ chót"
-              right={
-                <Switch
-                  value={promoOn}
-                  onValueChange={togglePromo}
-                  trackColor={{ false: "#D7DAE2", true: "#D0021B" }}
-                  thumbColor="#FFFFFF"
-                />
-              }
-            />
-            <Row
-              icon="document-text-outline"
-              title="Điều khoản & chính sách"
-              subtitle="Điều khoản sử dụng, bảo mật dữ liệu"
-              onPress={() => router.push("/(root)/(profile)/terms" as any)}
-            />
-            <Row
-              icon="information-circle-outline"
-              title="Về BenThanh Tourist"
-              subtitle="Giới thiệu, liên hệ, văn phòng"
-              onPress={() => router.push("/(root)/(profile)/about" as any)}
-              last
-            />
-          </Group>
+          <View ref={settingsRef} collapsable={false}>
+            <Group label="Cài đặt">
+              <Row
+                icon="moon-outline"
+                title="Giao diện tối"
+                right={
+                  <Switch
+                    value={isDark}
+                    onValueChange={toggleTheme}
+                    trackColor={{ false: "#D7DAE2", true: "#D0021B" }}
+                    thumbColor="#FFFFFF"
+                  />
+                }
+              />
+              <Row
+                icon="notifications-outline"
+                title="Thông báo khuyến mãi"
+                subtitle="Tour mới, ưu đãi giờ chót"
+                right={
+                  <Switch
+                    value={promoOn}
+                    onValueChange={togglePromo}
+                    trackColor={{ false: "#D7DAE2", true: "#D0021B" }}
+                    thumbColor="#FFFFFF"
+                  />
+                }
+              />
+              <Row
+                icon="document-text-outline"
+                title="Điều khoản & chính sách"
+                subtitle="Điều khoản sử dụng, bảo mật dữ liệu"
+                onPress={() => router.push("/(root)/(profile)/terms" as any)}
+              />
+              <Row
+                icon="information-circle-outline"
+                title="Về BenThanh Tourist"
+                subtitle="Giới thiệu, liên hệ, văn phòng"
+                onPress={() => router.push("/(root)/(profile)/about" as any)}
+                last
+              />
+            </Group>
+          </View>
 
           <TouchableOpacity
             onPress={handleLogout}
@@ -551,7 +602,15 @@ export default function ProfileScreen() {
         </View>
         <Footer />
       </ScrollView>
-      <ZaloFloatingButton />
+      <AvatarViewer
+        visible={avatarOpen}
+        onClose={() => setAvatarOpen(false)}
+        avatarUrl={user?.avatarUrl}
+        initials={initials}
+        name={fullName}
+        tierName={tier.name}
+      />
+      <ZaloFloatingButton baseBottom={10} />
     </View>
   );
 }

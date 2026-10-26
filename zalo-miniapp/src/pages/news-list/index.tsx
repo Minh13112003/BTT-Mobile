@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 
 import Footer from "@/components/Footer";
@@ -32,7 +32,11 @@ export default function NewsListPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [category, setCategory] = useState<CategoryKey>(CATEGORIES[0].key);
+  // Trang chủ mở thẳng mục đang xem (?category=company|guide) từ nút "Xem tất cả" của "Tin tức & cẩm nang".
+  const [searchParams] = useSearchParams();
+  const [category, setCategory] = useState<CategoryKey>(
+    CATEGORIES.find((c) => c.key === searchParams.get("category"))?.key ?? CATEGORIES[0].key,
+  );
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
 

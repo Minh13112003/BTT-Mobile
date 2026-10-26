@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native";
 import { TourHero } from "@/components/tour/TourHero";
+import { useChatbotLift } from "@/components/chatbot/ChatbotFloatingButton";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import {
   SafeAreaView,
@@ -37,6 +38,7 @@ import { TourScheduleHtmlAccordion } from "@/components/tour/TourScheduleHtmlAcc
 import { PriceIncludedCard } from "@/components/tour/PriceIncludedCard";
 import { FeaturedHighlightsCard } from "@/components/tour/FeaturedHighlightsCard";
 import { TripInfoCard } from "@/components/tour/TripInfoCard";
+import { BookingGuest } from "@/components/guest/BookingGuestList"; // [TẠM TẮT] BookingGuestList đang comment ở JSX bên dưới
 import { SectionTitle } from "@/components/ui/SectionTitle";
 interface BookingDetail {
   id: string;
@@ -81,6 +83,8 @@ interface BookingDetail {
     reuse?: boolean;
   };
   notice?: string;
+  /** Danh sách hành khách (booking cũ không có). */
+  guests?: BookingGuest[];
   paymentMethod?: string;
   createdAt: string;
   updatedAt: string;
@@ -106,6 +110,7 @@ export default function DetailTourScreen() {
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const chatbotLift = useChatbotLift();
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
   const {
     scale: imageScale,
@@ -878,6 +883,14 @@ export default function DetailTourScreen() {
               )}
             </View>
 
+            {/* [TẠM TẮT — chủ dự án chưa cần nhân thân/CCCD/hộ chiếu] DANH SÁCH HÀNH KHÁCH
+            {!!booking.guests?.length && (
+              <View className={sectionCardClass}>
+                <BookingGuestList guests={booking.guests} />
+              </View>
+            )}
+            */}
+
             {/*  HIGHLIGHTS */}
             {!!booking.tour.highlights?.length && (
               <View className={sectionCardClass}>
@@ -1076,19 +1089,19 @@ export default function DetailTourScreen() {
             }}
             style={{
               position: "absolute",
-              bottom: 94,
+              bottom: 94 + chatbotLift,
               right: 20,
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: "#D0021B",
+              backgroundColor: "rgba(208,2,27,0.55)",
               alignItems: "center",
               justifyContent: "center",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.25,
+              shadowOpacity: 0,
               shadowRadius: 8,
-              elevation: 6,
+              elevation: 0,
               zIndex: 99,
             }}
           >

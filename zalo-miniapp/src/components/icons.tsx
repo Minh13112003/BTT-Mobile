@@ -181,3 +181,17 @@ export function EyeIcon({ active, color = "currentColor", size = 18 }: TabIconPr
     </svg>
   );
 }
+
+/** Icon cặp táp "Du lịch" (vali) — tương đương briefcase-outline bên app RN. */
+export function BriefcaseIcon({ active, color = "currentColor", size = 23 }: TabIconProps) {
+  return active ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M9 3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V6h3.5A2.5 2.5 0 0 1 21 8.5v3.2H3V8.5A2.5 2.5 0 0 1 5.5 6H9V3.5Zm1.5.5V6h3V4h-3ZM3 13.2h6.5v1.3a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-1.3H21v6.3a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 19.5v-6.3Z" />
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round">
+      <rect x="3" y="7" width="18" height="13" rx="2.5" />
+      <path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7M3 13h18" />
+    </svg>
+  );
+}

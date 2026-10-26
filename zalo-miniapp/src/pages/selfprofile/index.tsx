@@ -1,293 +1,435 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Page, Spinner, useSnackbar } from "zmp-ui";
+import { Page, Spinner } from "zmp-ui";
 
-import Header from "@/components/Header";
+import AlertDialog, { AlertType } from "@/components/AlertDialog";
+import Icon from "@/components/Icon";
+import PrimaryButton from "@/components/PrimaryButton";
+import SubPageHeader from "@/components/SubPageHeader";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { changePassword, getMe, updateAvatar, updateProfile } from "@/services/user";
+import { getMe, updateAvatar, updateProfile } from "@/services/user";
 import { getItem, setItem } from "@/utils/storage";
-import { getPalette, BOTTOM_NAV_SPACE, RADIUS } from "@/constants/theme";
+import { getPalette } from "@/constants/theme";
 import { FONT_SIZE } from "@/constants/typography";
-import { UserIcon } from "@/components/icons";
+
+type Gender = "MALE" | "FEMALE" | "OTHER";
+const GENDERS: { value: Gender; label: string }[] = [
+  { value: "MALE", label: "Nam" },
+  { value: "FEMALE", label: "Nữ" },
+  { value: "OTHER", label: "Khác" },
+];
+
+/** ISO (2026-05-20 hoặc 2026-05-20T00:00:00Z) -> DD/MM/YYYY. */
+function isoToDmy(iso?: string | null): string {
+  if (!iso) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}
+
+/** DD/MM/YYYY -> YYYY-MM-DD; null nếu rỗng, undefined nếu sai định dạng/ngày không có thật. */
+function dmyToIso(dmy: string): string | null | undefined {
+  const v = dmy.trim();
+  if (!v) return null;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+  if (!m) return undefined;
+  const [, dd, mm, yyyy] = m;
+  const d = new Date(`${yyyy}-${mm}-${dd}T00:00:00`);
+  if (isNaN(d.getTime()) || d.getDate() !== Number(dd) || d.getMonth() + 1 !== Number(mm)) return undefined;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/** Tự chèn dấu "/" khi gõ ngày. */
+function maskDate(text: string): string {
+  const digits = text.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/** Nhãn ô nhập. Khai báo ở ngoài trang: component định nghĩa trong thân trang sẽ bị tạo lại mỗi lần gõ phím và làm ô nhập mất focus. */
+function Label({ children, hint }: { children: string; hint?: string }) {
+  const { theme } = useTheme();
+  const textMuted = theme === "dark" ? "#94A3B8" : "#64748B";
+  return (
+    <div className="flex items-baseline" style={{ marginBottom: 6, paddingLeft: 4 }}>
+      <span className="font-bold" style={{ fontSize: FONT_SIZE.xxs, color: textMuted }}>
+        {children}
+      </span>
+      {hint ? <span style={{ marginLeft: 8, fontSize: FONT_SIZE.xxs, color: textMuted }}>{hint}</span> : null}
+    </div>
+  );
+}
+
+/** Khối thẻ có tiêu đề (cũng khai báo ngoài trang vì lý do trên). */
+function Section({ title, badge, children }: { title: string; badge?: string; children: React.ReactNode }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div
+      style={{
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 16,
+        background: isDark ? "rgba(30,41,59,0.9)" : "#FFFFFF",
+        border: `1px solid ${isDark ? "rgba(51,65,85,0.5)" : "#F1F5F9"}`,
+      }}
+    >
+      <div className="flex items-center" style={{ marginBottom: 16 }}>
+        <span className="font-black" style={{ fontSize: FONT_SIZE.xs, color: isDark ? "#F1F5F9" : "#1E293B" }}>
+          {title}
+        </span>
+        {badge ? (
+          <span className="text-white font-bold" style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 999, background: "#C2410C", fontSize: FONT_SIZE.xxs }}>
+            {badge}
+          </span>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 /**
- * Port từ app/(root)/(profile)/selfprofile.tsx — gộp các khối Alert.alert
- * thành snackbar, upload avatar dùng input file thật của trình duyệt thay vì
- * expo-image-picker.
+ * Port từ app/(root)/(profile)/selfprofile.tsx (bản thiết kế lại): ảnh đại diện có nút máy ảnh,
+ * Thông tin cơ bản (họ, tên, ngày sinh, giới tính), Liên hệ (SĐT chỉ đọc, email), Giấy tờ tuỳ thân
+ * (CCCD, hộ chiếu + ngày hết hạn) — lưu cả vào NestJS. Đổi mật khẩu/PIN nằm ở trang "Mật khẩu & mã PIN".
  */
 export default function SelfProfilePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = getPalette(isDark);
-  const snackbar = useSnackbar();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<any>(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [focused, setFocused] = useState("");
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editAge, setEditAge] = useState("");
-  const [updatingProfile, setUpdatingProfile] = useState(false);
-  const [profileError, setProfileError] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState<Gender | null>(null);
+  const [email, setEmail] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [passportNumber, setPassportNumber] = useState("");
+  const [passportExpiry, setPassportExpiry] = useState("");
+  const [error, setError] = useState("");
+  const [alert, setAlert] = useState<{ title: string; message: string; type: AlertType } | null>(null);
 
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [updatingPassword, setUpdatingPassword] = useState(false);
-  const [pwError, setPwError] = useState("");
+  const fillForm = (u: any) => {
+    setFirstName(u?.firstName ?? "");
+    setLastName(u?.lastName ?? "");
+    setDob(isoToDmy(u?.dateOfBirth));
+    setGender((u?.gender as Gender) ?? null);
+    setEmail(u?.email ?? "");
+    setNationalId(u?.nationalId ?? "");
+    setPassportNumber(u?.passportNumber ?? "");
+    setPassportExpiry(isoToDmy(u?.passportExpiry));
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const load = async () => {
       try {
-        setLoadingProfile(true);
-        const cached = await getItem("user_profile");
-        if (cached) {
-          setProfile(JSON.parse(cached));
-        } else {
-          const res = await getMe();
-          const userData = (res.data as any)?.user || res.data;
-          if (userData) {
-            await setItem("user_profile", JSON.stringify(userData));
-            setProfile(userData);
-          }
+        // Luôn gọi API: cache cũ có thể thiếu các trường mới (ngày sinh, CCCD, hộ chiếu).
+        const res = await getMe();
+        const data = (res.data as any)?.user || res.data;
+        if (data) {
+          await setItem("user_profile", JSON.stringify(data));
+          setProfile(data);
+          fillForm(data);
+          return;
         }
       } catch (err) {
         console.error("Lỗi khi tải thông tin cá nhân:", err);
-      } finally {
-        setLoadingProfile(false);
+      }
+      try {
+        const cached = await getItem("user_profile");
+        const data = cached ? JSON.parse(cached) : user;
+        setProfile(data);
+        fillForm(data);
+      } catch {
+        fillForm(user);
       }
     };
-    fetchProfile();
+    load().finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const displayUser = profile || user;
+  const avatarUri = localAvatarUrl ?? displayUser?.avatarUrl ?? null;
+  const initials = `${(firstName || "").charAt(0)}${(lastName || "").charAt(0)}`.toUpperCase() || "BT";
 
-  const startEditing = () => {
-    setEditFirstName(displayUser?.firstName || "");
-    setEditLastName(displayUser?.lastName || "");
-    setEditEmail(displayUser?.email || "");
-    setEditAge(displayUser?.age?.toString() || "");
-    setProfileError("");
-    setIsEditing(true);
-  };
-
-  const handleUpdateProfile = async () => {
-    setProfileError("");
-    if (!editFirstName.trim() || !editLastName.trim() || !editEmail.trim()) {
-      return setProfileError("Vui lòng nhập đầy đủ thông tin Họ, Tên và Email.");
+  const handleSave = async () => {
+    setError("");
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setError("Vui lòng nhập đầy đủ Họ, Tên và Email.");
+      return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
-      return setProfileError("Email không đúng định dạng.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Email không đúng định dạng.");
+      return;
     }
-    let ageVal: number | undefined;
-    if (editAge.trim()) {
-      const parsed = parseInt(editAge.trim(), 10);
-      if (isNaN(parsed) || parsed <= 0) return setProfileError("Tuổi phải là số nguyên dương hợp lệ.");
-      ageVal = parsed;
+    const dobIso = dmyToIso(dob);
+    if (dobIso === undefined) {
+      setError("Ngày sinh không hợp lệ. Nhập theo dạng DD/MM/YYYY.");
+      return;
     }
+    // [TẠM TẮT — chủ dự án chưa cần CCCD/hộ chiếu] không kiểm tra, cũng KHÔNG gửi 3 trường này (gửi null sẽ xoá dữ liệu đã lưu)
+    // const expiryIso = dmyToIso(passportExpiry);
+    // if (expiryIso === undefined) {
+    //   setError("Ngày hết hạn hộ chiếu không hợp lệ. Nhập theo dạng DD/MM/YYYY.");
+    //   return;
+    // }
+    // const nid = nationalId.trim();
+    // if (nid && !/^(\d{9}|\d{12})$/.test(nid)) {
+    //   setError("Số CCCD gồm 9 hoặc 12 chữ số.");
+    //   return;
+    // }
 
     try {
-      setUpdatingProfile(true);
+      setSaving(true);
       const res = await updateProfile({
-        firstName: editFirstName.trim(),
-        lastName: editLastName.trim(),
-        email: editEmail.trim(),
-        age: ageVal,
-      } as any);
-      const updatedUser = (res.data as any)?.user || res.data;
-      const finalUser = updatedUser || { ...displayUser, firstName: editFirstName.trim(), lastName: editLastName.trim(), email: editEmail.trim(), age: ageVal };
-      await setItem("user_profile", JSON.stringify(finalUser));
-      setProfile(finalUser);
-      snackbar.openSnackbar({ text: "Cập nhật thông tin tài khoản thành công!", type: "success" });
-      setIsEditing(false);
-    } catch (err: any) {
-      const rawMsg = err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin.";
-      setProfileError(Array.isArray(rawMsg) ? rawMsg.join(", ") : String(rawMsg));
-    } finally {
-      setUpdatingProfile(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword) return setPwError("Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.");
-    if (newPassword.length < 6) return setPwError("Mật khẩu mới phải có ít nhất 6 ký tự.");
-
-    try {
-      setUpdatingPassword(true);
-      setPwError("");
-      await changePassword({ currentPassword: oldPassword, newPassword });
-      setOldPassword("");
-      setNewPassword("");
-      // Giống bản RN — buộc đăng xuất sau khi đổi mật khẩu thành công để session
-      // cũ (token đang có trong tay người khác, nếu có) không còn hiệu lực.
-      snackbar.openSnackbar({
-        text: "Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.",
-        type: "success",
-        duration: 3000,
-        onClose: async () => {
-          await logout();
-          navigate("/login", { replace: true });
-        },
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        dateOfBirth: dobIso,
+        gender,
+        // nationalId: nid || null,
+        // passportNumber: passportNumber.trim() ? passportNumber.trim().toUpperCase() : null,
+        // passportExpiry: expiryIso,
       });
+      const updated = (res.data as any)?.user || res.data;
+      if (updated) {
+        await setItem("user_profile", JSON.stringify(updated));
+        setProfile(updated);
+        fillForm(updated);
+      }
+      setAlert({ title: "Đã lưu", message: "Thông tin cá nhân của bạn đã được cập nhật.", type: "success" });
     } catch (err: any) {
-      const status = err?.response?.status;
-      const rawMsg = err?.response?.data?.message;
-      const msg =
-        status === 400 || status === 401
-          ? "Sai mật khẩu cũ, xin vui lòng nhập đúng mật khẩu cũ của bạn."
-          : Array.isArray(rawMsg)
-          ? rawMsg.join(", ")
-          : rawMsg || "Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.";
-      setPwError(msg);
-      snackbar.openSnackbar({ text: msg, type: "error" });
+      const raw = err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin.";
+      setError(Array.isArray(raw) ? raw.join(", ") : String(raw));
     } finally {
-      setUpdatingPassword(false);
+      setSaving(false);
     }
   };
 
-  const handlePickAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAlert({ title: "Ảnh không hợp lệ", message: "Vui lòng chọn một file ảnh.", type: "warning" });
+      return;
+    }
     const previewUrl = URL.createObjectURL(file);
     setLocalAvatarUrl(previewUrl);
     try {
       setUploadingAvatar(true);
       const res = await updateAvatar(file);
-      const updatedUser = (res.data as any)?.user ?? res.data;
-      if (updatedUser) {
-        await setItem("user_profile", JSON.stringify(updatedUser));
-        setProfile(updatedUser);
+      const updated = (res.data as any)?.user ?? res.data;
+      if (updated) {
+        await setItem("user_profile", JSON.stringify(updated));
+        setProfile(updated);
       }
-      snackbar.openSnackbar({ text: "Ảnh đại diện đã được cập nhật!", type: "success" });
-    } catch (err) {
-      console.error(err);
-      snackbar.openSnackbar({ text: "Không thể tải ảnh lên. Vui lòng thử lại.", type: "error" });
+      setAlert({ title: "Thành công", message: "Ảnh đại diện đã được cập nhật.", type: "success" });
+    } catch {
+      setAlert({ title: "Lỗi", message: "Không thể tải ảnh lên. Vui lòng thử lại.", type: "error" });
       setLocalAvatarUrl(null);
     } finally {
       setUploadingAvatar(false);
     }
   };
 
-  const fieldStyle = { borderRadius: RADIUS.lg, border: `1.5px solid ${palette.border}`, background: palette.surfaceAlt, padding: "0 14px", height: 50, color: palette.textPrimary, fontSize: FONT_SIZE.xxs, outline: "none", width: "100%" };
-  const labelStyle = { fontSize: FONT_SIZE.card, fontWeight: 700, color: palette.textMuted, marginBottom: 6, textTransform: "uppercase" as const };
+  const textMain = isDark ? "#F1F5F9" : "#1E293B";
+  const textMuted = isDark ? "#94A3B8" : "#64748B";
+
+  const inputWrapStyle = (key: string, readonly = false): React.CSSProperties => ({
+    height: 56,
+    padding: "0 16px",
+    borderRadius: 16,
+    display: "flex",
+    alignItems: "center",
+    background: readonly ? (isDark ? "rgba(30,41,59,0.5)" : "#F1F5F9") : isDark ? "#1E293B" : "#FFFFFF",
+    border: `2px solid ${
+      readonly
+        ? isDark
+          ? "#334155"
+          : "#F1F5F9"
+        : focused === key
+          ? isDark
+            ? "#F87171"
+            : "#D0021B"
+          : isDark
+            ? "#334155"
+            : "#E2E8F0"
+    }`,
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    border: "none",
+    outline: "none",
+    background: "transparent",
+    fontWeight: 500,
+    color: textMain,
+    fontSize: FONT_SIZE.xs,
+  };
+
+  const field = (
+    key: string,
+    value: string,
+    onChange: (v: string) => void,
+    props: React.InputHTMLAttributes<HTMLInputElement> = {},
+    mb = 0,
+  ) => (
+    <div style={{ ...inputWrapStyle(key), marginBottom: mb }}>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(key)}
+        onBlur={() => setFocused("")}
+        style={inputStyle}
+        {...props}
+      />
+    </div>
+  );
 
   return (
-    <Page style={{ background: palette.screenBg, paddingBottom: BOTTOM_NAV_SPACE }}>
-      <Header title="Hồ sơ cá nhân" showBackButton />
+    <Page style={{ background: palette.screenBg, minHeight: "100vh" }}>
+      <SubPageHeader title="Thông tin cá nhân" />
 
-      <div style={{ padding: "20px 24px 40px" }}>
-        <div style={{ padding: 20, borderRadius: RADIUS.xl, background: palette.surface, border: `1px solid ${palette.border}` }}>
-          {/* Avatar */}
+      {loading ? (
+        <div className="flex items-center justify-center" style={{ padding: 60 }}>
+          <Spinner />
+        </div>
+      ) : (
+        <div style={{ padding: "8px 16px 40px" }}>
+          {/* Ảnh đại diện */}
           <div className="flex flex-col items-center" style={{ marginBottom: 20 }}>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="relative flex items-center justify-center"
-              style={{ width: 160, height: 160, borderRadius: 80, border: `3px solid ${isDark ? "#3B82F6" : palette.brand}`, overflow: "hidden", background: palette.surfaceAlt }}
-            >
-              {localAvatarUrl || displayUser?.avatarUrl ? (
-                <img src={localAvatarUrl ?? displayUser?.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <UserIcon active color={palette.icon} size={64} />
-              )}
-              {uploadingAvatar && (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.4)" }}>
-                  <Spinner />
-                </div>
-              )}
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickAvatar} style={{ display: "none" }} />
-            <button onClick={() => fileInputRef.current?.click()} style={{ marginTop: 10, color: palette.brand, fontWeight: 700, fontSize: FONT_SIZE.xxs }}>
-              Đổi ảnh đại diện
-            </button>
+            <div style={{ position: "relative" }}>
+              <div
+                className="flex items-center justify-center"
+                style={{
+                  width: 104,
+                  height: 104,
+                  borderRadius: 52,
+                  overflow: "hidden",
+                  background: "#FDECEE",
+                  border: `4px solid ${isDark ? "#334155" : "#FFFFFF"}`,
+                  position: "relative",
+                }}
+              >
+                {avatarUri ? (
+                  <img src={avatarUri} alt="" style={{ width: 104, height: 104, objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: FONT_SIZE.xxl, fontWeight: 800, color: "#B30014" }}>{initials}</span>
+                )}
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.35)" }}>
+                    <Spinner />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                aria-label="Đổi ảnh đại diện"
+                className="absolute flex items-center justify-center"
+                style={{ right: -2, bottom: 0, width: 44, height: 44, borderRadius: 22, background: "#D0021B", border: "2px solid #FFFFFF" }}
+              >
+                <Icon name="camera-outline" size={20} color="#FFFFFF" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} style={{ display: "none" }} />
+            </div>
+            <div style={{ marginTop: 12, fontSize: FONT_SIZE.xxs, color: textMuted }}>Bấm nút máy ảnh để đổi ảnh đại diện</div>
           </div>
 
-          {!isEditing ? (
-            <>
-              <div style={{ fontSize: FONT_SIZE.xl, fontWeight: 900, color: palette.textPrimary, textAlign: "center" }}>
-                {displayUser?.firstName} {displayUser?.lastName}
+          <Section title="Thông tin cơ bản">
+            <div className="flex" style={{ gap: 12, marginBottom: 16 }}>
+              <div className="flex-1 min-w-0">
+                <Label>Họ</Label>
+                {field("first", firstName, setFirstName, { placeholder: "Họ" })}
               </div>
-              <div style={{ textAlign: "center", color: palette.textMuted, marginTop: 4, fontSize: FONT_SIZE.xxs }}>{displayUser?.email}</div>
-
-              <div style={{ marginTop: 20 }}>
-                <div className="flex items-center justify-between" style={{ padding: "12px 0", borderBottom: `1px solid ${palette.border}` }}>
-                  <span style={{ color: palette.textMuted, fontSize: FONT_SIZE.xxs }}>Số điện thoại</span>
-                  <span style={{ color: palette.textPrimary, fontWeight: 700, fontSize: FONT_SIZE.xxs }}>{displayUser?.phonenumber || "Chưa cập nhật"}</span>
-                </div>
-                <div className="flex items-center justify-between" style={{ padding: "12px 0", borderBottom: `1px solid ${palette.border}` }}>
-                  <span style={{ color: palette.textMuted, fontSize: FONT_SIZE.xxs }}>Tuổi</span>
-                  <span style={{ color: palette.textPrimary, fontWeight: 700, fontSize: FONT_SIZE.xxs }}>{displayUser?.age || "Chưa cập nhật"}</span>
-                </div>
+              <div className="flex-1 min-w-0">
+                <Label>Tên</Label>
+                {field("last", lastName, setLastName, { placeholder: "Tên" })}
               </div>
+            </div>
 
-              <button
-                onClick={startEditing}
-                className="w-full text-white font-bold"
-                style={{ marginTop: 20, borderRadius: RADIUS.lg, height: 50, background: palette.brand, fontSize: FONT_SIZE.xxs }}
-              >
-                Chỉnh sửa thông tin
-              </button>
-            </>
-          ) : (
-            <>
-              <div style={labelStyle}>Họ</div>
-              <input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} />
-              <div style={labelStyle}>Tên</div>
-              <input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} />
-              <div style={labelStyle}>Email</div>
-              <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} />
-              <div style={labelStyle}>Tuổi (tuỳ chọn)</div>
-              <input value={editAge} onChange={(e) => setEditAge(e.target.value)} inputMode="numeric" style={{ ...fieldStyle, marginBottom: 14 }} />
+            <Label hint="DD/MM/YYYY">Ngày sinh</Label>
+            {field("dob", dob, (t) => setDob(maskDate(t)), { placeholder: "20/05/1990", inputMode: "numeric", maxLength: 10 }, 16)}
 
-              {profileError && (
-                <div style={{ color: "#EF4444", fontSize: FONT_SIZE.xxs, marginBottom: 14 }}>{profileError}</div>
-              )}
+            <Label>Giới tính</Label>
+            <div className="flex" style={{ gap: 8 }}>
+              {GENDERS.map((g) => {
+                const active = gender === g.value;
+                return (
+                  <button
+                    key={g.value}
+                    onClick={() => setGender(active ? null : g.value)}
+                    className="flex-1 font-bold"
+                    style={{
+                      height: 48,
+                      borderRadius: 16,
+                      fontSize: FONT_SIZE.xxs,
+                      color: active ? "#FFFFFF" : textMuted,
+                      background: active ? "#D0021B" : isDark ? "#1E293B" : "#FFFFFF",
+                      border: `2px solid ${active ? "#D0021B" : isDark ? "#334155" : "#E2E8F0"}`,
+                    }}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
 
-              <div className="flex" style={{ gap: 10 }}>
-                <button onClick={() => setIsEditing(false)} className="flex-1 font-bold" style={{ borderRadius: RADIUS.lg, height: 50, border: `1px solid ${palette.border}`, color: palette.textSecondary, fontSize: FONT_SIZE.xxs }}>
-                  Hủy
-                </button>
-                <button
-                  onClick={handleUpdateProfile}
-                  disabled={updatingProfile}
-                  className="flex-1 text-white font-bold"
-                  style={{ borderRadius: RADIUS.lg, height: 50, background: palette.brand, opacity: updatingProfile ? 0.7 : 1, fontSize: FONT_SIZE.xxs }}
-                >
-                  {updatingProfile ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
-              </div>
-            </>
-          )}
+          <Section title="Liên hệ">
+            <Label hint="Đăng nhập bằng số này">Số điện thoại</Label>
+            <div style={{ ...inputWrapStyle("phone", true), marginBottom: 16 }}>
+              <span style={{ fontSize: FONT_SIZE.xs, color: textMuted }}>{displayUser?.phonenumber || "Chưa có"}</span>
+            </div>
+            <Label>Email</Label>
+            {field("email", email, setEmail, { placeholder: "email@example.com", type: "email", autoCapitalize: "none" })}
+          </Section>
+
+          {/* [TẠM TẮT — chủ dự án chưa cần CCCD/hộ chiếu] bỏ comment cả khối để bật lại (cùng 2 khối cùng ghi chú ở handleSave)
+          <Section title="Giấy tờ tuỳ thân" badge="Mới">
+            <Label>Số CCCD</Label>
+            {field("nid", nationalId, (t) => setNationalId(t.replace(/\D/g, "").slice(0, 12)), { placeholder: "12 chữ số", inputMode: "numeric" }, 16)}
+            <Label>Số hộ chiếu</Label>
+            {field("pp", passportNumber, (t) => setPassportNumber(t.toUpperCase().slice(0, 20)), { placeholder: "C1234567", autoCapitalize: "characters" }, 16)}
+            <Label hint="DD/MM/YYYY">Ngày hết hạn</Label>
+            {field("ppx", passportExpiry, (t) => setPassportExpiry(maskDate(t)), { placeholder: "15/01/2032", inputMode: "numeric", maxLength: 10 }, 12)}
+            <div style={{ lineHeight: "22px", fontSize: FONT_SIZE.xxs, color: textMuted }}>
+              Chỉ dùng để làm thủ tục tour (vé máy bay, visa). Hộ chiếu cần còn hạn ít nhất 6 tháng tính từ ngày về.
+            </div>
+          </Section>
+          */}
+
+          {error ? (
+            <div
+              className="font-medium"
+              style={{ padding: 14, borderRadius: 16, marginBottom: 16, background: "#FEF2F2", border: "1px solid #FECACA", color: "#B91C1C", fontSize: FONT_SIZE.xxs }}
+            >
+              {error}
+            </div>
+          ) : null}
+
+          <PrimaryButton label="Lưu thay đổi" onClick={handleSave} loading={saving} fullWidth />
         </div>
+      )}
 
-        {/* Đổi mật khẩu */}
-        <div style={{ padding: 20, borderRadius: RADIUS.xl, background: palette.surface, border: `1px solid ${palette.border}`, marginTop: 20 }}>
-          <div className="font-black" style={{ fontSize: FONT_SIZE.xxs, color: palette.textPrimary, marginBottom: 14 }}>Đổi mật khẩu</div>
-
-          <div style={labelStyle}>Mật khẩu hiện tại</div>
-          <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} />
-          <div style={labelStyle}>Mật khẩu mới</div>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} />
-
-          {pwError && <div style={{ color: "#EF4444", fontSize: FONT_SIZE.xxs, marginBottom: 14 }}>{pwError}</div>}
-
-          <button
-            onClick={handleChangePassword}
-            disabled={updatingPassword}
-            className="w-full text-white font-bold"
-            style={{ borderRadius: RADIUS.lg, height: 50, background: isDark ? "#334155" : "#1E293B", opacity: updatingPassword ? 0.7 : 1, fontSize: FONT_SIZE.xxs }}
-          >
-            {updatingPassword ? "Đang xử lý..." : "Đổi mật khẩu"}
-          </button>
-        </div>
-      </div>
+      <AlertDialog
+        visible={!!alert}
+        type={alert?.type}
+        title={alert?.title ?? ""}
+        message={alert?.message}
+        onClose={() => setAlert(null)}
+      />
     </Page>
   );
 }

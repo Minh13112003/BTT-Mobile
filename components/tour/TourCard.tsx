@@ -67,6 +67,14 @@ export function TourCard({
   const displayPrice = nearest?.price ?? null;
   const displayDate = nearest?.departureDate ?? null;
 
+  const coverUri = Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl;
+  // Laravel không có cờ trong nước/nước ngoài — đường dẫn ảnh là tour/trong-nuoc/... hoặc tour/nuoc-ngoai/...
+  const regionLabel = coverUri?.includes("/nuoc-ngoai/")
+    ? "Nước ngoài"
+    : coverUri?.includes("/trong-nuoc/")
+      ? "Trong nước"
+      : null;
+
   return (
     <TouchableOpacity
       activeOpacity={0.95}
@@ -82,27 +90,23 @@ export function TourCard({
         ...(width != null ? { width } : null),
       }}
     >
-      {/* Tour Image with Rating badge */}
+      {/* Ảnh + nhãn khu vực + thời lượng. Bỏ ô ★ (Laravel luôn trả rating 0). */}
       <View className="relative h-44 w-full bg-slate-900/10">
-        <TourImage
-          uri={Array.isArray(tour.imageUrl) ? tour.imageUrl[0] : tour.imageUrl}
-          style={{ width: "100%", height: "100%" }}
-        />
-        <View
-          className={`absolute top-3 right-3 rounded-full px-2.5 py-1 flex-row items-center shadow-sm ${
-            isDark ? "bg-slate-900/90" : "bg-white/90"
-          }`}
-        >
-          <Ionicons name="star" size={12} color="#F59E0B" />
-          <Text
-            className={`font-black ml-1 ${
-              isDark ? "text-slate-100" : "text-slate-800"
+        <TourImage uri={coverUri} style={{ width: "100%", height: "100%" }} />
+        {regionLabel && (
+          <View
+            className={`absolute top-3 left-3 rounded-full px-2.5 py-0.5 ${
+              isDark ? "bg-slate-900/90" : "bg-white/90"
             }`}
-            style={{ fontSize: FONT_SIZE.xs }}
           >
-            {tour.rating}
-          </Text>
-        </View>
+            <Text
+              className={`font-semibold ${isDark ? "text-slate-100" : "text-[#B30118]"}`}
+              style={{ fontSize: FONT_SIZE.card }}
+            >
+              {regionLabel}
+            </Text>
+          </View>
+        )}
         <View
           className={`absolute bottom-3 left-3 rounded-xl px-2.5 py-1 ${
             isDark ? "bg-slate-700/95" : "bg-[#D0021B]/90"
@@ -114,78 +118,50 @@ export function TourCard({
         </View>
       </View>
 
-      {/* Tour Details */}
+      {/* Tên tour, ngày khởi hành + giá chung 1 hàng, nút Xem chi tiết — không vạch chia */}
       <View style={{ position: "relative" }}>
-        {(
-          <Svg
-            width="100%"
-            height={170}
-            viewBox="0 0 380 170"
-            preserveAspectRatio="none"
-            style={{ position: "absolute", top: 0, left: 0, right: 0 }}
-          >
-            <Path
-              d="M0,170 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,170 Z"
-              fill={isDark ? "#64748B" : "#D0021B"}
-              fillOpacity={isDark ? 0.2 : 0.22}
-            />
-          </Svg>
-        )}
-        <View className="p-4">
+        <Svg
+          width="100%"
+          height={180}
+          viewBox="0 0 380 180"
+          preserveAspectRatio="none"
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
+        >
+          <Path
+            d="M0,180 L0,70 C 31.6,54 63.3,54 95,70 C 126.6,86 158.3,86 190,70 C 221.6,54 253.3,54 285,70 C 316.6,86 348.3,86 380,70 L380,180 Z"
+            fill={isDark ? "#64748B" : "#D0021B"}
+            fillOpacity={0.2}
+          />
+        </Svg>
+        <View className="px-4 pt-3.5 pb-4" style={{ gap: 12 }}>
           <Text
-            style={{ fontSize: FONT_SIZE.xl }}
-            className={`font-black leading-8 ${
-              isDark ? "text-slate-100" : "text-slate-800"
-            }`}
+            style={{ fontSize: FONT_SIZE.lg, lineHeight: 30 }}
+            className={`font-black ${isDark ? "text-slate-100" : "text-slate-800"}`}
             numberOfLines={2}
           >
             {tour.name}
           </Text>
 
-          {/* Nearest departure + price */}
-          <View className="mt-2.5">
-            <View className="flex-row items-center">
-              <Text style={{ fontSize: FONT_SIZE.xs }}>📅</Text>
+          <View className="flex-row items-center justify-between" style={{ gap: 10 }}>
+            <View className="flex-row items-center flex-shrink" style={{ gap: 6 }}>
+              <Ionicons name="calendar-outline" size={18} color={isDark ? "#F87171" : "#D0021B"} />
               <Text
                 style={{ fontSize: FONT_SIZE.xs }}
-                className={`ml-1.5 font-semibold ${
-                  isDark ? "text-slate-300" : "text-slate-600"
-                }`}
+                className={`font-semibold flex-shrink ${isDark ? "text-slate-300" : "text-slate-600"}`}
+                numberOfLines={1}
               >
-                {displayDate
-                  ? `Khởi hành: ${formatDepartureDate(displayDate)}`
-                  : "Liên hệ để biết lịch khởi hành"}
+                {displayDate ? formatDepartureDate(displayDate) : "Chưa có lịch"}
               </Text>
             </View>
-            <View className="flex-row items-center mt-1">
-              <Text style={{ fontSize: FONT_SIZE.xs }}>💰</Text>
-              <Text
-                style={{ fontSize: FONT_SIZE.xs }}
-                className={`ml-1.5 font-bold ${
-                  isDark ? "text-slate-200" : "text-[#D0021B]"
-                }`}
-              >
-                Từ {formatPrice(displayPrice)}
-              </Text>
-            </View>
-            <View className="flex-row items-center mt-1">
-              <Text style={{ fontSize: FONT_SIZE.xs }}>🕒</Text>
-              <Text
-                style={{ fontSize: FONT_SIZE.xs }}
-                className={`ml-1.5 font-semibold ${
-                  isDark ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                {tour.duration}
-              </Text>
-            </View>
+            <Text
+              style={{ fontSize: FONT_SIZE.lg }}
+              className={`font-black ${isDark ? "text-slate-100" : "text-[#D0021B]"}`}
+            >
+              {formatPrice(displayPrice)}
+            </Text>
           </View>
 
-          <View
-            className={`flex-row items-center justify-end mt-4 pt-3 border-t ${
-              isDark ? "border-slate-700/60" : "border-slate-100"
-            }`}
-          >
+          <View className="flex-row justify-end mt-1.5">
             <PrimaryButton label="Xem chi tiết" onPress={onPress} />
           </View>
         </View>

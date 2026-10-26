@@ -9,14 +9,14 @@ import { Text, TouchableOpacity, useWindowDimensions, View } from "react-native"
 import RenderHTML from "react-native-render-html";
 
 // Slug → nhãn hiển thị, xem docs/laravel-tour-api-samples.md ("eats"/"main_vehicles").
-const EAT_LABELS: Record<string, string> = {
+export const EAT_LABELS: Record<string, string> = {
   "an-sang": "Ăn sáng",
   "an-trua": "Ăn trưa",
   "an-chieu": "Ăn chiều",
   "an-toi": "Ăn tối",
   "bua-phu": "Bữa phụ",
 };
-const VEHICLE_LABELS: Record<string, string> = {
+export const VEHICLE_LABELS: Record<string, string> = {
   "may-bay": "Máy bay",
   "xe-oto": "Xe ô tô",
   "tau-hoa": "Tàu hỏa",
